@@ -9,27 +9,26 @@ import {
   KeyRound, 
   ShieldCheck, 
   GraduationCap, 
-  Building2, 
   ArrowRight, 
   Sparkles,
   FileSpreadsheet,
-  Check,
-  HelpCircle
+  Shield
 } from 'lucide-react';
-import { studentAuthUtil } from '../../utils/studentAuth';
+import { studentAuthUtil, ActiveSessionUser } from '../../utils/studentAuth';
 import { soundFx } from '../../utils/soundEffects';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import { StudentExcelRegistryModal } from './StudentExcelRegistryModal';
 
 interface StudentLoginPortalProps {
-  onSuccessLogin: () => void;
+  onSuccessLogin: (user: ActiveSessionUser) => void;
 }
 
 export const StudentLoginPortal: React.FC<StudentLoginPortalProps> = ({
   onSuccessLogin
 }) => {
-  const [emailInput, setEmailInput] = useState('pravin.yadav.0926@pbs.com');
-  const [passwordInput, setPasswordInput] = useState('pravinyadav@123');
+  const [selectedRole, setSelectedRole] = useState<'student' | 'admin'>('student');
+  const [emailInput, setEmailInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
@@ -39,15 +38,28 @@ export const StudentLoginPortal: React.FC<StudentLoginPortalProps> = ({
   const [showExcelModal, setShowExcelModal] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
-  const activeDefaultEmail = studentAuthUtil.defaultEmail;
-  const activePassword = studentAuthUtil.getActivePassword();
+  const handleSwitchToStudent = () => {
+    soundFx.playClick();
+    setSelectedRole('student');
+    setEmailInput('');
+    setPasswordInput('');
+    setErrorMsg(null);
+  };
+
+  const handleSwitchToAdmin = () => {
+    soundFx.playClick();
+    setSelectedRole('admin');
+    setEmailInput('');
+    setPasswordInput('');
+    setErrorMsg(null);
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
     if (!emailInput.trim() || !passwordInput.trim()) {
-      setErrorMsg('Please enter both student email and password.');
+      setErrorMsg('Please enter both institutional email (or roll number) and password.');
       return;
     }
 
@@ -57,24 +69,15 @@ export const StudentLoginPortal: React.FC<StudentLoginPortalProps> = ({
       setIsLoggingIn(false);
       const res = studentAuthUtil.verifyCredentials(emailInput, passwordInput);
 
-      if (res.success) {
+      if (res.success && res.user) {
         soundFx.playSuccess();
         studentAuthUtil.setLoggedIn(true);
-        onSuccessLogin();
+        onSuccessLogin(res.user);
       } else {
         soundFx.playClick();
         setErrorMsg(res.message);
       }
-    }, 600);
-  };
-
-  const handleQuickFill = () => {
-    soundFx.playClick();
-    setEmailInput(activeDefaultEmail);
-    setPasswordInput(activePassword);
-    setErrorMsg(null);
-    setToastMsg('Filled official student credentials for Pravin Yadav');
-    setTimeout(() => setToastMsg(null), 3000);
+    }, 500);
   };
 
   return (
@@ -110,20 +113,22 @@ export const StudentLoginPortal: React.FC<StudentLoginPortalProps> = ({
             <h1 className="font-extrabold text-sm sm:text-base tracking-tight text-white flex items-center gap-1.5">
               <span>Pragmatic BIM Solution</span>
               <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
-                Student LMS
+                Institutional Portal
               </span>
             </h1>
-            <p className="text-[11px] text-slate-400">ISO 19650 Certified BIM Academy Portal</p>
+            <p className="text-[11px] text-slate-400">ISO 19650 Certified BIM Academy & Management System</p>
           </div>
         </div>
 
-        <button
-          onClick={() => setShowExcelModal(true)}
-          className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-xs font-bold transition-colors cursor-pointer"
-        >
-          <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Excel Registry (.csv)</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowExcelModal(true)}
+            className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-xs font-bold transition-colors cursor-pointer"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Excel Registry (.csv)</span>
+          </button>
+        </div>
       </header>
 
       {/* Main Login Card Area */}
@@ -139,107 +144,104 @@ export const StudentLoginPortal: React.FC<StudentLoginPortalProps> = ({
 
         <div className="bg-white text-slate-900 rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-100/10 space-y-6">
           
-          {/* Header */}
+          {/* Role Selector Tabs (Student vs Admin) */}
+          <div className="grid grid-cols-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200">
+            <button
+              type="button"
+              onClick={handleSwitchToStudent}
+              className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                selectedRole === 'student'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <GraduationCap className="w-4 h-4 text-emerald-600" />
+              <span>Student LMS</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSwitchToAdmin}
+              className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                selectedRole === 'admin'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <Shield className="w-4 h-4 text-amber-400" />
+              <span>Admin Portal</span>
+            </button>
+          </div>
+
+          {/* Header Description */}
           <div className="text-center space-y-1">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 mb-2">
-              <GraduationCap className="w-6 h-6" />
-            </div>
-            <h2 className="text-xl font-extrabold tracking-tight text-slate-900">Student Portal Sign In</h2>
-            <p className="text-xs text-slate-500">Enter your official institutional credentials to access your courses & LMS dashboard</p>
+            <h2 className="text-xl font-extrabold tracking-tight text-slate-900">
+              {selectedRole === 'admin' ? 'PBS Admin Control Center' : 'Student Portal Sign In'}
+            </h2>
+            <p className="text-xs text-slate-500">
+              {selectedRole === 'admin' 
+                ? 'Sign in with administrator credentials to manage cohorts, fees, curriculum & placements'
+                : 'Enter your institutional email or roll number to access your LMS dashboard'}
+            </p>
           </div>
 
-          {/* Quick Credential Helper Pill */}
-          <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="font-bold text-slate-600 flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Single Student Profile:</span>
-              </span>
-              <button
-                type="button"
-                onClick={handleQuickFill}
-                className="text-emerald-700 hover:text-emerald-800 font-bold underline cursor-pointer"
-              >
-                1-Click Auto Fill
-              </button>
-            </div>
-            <div className="text-[11px] font-mono text-slate-700 bg-white p-2 rounded-xl border border-slate-200/80 space-y-1">
-              <div>
-                <span className="text-slate-400">Email: </span>
-                <strong className="text-emerald-800 font-bold">pravin.yadav.0926@pbs.com</strong>
-              </div>
-              <div>
-                <span className="text-slate-400">Default Pwd: </span>
-                <strong className="text-slate-800 font-bold">pravinyadav@123</strong>
-              </div>
-            </div>
-          </div>
-
-          {/* Error Alert */}
-          {errorMsg && (
-            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-center gap-2 font-medium">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
-          {/* Form */}
+          {/* Login Form */}
           <form onSubmit={handleLogin} className="space-y-4">
             
-            {/* Student Institutional Email */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Student Email Address
+            {/* Error Message */}
+            {errorMsg && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-start gap-2 animate-fadeIn font-medium">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+
+            {/* Email Field */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 block">
+                {selectedRole === 'admin' ? 'Administrator Email' : 'Institutional Email or Roll Number'}
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <Mail className="w-4 h-4" />
-                </div>
+                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
-                  type="email"
+                  type="text"
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
-                  placeholder="pravin.yadav.0926@pbs.com"
+                  placeholder={selectedRole === 'admin' ? 'admin@pbs.com' : 'e.g. yourname.0926@pbs.com or PBS/2026/...'}
                   required
-                  className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                  className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium text-slate-900"
                 />
               </div>
-              <p className="text-[10px] text-slate-400 mt-1">
-                Format: <code className="text-slate-600 font-mono">name.0926@pbs.com</code> (Month 09 • Year 26)
-              </p>
             </div>
 
-            {/* Password */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-bold text-slate-700">
-                  Password
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setShowChangePwdModal(true)}
-                  className="text-[11px] text-emerald-700 hover:text-emerald-800 font-bold cursor-pointer"
-                >
-                  Change Password?
-                </button>
+            {/* Password Field */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700">Password</label>
+                {selectedRole === 'student' && (
+                  <button
+                    type="button"
+                    onClick={() => setShowChangePwdModal(true)}
+                    className="text-[11px] text-emerald-600 hover:text-emerald-700 font-semibold cursor-pointer"
+                  >
+                    Change Password?
+                  </button>
+                )}
               </div>
-
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <Lock className="w-4 h-4" />
-                </div>
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
-                  placeholder="pravinyadav@123"
+                  placeholder="••••••••••••"
                   required
-                  className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                  className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium text-slate-900"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-1"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -247,66 +249,62 @@ export const StudentLoginPortal: React.FC<StudentLoginPortalProps> = ({
             </div>
 
             {/* Remember Me */}
-            <div className="flex items-center justify-between text-xs pt-1">
-              <label className="flex items-center gap-2 cursor-pointer select-none">
+            <div className="flex items-center justify-between pt-1">
+              <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="rounded text-emerald-600 focus:ring-emerald-500"
+                  className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300"
                 />
-                <span className="text-slate-600 text-xs font-medium">Keep me signed in</span>
+                <span>Remember session</span>
               </label>
 
-              <button
-                type="button"
-                onClick={() => setShowExcelModal(true)}
-                className="text-slate-500 hover:text-slate-800 text-[11px] font-semibold cursor-pointer"
-              >
-                View Excel Data
-              </button>
+              <span className="text-[11px] text-slate-400 flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                <span>SSL Encrypted</span>
+              </span>
             </div>
 
-            {/* Sign In Button */}
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoggingIn}
-              className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/30 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+              className={`w-full py-3 rounded-xl text-xs font-bold tracking-wide transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer ${
+                selectedRole === 'admin'
+                  ? 'bg-slate-900 hover:bg-slate-800 text-white shadow-slate-900/20'
+                  : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
+              }`}
             >
               {isLoggingIn ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   <span>Verifying Credentials...</span>
                 </>
               ) : (
                 <>
-                  <span>Sign In to Student Portal</span>
+                  <span>
+                    {selectedRole === 'admin' ? 'Access Admin Control Center' : 'Sign In to Student LMS'}
+                  </span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
-
           </form>
-
-          {/* Institutional Trust Footer */}
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-center gap-4 text-[10px] text-slate-400">
-            <span className="flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>256-Bit Encrypted</span>
-            </span>
-            <span>•</span>
-            <span>ISO 19650 Academic CDE</span>
-            <span>•</span>
-            <span>Pune, India</span>
-          </div>
 
         </div>
 
       </main>
 
-      {/* Footer */}
-      <footer className="max-w-6xl mx-auto w-full text-center text-xs text-slate-400 py-3">
-        <p>© 2026 Pragmatic BIM Solution. All academic rights reserved. Direct student support: academic@pragmaticbim.com</p>
+      {/* Bottom Info Bar */}
+      <footer className="max-w-4xl mx-auto w-full text-center py-4 text-xs text-slate-400 space-y-1">
+        <p className="flex items-center justify-center gap-2">
+          <span>Pragmatic BIM Solution (PBS)</span>
+          <span>•</span>
+          <span>ISO 19650 Academic Delivery Standard</span>
+          <span>•</span>
+          <span className="text-emerald-400">All Rights Reserved © 2026</span>
+        </p>
       </footer>
 
     </div>

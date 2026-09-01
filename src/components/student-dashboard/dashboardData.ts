@@ -64,16 +64,16 @@ export const ENROLLED_COURSES_DATA: EnrolledCourseItem[] = [
     badge: 'Cohort Primary Track',
     batchMode: 'Offline Weekend (Sat-Sun, 4 hrs/day)',
     batchSchedule: 'Saturdays & Sundays (06:00 PM - 09:30 PM IST)',
-    progressPercent: 92,
-    completedModules: 9,
+    progressPercent: 0,
+    completedModules: 0,
     totalModules: 10,
-    enrolledDate: 'Aug 10, 2026',
+    enrolledDate: 'Sept 01, 2026',
     status: 'Active',
     instructor: 'Pravin Yadav (15+ Yrs Industry Exp)',
     totalFee: 14999,
     paidAmount: 7500,
     pendingBalance: 7499,
-    certificateEarned: true,
+    certificateEarned: false,
     image: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=600&q=80',
     accentColor: '#10b981'
   },
@@ -83,19 +83,19 @@ export const ENROLLED_COURSES_DATA: EnrolledCourseItem[] = [
     courseTitle: 'Navisworks Manage & Multi-Disciplinary Clash Detection',
     category: 'Navisworks',
     level: 'Professional Specialist',
-    badge: 'Certified Complete',
+    badge: 'Cohort Core Track',
     batchMode: 'Online Interactive Live',
-    batchSchedule: 'Completed Cohort Archive (Available 24/7)',
-    progressPercent: 100,
-    completedModules: 6,
+    batchSchedule: 'Tuesday & Thursday (07:30 PM - 09:30 PM IST)',
+    progressPercent: 0,
+    completedModules: 0,
     totalModules: 6,
-    enrolledDate: 'May 14, 2026',
-    status: 'Completed',
+    enrolledDate: 'Sept 01, 2026',
+    status: 'Active',
     instructor: 'Coordination Specialist Team',
     totalFee: 11999,
     paidAmount: 11999,
     pendingBalance: 0,
-    certificateEarned: true,
+    certificateEarned: false,
     image: 'https://images.unsplash.com/photo-1541888946425-d0fbb18086f6?auto=format&fit=crop&w=600&q=80',
     accentColor: '#0ea5e9'
   },
@@ -105,13 +105,13 @@ export const ENROLLED_COURSES_DATA: EnrolledCourseItem[] = [
     courseTitle: 'Computational BIM with Dynamo Visual Scripting & Python',
     category: 'Dynamo',
     level: 'Specialization Track',
-    badge: 'In Progress (Module 4)',
+    badge: 'Cohort Specialization',
     batchMode: 'Online Interactive Evening',
-    batchSchedule: 'Tuesday & Thursday (08:00 PM - 10:00 PM IST)',
-    progressPercent: 68,
-    completedModules: 5,
+    batchSchedule: 'Monday & Wednesday (08:00 PM - 10:00 PM IST)',
+    progressPercent: 0,
+    completedModules: 0,
     totalModules: 8,
-    enrolledDate: 'July 01, 2026',
+    enrolledDate: 'Sept 01, 2026',
     status: 'Active',
     instructor: 'Computational Design Lead',
     totalFee: 13999,
@@ -929,152 +929,111 @@ export const CAPSTONE_STAGES_DATA: CapstoneStage[] = [
     stageNumber: '00',
     stageIndex: 0,
     title: 'Strategic Definition',
-    goal: 'Goal : Identify the client requirements',
-    status: 'Completed',
-    grade: 'Excellent',
-    dueDate: '06 April',
+    goal: 'Goal : Identify the client requirements & ISO 19650 BEP foundation',
+    status: 'In Progress',
+    grade: 'Pending Review',
+    dueDate: '20 Sept',
     isCritical: false,
     mentorName: 'Pravin Yadav (BIM Director)',
-    mentorFeedback: 'Outstanding EIR analysis and project scope definition. Client requirements accurately mapped to ISO 19650 standards.',
-    mentorScore: 98,
-    submissionFiles: [
-      { name: 'PBS_Capstone_Stage00_EIR_Matrix.pdf', size: '2.4 MB', type: 'PDF' },
-      { name: 'PBS_Stage00_Project_Brief.docx', size: '1.1 MB', type: 'DOCX' }
-    ]
+    mentorFeedback: 'Stage 00 is now active. Complete the client EIR requirement document and initial BEP questionnaire.',
+    mentorScore: 0,
+    submissionFiles: []
   },
   {
     stageNumber: '01',
     stageIndex: 1,
     title: 'Preparation and Briefing',
-    goal: 'Goal : To assemble the project team; define the structure, team roles, and responsibilities.',
-    status: 'Completed',
-    grade: 'Excellent',
-    dueDate: '08 April',
+    goal: 'Goal : Assemble the project team; define the structure, team roles, and responsibilities.',
+    status: 'Upcoming',
+    dueDate: '28 Sept',
     isCritical: false,
     mentorName: 'Ar. Rajesh Verma',
-    mentorFeedback: 'Team org chart, RACI matrix, and communication protocols are properly documented. Pre-contract BEP approved.',
-    mentorScore: 96,
-    submissionFiles: [
-      { name: 'PBS_Stage01_PreContract_BEP_Signed.pdf', size: '4.8 MB', type: 'PDF' },
-      { name: 'PBS_Stage01_TIDP_MIDP_Schedule.xlsx', size: '890 KB', type: 'XLSX' }
-    ]
+    mentorFeedback: 'Unlocks after Stage 00 approval.',
+    submissionFiles: []
   },
   {
     stageNumber: '02',
     stageIndex: 2,
     title: 'Concept Design',
-    goal: 'Goal : To start working on concept design',
-    status: 'Completed',
-    grade: 'Excellent',
-    dueDate: '15 April',
+    goal: 'Goal : Start working on conceptual massing and architectural spatial layout',
+    status: 'Upcoming',
+    dueDate: '10 Oct',
     isCritical: true,
-    mentorName: 'Vikram Mehta (Lead Architect)',
-    mentorFeedback: 'Massing and volumetric studies meet local zoning codes. Solar radiation analysis in Insight confirms optimal shading.',
-    mentorScore: 95,
-    submissionFiles: [
-      { name: 'PBS_Stage02_Conceptual_Mass.rvt', size: '42.1 MB', type: 'RVT' },
-      { name: 'PBS_Stage02_Solar_Analysis_Report.pdf', size: '6.3 MB', type: 'PDF' }
-    ]
+    mentorName: 'Lead Architect',
+    mentorFeedback: 'Unlocks after Stage 01 approval.',
+    submissionFiles: []
   },
   {
     stageNumber: '03',
     stageIndex: 3,
     title: 'Design Development',
-    goal: 'Goal : In this Stage you will develop all the detailed drawings for your design',
-    status: 'Completed',
-    grade: 'Excellent',
-    dueDate: '29 April',
+    goal: 'Goal : Develop detailed LOD 300 multidisciplinary drawings',
+    status: 'Upcoming',
+    dueDate: '24 Oct',
     isCritical: true,
     mentorName: 'Pravin Yadav (BIM Director)',
-    mentorFeedback: 'Exemplary LOD 300 coordination between architectural core, structural shear walls, and primary MEP risers.',
-    mentorScore: 99,
-    submissionFiles: [
-      { name: 'PBS_Stage03_Arch_LOD300_Federated.rvt', size: '88.5 MB', type: 'RVT' },
-      { name: 'PBS_Stage03_Detailed_Drawings_Set.pdf', size: '18.2 MB', type: 'PDF' }
-    ]
+    mentorFeedback: 'Unlocks after Stage 02 approval.',
+    submissionFiles: []
   },
   {
     stageNumber: '04',
     stageIndex: 4,
     title: 'Technical Design',
-    goal: 'Goal : In this stage you will create construction drawings and technical details',
-    status: 'Completed',
-    grade: 'Excellent',
-    dueDate: '13 May',
+    goal: 'Goal : Create construction drawings, Navisworks clash coordination & technical details',
+    status: 'Upcoming',
+    dueDate: '08 Nov',
     isCritical: true,
-    mentorName: 'Kavita Iyer (Senior BIM Coordinator)',
-    mentorFeedback: 'Zero critical clashes in Navisworks. Curtain wall connection details and MEP duct transitions meet high-precision LOD 350.',
-    mentorScore: 97,
-    submissionFiles: [
-      { name: 'PBS_Stage04_Navisworks_Clash_Zero.nwd', size: '114 MB', type: 'NWD' },
-      { name: 'PBS_Stage04_GFC_Drawing_Package.pdf', size: '32.4 MB', type: 'PDF' }
-    ]
+    mentorName: 'Senior BIM Coordinator',
+    mentorFeedback: 'Unlocks after Stage 03 approval.',
+    submissionFiles: []
   },
   {
     stageNumber: '05',
     stageIndex: 5,
     title: 'Manufacturing and Construction',
-    goal: 'Goal : In this stage you will handover your construction drawings to on-site',
-    status: 'Completed',
-    grade: 'Excellent',
-    dueDate: '27 May',
+    goal: 'Goal : 4D TimeLiner animation and 5D quantity takeoff handover',
+    status: 'Upcoming',
+    dueDate: '22 Nov',
     isCritical: false,
-    mentorName: 'Sunil Rao (VDC Construction Lead)',
-    mentorFeedback: '4D TimeLiner animation and 5D quantity takeoff verified with MS Project schedule. Construction sequencing approved.',
-    mentorScore: 98,
-    submissionFiles: [
-      { name: 'PBS_Stage05_4D_TimeLiner_Video.mp4', size: '64.0 MB', type: 'MP4' },
-      { name: 'PBS_Stage05_5D_QTO_Bill_of_Quantities.xlsx', size: '2.1 MB', type: 'XLSX' }
-    ]
+    mentorName: 'VDC Construction Lead',
+    mentorFeedback: 'Unlocks after Stage 04 approval.',
+    submissionFiles: []
   },
   {
     stageNumber: '06',
     stageIndex: 6,
     title: 'Handover & Close Out',
-    goal: 'Goal : This stage you will understand the Handover process',
-    status: 'Completed',
-    grade: 'Excellent',
-    dueDate: '27 May',
+    goal: 'Goal : As-Built Asset Information Model (AIM) and COBie spreadsheet tags',
+    status: 'Upcoming',
+    dueDate: '06 Dec',
     isCritical: false,
     mentorName: 'Pravin Yadav (BIM Director)',
-    mentorFeedback: 'As-Built Asset Information Model (AIM) generated with complete COBie asset tags for equipment and rooms.',
-    mentorScore: 100,
-    submissionFiles: [
-      { name: 'PBS_Stage06_AsBuilt_AIM_COBie.xlsx', size: '4.5 MB', type: 'XLSX' },
-      { name: 'PBS_Stage06_O&M_Handover_Manual.pdf', size: '12.8 MB', type: 'PDF' }
-    ]
+    mentorFeedback: 'Unlocks after Stage 05 approval.',
+    submissionFiles: []
   },
   {
     stageNumber: '07',
     stageIndex: 7,
-    title: 'In Use',
-    goal: 'Goal : In this stage you will see the building in use',
-    status: 'Completed',
-    grade: 'Excellent',
-    dueDate: '27 May',
+    title: 'In Use & Digital Twin',
+    goal: 'Goal : Facility management and CAFM IoT sensor linkages',
+    status: 'Upcoming',
+    dueDate: '18 Dec',
     isCritical: false,
     mentorName: 'Facility Management Lead',
-    mentorFeedback: 'Digital Twin IoT sensor integration plan and CAFM database linkage demonstrated effectively.',
-    mentorScore: 96,
-    submissionFiles: [
-      { name: 'PBS_Stage07_Digital_Twin_Lifecycle.pdf', size: '8.2 MB', type: 'PDF' }
-    ]
+    mentorFeedback: 'Unlocks after Stage 06 approval.',
+    submissionFiles: []
   },
   {
     stageNumber: '08',
     stageIndex: 8,
-    title: 'Placements',
-    goal: 'Goal : In this stage you will get your portfolio reviewed by Angel mentor',
-    status: 'Completed',
-    grade: 'Excellent',
-    dueDate: '07 June',
+    title: 'Placements & Portfolio Defense',
+    goal: 'Goal : Portfolio review by Angel industry mentors and MNC interview rounds',
+    status: 'Upcoming',
+    dueDate: '30 Dec',
     isCritical: false,
-    mentorName: 'Angel Industry Mentor (Foster+Partners BIM Alum)',
-    mentorFeedback: 'Portfolio approved for Senior BIM Coordinator and BIM Manager job openings across Global AEC firms! Top 1% tier portfolio.',
-    mentorScore: 99,
-    submissionFiles: [
-      { name: 'Pravin_Yadav_BIM_Professional_Portfolio_2026.pdf', size: '45.8 MB', type: 'PDF' }
-    ]
+    mentorName: 'Angel Industry Mentor',
+    mentorFeedback: 'Final Capstone review and MNC referrals.',
+    submissionFiles: []
   }
 ];
 
@@ -1306,7 +1265,7 @@ export const COURSE_MODULES_DATA: CourseContentModule[] = [
     id: 'mod-0',
     moduleCode: 'Module 0',
     title: 'Introduction to Oneistox & PBS BIM Course',
-    isCompleted: true,
+    isCompleted: false,
     lessonsCount: 4,
     duration: '45 mins',
     subSections: [
@@ -1314,10 +1273,10 @@ export const COURSE_MODULES_DATA: CourseContentModule[] = [
         sectionTitle: 'Course Onboarding & Community',
         duration: '45 min',
         lessons: [
-          { id: 'l0-1', title: 'Welcome to the BIM Professional Cohort', duration: '10 min', isCompleted: true, type: 'video' },
-          { id: 'l0-2', title: 'Software Installation & Licensing Guide (Revit, Navisworks)', duration: '15 min', isCompleted: true, type: 'reading' },
-          { id: 'l0-3', title: 'Cohort Rules & Academic Code of Conduct', duration: '10 min', isCompleted: true, type: 'reading' },
-          { id: 'l0-4', title: 'Slack & Community Channel Onboarding', duration: '10 min', isCompleted: true, type: 'video' }
+          { id: 'l0-1', title: 'Welcome to the BIM Professional Cohort', duration: '10 min', isCompleted: false, type: 'video' },
+          { id: 'l0-2', title: 'Software Installation & Licensing Guide (Revit, Navisworks)', duration: '15 min', isCompleted: false, type: 'reading' },
+          { id: 'l0-3', title: 'Cohort Rules & Academic Code of Conduct', duration: '10 min', isCompleted: false, type: 'reading' },
+          { id: 'l0-4', title: 'Slack & Community Channel Onboarding', duration: '10 min', isCompleted: false, type: 'video' }
         ]
       }
     ]
@@ -1326,7 +1285,7 @@ export const COURSE_MODULES_DATA: CourseContentModule[] = [
     id: 'mod-1',
     moduleCode: 'Module 01',
     title: 'Introduction to BIM & ISO 19650 Standards',
-    isCompleted: true,
+    isCompleted: false,
     lessonsCount: 6,
     duration: '2 hrs 15 mins',
     subSections: [
@@ -1334,18 +1293,18 @@ export const COURSE_MODULES_DATA: CourseContentModule[] = [
         sectionTitle: 'BIM Fundamentals & Principles',
         duration: '1 hr 15 min',
         lessons: [
-          { id: 'l1-1', title: 'What is BIM? Evolution from CAD to Digital Twins', duration: '25 min', isCompleted: true, type: 'video' },
-          { id: 'l1-2', title: 'Dimensions of BIM (3D, 4D, 5D, 6D, 7D)', duration: '20 min', isCompleted: true, type: 'video' },
-          { id: 'l1-3', title: 'Levels of Development: LOD 100 to LOD 500', duration: '30 min', isCompleted: true, type: 'video' }
+          { id: 'l1-1', title: 'What is BIM? Evolution from CAD to Digital Twins', duration: '25 min', isCompleted: false, type: 'video' },
+          { id: 'l1-2', title: 'Dimensions of BIM (3D, 4D, 5D, 6D, 7D)', duration: '20 min', isCompleted: false, type: 'video' },
+          { id: 'l1-3', title: 'Levels of Development: LOD 100 to LOD 500', duration: '30 min', isCompleted: false, type: 'video' }
         ]
       },
       {
         sectionTitle: 'Information Management ISO 19650',
         duration: '1 hr',
         lessons: [
-          { id: 'l1-4', title: 'ISO 19650 Part 1 & Part 2 Framework', duration: '30 min', isCompleted: true, type: 'video' },
-          { id: 'l1-5', title: 'Common Data Environment (CDE) Workflow', duration: '20 min', isCompleted: true, type: 'video' },
-          { id: 'l1-6', title: 'Module 1 Knowledge Check Quiz', duration: '10 min', isCompleted: true, type: 'quiz' }
+          { id: 'l1-4', title: 'ISO 19650 Part 1 & Part 2 Framework', duration: '30 min', isCompleted: false, type: 'video' },
+          { id: 'l1-5', title: 'Common Data Environment (CDE) Workflow', duration: '20 min', isCompleted: false, type: 'video' },
+          { id: 'l1-6', title: 'Module 1 Knowledge Check Quiz', duration: '10 min', isCompleted: false, type: 'quiz' }
         ]
       }
     ]
@@ -1354,7 +1313,7 @@ export const COURSE_MODULES_DATA: CourseContentModule[] = [
     id: 'mod-2',
     moduleCode: 'Module 02',
     title: 'Basics of Revit Modelling',
-    isCompleted: true,
+    isCompleted: false,
     lessonsCount: 9,
     duration: '3 hrs 40 mins',
     subSections: [
@@ -1362,27 +1321,27 @@ export const COURSE_MODULES_DATA: CourseContentModule[] = [
         sectionTitle: 'Introduction to Revit',
         duration: '55 min',
         lessons: [
-          { id: 'l2-1', title: 'Why start with Revit?', duration: '12 min', isCompleted: true, type: 'video' },
-          { id: 'l2-2', title: 'Revit Version and Builds', duration: '8 min', isCompleted: true, type: 'video' },
-          { id: 'l2-3', title: 'Opening and Saving Files', duration: '15 min', isCompleted: true, type: 'video' },
-          { id: 'l2-4', title: 'Revit UI, Ribbon & Properties Palette', duration: '20 min', isCompleted: true, type: 'video' }
+          { id: 'l2-1', title: 'Why start with Revit?', duration: '12 min', isCompleted: false, type: 'video' },
+          { id: 'l2-2', title: 'Revit Version and Builds', duration: '8 min', isCompleted: false, type: 'video' },
+          { id: 'l2-3', title: 'Opening and Saving Files', duration: '15 min', isCompleted: false, type: 'video' },
+          { id: 'l2-4', title: 'Revit UI, Ribbon & Properties Palette', duration: '20 min', isCompleted: false, type: 'video' }
         ]
       },
       {
         sectionTitle: 'Project Setup & Grids',
         duration: '1 hr 10 min',
         lessons: [
-          { id: 'l2-5', title: 'Setting Up Project Units & Coordinates', duration: '20 min', isCompleted: true, type: 'video' },
-          { id: 'l2-6', title: 'Creating Levels and Grids with Extents', duration: '25 min', isCompleted: true, type: 'video' },
-          { id: 'l2-7', title: 'Basic System Families: Compound Walls & Layers', duration: '25 min', isCompleted: true, type: 'video' }
+          { id: 'l2-5', title: 'Setting Up Project Units & Coordinates', duration: '20 min', isCompleted: false, type: 'video' },
+          { id: 'l2-6', title: 'Creating Levels and Grids with Extents', duration: '25 min', isCompleted: false, type: 'video' },
+          { id: 'l2-7', title: 'Basic System Families: Compound Walls & Layers', duration: '25 min', isCompleted: false, type: 'video' }
         ]
       },
       {
         sectionTitle: 'Floors, Roofs & Ceilings',
         duration: '1 hr 35 min',
         lessons: [
-          { id: 'l2-8', title: 'Slab Edge Profiles & Slope Arrows', duration: '35 min', isCompleted: true, type: 'video' },
-          { id: 'l2-9', title: 'Curtain Walls: Grids, Mullions & Panels', duration: '40 min', isCompleted: true, type: 'video' }
+          { id: 'l2-8', title: 'Slab Edge Profiles & Slope Arrows', duration: '35 min', isCompleted: false, type: 'video' },
+          { id: 'l2-9', title: 'Curtain Walls: Grids, Mullions & Panels', duration: '40 min', isCompleted: false, type: 'video' }
         ]
       }
     ]
@@ -1391,7 +1350,7 @@ export const COURSE_MODULES_DATA: CourseContentModule[] = [
     id: 'mod-3',
     moduleCode: 'Module 03',
     title: 'Structural BIM & Analytical Frameworks',
-    isCompleted: true,
+    isCompleted: false,
     lessonsCount: 8,
     duration: '3 hrs 10 mins',
     subSections: [
@@ -1399,18 +1358,18 @@ export const COURSE_MODULES_DATA: CourseContentModule[] = [
         sectionTitle: 'Structural Concrete & Steel Elements',
         duration: '1 hr 45 min',
         lessons: [
-          { id: 'l3-1', title: 'Structural Columns & Framing Systems', duration: '30 min', isCompleted: true, type: 'video' },
-          { id: 'l3-2', title: 'Foundations: Isolated, Strip & Mat Footings', duration: '35 min', isCompleted: true, type: 'video' },
-          { id: 'l3-3', title: '3D Rebar Detailing & Shape Codes', duration: '40 min', isCompleted: true, type: 'video' }
+          { id: 'l3-1', title: 'Structural Columns & Framing Systems', duration: '30 min', isCompleted: false, type: 'video' },
+          { id: 'l3-2', title: 'Foundations: Isolated, Strip & Mat Footings', duration: '35 min', isCompleted: false, type: 'video' },
+          { id: 'l3-3', title: '3D Rebar Detailing & Shape Codes', duration: '40 min', isCompleted: false, type: 'video' }
         ]
       },
       {
         sectionTitle: 'ETABS Integration',
         duration: '1 hr 25 min',
         lessons: [
-          { id: 'l3-4', title: 'Exporting Analytical Model to ETABS', duration: '35 min', isCompleted: true, type: 'video' },
-          { id: 'l3-5', title: 'Finite Element Analysis (FEA) Verification', duration: '35 min', isCompleted: true, type: 'video' },
-          { id: 'l3-6', title: 'Module 3 Practical Assignment Submission', duration: '15 min', isCompleted: true, type: 'assignment' }
+          { id: 'l3-4', title: 'Exporting Analytical Model to ETABS', duration: '35 min', isCompleted: false, type: 'video' },
+          { id: 'l3-5', title: 'Finite Element Analysis (FEA) Verification', duration: '35 min', isCompleted: false, type: 'video' },
+          { id: 'l3-6', title: 'Module 3 Practical Assignment Submission', duration: '15 min', isCompleted: false, type: 'assignment' }
         ]
       }
     ]
@@ -1419,7 +1378,7 @@ export const COURSE_MODULES_DATA: CourseContentModule[] = [
     id: 'mod-4',
     moduleCode: 'Module 04',
     title: 'Documentation, Schedules & Keynoting',
-    isCompleted: true,
+    isCompleted: false,
     lessonsCount: 7,
     duration: '2 hrs 50 mins',
     subSections: [
@@ -1427,18 +1386,18 @@ export const COURSE_MODULES_DATA: CourseContentModule[] = [
         sectionTitle: 'Views, Sheets & Revisions',
         duration: '1 hr 20 min',
         lessons: [
-          { id: 'l4-1', title: 'View Templates & Graphic Overrides', duration: '25 min', isCompleted: true, type: 'video' },
-          { id: 'l4-2', title: 'Sheet Layouts, Titleblocks & Revision Clouds', duration: '30 min', isCompleted: true, type: 'video' },
-          { id: 'l4-3', title: 'Keynotes & Master Specifications Linking', duration: '25 min', isCompleted: true, type: 'video' }
+          { id: 'l4-1', title: 'View Templates & Graphic Overrides', duration: '25 min', isCompleted: false, type: 'video' },
+          { id: 'l4-2', title: 'Sheet Layouts, Titleblocks & Revision Clouds', duration: '30 min', isCompleted: false, type: 'video' },
+          { id: 'l4-3', title: 'Keynotes & Master Specifications Linking', duration: '25 min', isCompleted: false, type: 'video' }
         ]
       },
       {
         sectionTitle: 'Quantity Takeoffs & QTO',
         duration: '1 hr 30 min',
         lessons: [
-          { id: 'l4-4', title: 'Multi-category Schedules & Calculated Formulas', duration: '45 min', isCompleted: true, type: 'video' },
-          { id: 'l4-5', title: 'Exporting Schedules to Excel & PowerBI', duration: '35 min', isCompleted: true, type: 'video' },
-          { id: 'l4-6', title: 'Module 4 Documentation Test', duration: '10 min', isCompleted: true, type: 'quiz' }
+          { id: 'l4-4', title: 'Multi-category Schedules & Calculated Formulas', duration: '45 min', isCompleted: false, type: 'video' },
+          { id: 'l4-5', title: 'Exporting Schedules to Excel & PowerBI', duration: '35 min', isCompleted: false, type: 'video' },
+          { id: 'l4-6', title: 'Module 4 Documentation Test', duration: '10 min', isCompleted: false, type: 'quiz' }
         ]
       }
     ]
@@ -1447,7 +1406,7 @@ export const COURSE_MODULES_DATA: CourseContentModule[] = [
     id: 'mod-5',
     moduleCode: 'Module 05',
     title: 'MEP BIM Coordination (HVAC, Electrical, Plumbing)',
-    isCompleted: true,
+    isCompleted: false,
     lessonsCount: 8,
     duration: '3 hrs 20 mins',
     subSections: [
@@ -1455,18 +1414,18 @@ export const COURSE_MODULES_DATA: CourseContentModule[] = [
         sectionTitle: 'HVAC Duct & Pipe Routing',
         duration: '1 hr 50 min',
         lessons: [
-          { id: 'l5-1', title: 'Mechanical Equipment & Air Terminal Placement', duration: '35 min', isCompleted: true, type: 'video' },
-          { id: 'l5-2', title: 'Ductwork Sizing & Pressure Drop Calculations', duration: '40 min', isCompleted: true, type: 'video' },
-          { id: 'l5-3', title: 'Hydronic Piping & Plumbing Drainage Slopes', duration: '35 min', isCompleted: true, type: 'video' }
+          { id: 'l5-1', title: 'Mechanical Equipment & Air Terminal Placement', duration: '35 min', isCompleted: false, type: 'video' },
+          { id: 'l5-2', title: 'Ductwork Sizing & Pressure Drop Calculations', duration: '40 min', isCompleted: false, type: 'video' },
+          { id: 'l5-3', title: 'Hydronic Piping & Plumbing Drainage Slopes', duration: '35 min', isCompleted: false, type: 'video' }
         ]
       },
       {
         sectionTitle: 'Electrical Cable Trays & Fire Protection',
         duration: '1 hr 30 min',
         lessons: [
-          { id: 'l5-4', title: 'Cable Tray Routing & Clearance Rules', duration: '30 min', isCompleted: true, type: 'video' },
-          { id: 'l5-5', title: 'Fire Sprinkler Grid & Head Distribution', duration: '30 min', isCompleted: true, type: 'video' },
-          { id: 'l5-6', title: 'MEP Model Quality Audit', duration: '30 min', isCompleted: true, type: 'assignment' }
+          { id: 'l5-4', title: 'Cable Tray Routing & Clearance Rules', duration: '30 min', isCompleted: false, type: 'video' },
+          { id: 'l5-5', title: 'Fire Sprinkler Grid & Head Distribution', duration: '30 min', isCompleted: false, type: 'video' },
+          { id: 'l5-6', title: 'MEP Model Quality Audit', duration: '30 min', isCompleted: false, type: 'assignment' }
         ]
       }
     ]
@@ -1475,7 +1434,7 @@ export const COURSE_MODULES_DATA: CourseContentModule[] = [
     id: 'mod-6',
     moduleCode: 'Module 06',
     title: 'Navisworks Clash Coordination & BCF Workflows',
-    isCompleted: true,
+    isCompleted: false,
     lessonsCount: 6,
     duration: '2 hrs 45 mins',
     subSections: [
@@ -1483,17 +1442,17 @@ export const COURSE_MODULES_DATA: CourseContentModule[] = [
         sectionTitle: 'Federated Model Assembly',
         duration: '1 hr 15 min',
         lessons: [
-          { id: 'l6-1', title: 'Assembling Arch, Struct & MEP in Navisworks Manage', duration: '35 min', isCompleted: true, type: 'video' },
-          { id: 'l6-2', title: 'Selection Sets, Search Sets & Rules', duration: '40 min', isCompleted: true, type: 'video' }
+          { id: 'l6-1', title: 'Assembling Arch, Struct & MEP in Navisworks Manage', duration: '35 min', isCompleted: false, type: 'video' },
+          { id: 'l6-2', title: 'Selection Sets, Search Sets & Rules', duration: '40 min', isCompleted: false, type: 'video' }
         ]
       },
       {
         sectionTitle: 'Clash Detective & Matrix',
         duration: '1 hr 30 min',
         lessons: [
-          { id: 'l6-3', title: 'Clash Detective Rules & Tolerance Management', duration: '35 min', isCompleted: true, type: 'video' },
-          { id: 'l6-4', title: 'Clash Resolution Meetings & BCF Export to Revit', duration: '35 min', isCompleted: true, type: 'video' },
-          { id: 'l6-5', title: 'Navisworks Coordination Report Submission', duration: '20 min', isCompleted: true, type: 'assignment' }
+          { id: 'l6-3', title: 'Clash Detective Rules & Tolerance Management', duration: '35 min', isCompleted: false, type: 'video' },
+          { id: 'l6-4', title: 'Clash Resolution Meetings & BCF Export to Revit', duration: '35 min', isCompleted: false, type: 'video' },
+          { id: 'l6-5', title: 'Navisworks Coordination Report Submission', duration: '20 min', isCompleted: false, type: 'assignment' }
         ]
       }
     ]
@@ -1502,7 +1461,7 @@ export const COURSE_MODULES_DATA: CourseContentModule[] = [
     id: 'mod-7',
     moduleCode: 'Module 07',
     title: '4D Construction Scheduling & 5D Cost Estimation',
-    isCompleted: true,
+    isCompleted: false,
     lessonsCount: 6,
     duration: '2 hrs 30 mins',
     subSections: [
@@ -1510,16 +1469,16 @@ export const COURSE_MODULES_DATA: CourseContentModule[] = [
         sectionTitle: 'TimeLiner & Schedule Synchronization',
         duration: '1 hr 20 min',
         lessons: [
-          { id: 'l7-1', title: 'Navisworks TimeLiner with Primavera P6 / MS Project', duration: '40 min', isCompleted: true, type: 'video' },
-          { id: 'l7-2', title: 'Constructability Simulation & Exporting 4D Videos', duration: '40 min', isCompleted: true, type: 'video' }
+          { id: 'l7-1', title: 'Navisworks TimeLiner with Primavera P6 / MS Project', duration: '40 min', isCompleted: false, type: 'video' },
+          { id: 'l7-2', title: 'Constructability Simulation & Exporting 4D Videos', duration: '40 min', isCompleted: false, type: 'video' }
         ]
       },
       {
         sectionTitle: '5D Cost Planning',
         duration: '1 hr 10 min',
         lessons: [
-          { id: 'l7-3', title: 'Quantification Workbook & Model Takeoff Mapping', duration: '40 min', isCompleted: true, type: 'video' },
-          { id: 'l7-4', title: 'Cash Flow Curves & Variance Tracking', duration: '30 min', isCompleted: true, type: 'video' }
+          { id: 'l7-3', title: 'Quantification Workbook & Model Takeoff Mapping', duration: '40 min', isCompleted: false, type: 'video' },
+          { id: 'l7-4', title: 'Cash Flow Curves & Variance Tracking', duration: '30 min', isCompleted: false, type: 'video' }
         ]
       }
     ]
@@ -1528,7 +1487,7 @@ export const COURSE_MODULES_DATA: CourseContentModule[] = [
     id: 'mod-8',
     moduleCode: 'Module 08',
     title: 'Dynamo Visual Programming & Python BIM Automation',
-    isCompleted: true,
+    isCompleted: false,
     lessonsCount: 7,
     duration: '3 hrs 15 mins',
     subSections: [
@@ -1536,18 +1495,18 @@ export const COURSE_MODULES_DATA: CourseContentModule[] = [
         sectionTitle: 'Dynamo Visual Scripting',
         duration: '1 hr 45 min',
         lessons: [
-          { id: 'l8-1', title: 'Dynamo UI, Node Logic & List Level Management', duration: '35 min', isCompleted: true, type: 'video' },
-          { id: 'l8-2', title: 'Automated Sheet Generation & View Placement', duration: '35 min', isCompleted: true, type: 'video' },
-          { id: 'l8-3', title: 'Excel Read/Write Two-Way Synchronization', duration: '35 min', isCompleted: true, type: 'video' }
+          { id: 'l8-1', title: 'Dynamo UI, Node Logic & List Level Management', duration: '35 min', isCompleted: false, type: 'video' },
+          { id: 'l8-2', title: 'Automated Sheet Generation & View Placement', duration: '35 min', isCompleted: false, type: 'video' },
+          { id: 'l8-3', title: 'Excel Read/Write Two-Way Synchronization', duration: '35 min', isCompleted: false, type: 'video' }
         ]
       },
       {
         sectionTitle: 'Python in Revit API',
         duration: '1 hr 30 min',
         lessons: [
-          { id: 'l8-4', title: 'Revit API Hierarchy & Transaction Management', duration: '35 min', isCompleted: true, type: 'video' },
-          { id: 'l8-5', title: 'FilteredElementCollector & Bulk Parameter Extraction', duration: '40 min', isCompleted: true, type: 'video' },
-          { id: 'l8-6', title: 'Dynamo Player Custom Tool Deployment', duration: '15 min', isCompleted: true, type: 'assignment' }
+          { id: 'l8-4', title: 'Revit API Hierarchy & Transaction Management', duration: '35 min', isCompleted: false, type: 'video' },
+          { id: 'l8-5', title: 'FilteredElementCollector & Bulk Parameter Extraction', duration: '40 min', isCompleted: false, type: 'video' },
+          { id: 'l8-6', title: 'Dynamo Player Custom Tool Deployment', duration: '15 min', isCompleted: false, type: 'assignment' }
         ]
       }
     ]
@@ -1564,8 +1523,8 @@ export const COURSE_MODULES_DATA: CourseContentModule[] = [
         sectionTitle: 'Capstone Handover & Close Out',
         duration: '1 hr 10 min',
         lessons: [
-          { id: 'l9-1', title: 'As-Built Asset Information Model (AIM) Compilation', duration: '35 min', isCompleted: true, type: 'video' },
-          { id: 'l9-2', title: 'COBie Spreadsheets Quality Audit', duration: '35 min', isCompleted: true, type: 'video' }
+          { id: 'l9-1', title: 'As-Built Asset Information Model (AIM) Compilation', duration: '35 min', isCompleted: false, type: 'video' },
+          { id: 'l9-2', title: 'COBie Spreadsheets Quality Audit', duration: '35 min', isCompleted: false, type: 'video' }
         ]
       },
       {

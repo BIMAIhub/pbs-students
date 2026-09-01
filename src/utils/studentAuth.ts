@@ -1,7 +1,7 @@
 /**
- * Student Authentication & Excel Database Registry Utility
- * Manages institutional credentials, password verification, password updates, 
- * and Excel (CSV) database records for Pragmatic BIM Solution (PBS).
+ * Student & Admin Authentication Registry Utility
+ * Manages institutional credentials, role detection (Admin vs Student),
+ * password verification, password updates, and persistent state.
  */
 
 export interface StudentAuthRecord {
@@ -22,31 +22,71 @@ export interface StudentAuthRecord {
   paidFee: number;
   pendingFee: number;
   iso19650Code: string;
+  placementStatus?: string;
+  interviewReadiness?: string;
 }
 
-const DEFAULT_EMAIL = 'pravin.yadav.0926@pbs.com';
-const DEFAULT_PASSWORD = 'pravinyadav@123';
-const STORAGE_PWD_KEY = 'pbs_student_custom_password';
+export type UserRole = 'student' | 'admin';
+
+export interface ActiveSessionUser {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  avatar: string;
+  phone?: string;
+  studentId?: string;
+  rollNumber?: string;
+  specialization?: string;
+  batch?: string;
+}
+
+const DEFAULT_STUDENT_EMAIL = 'pravin.yadav.0926@pbs.com';
+const DEFAULT_STUDENT_PASSWORD = 'pravinyadav@123';
+
+const DEFAULT_ADMIN_EMAIL = 'admin@pbs.com';
+const DEFAULT_ADMIN_PASSWORD = 'admin@123';
+
+const STORAGE_STUDENT_PWD_KEY = 'pbs_student_custom_password';
+const STORAGE_ADMIN_PWD_KEY = 'pbs_admin_custom_password';
 const STORAGE_PWD_CHANGED_KEY = 'pbs_student_password_changed_date';
-const STORAGE_AUTH_LOGGED_IN_KEY = 'pbs_student_is_logged_in';
+const STORAGE_AUTH_USER_KEY = 'pbs_active_authenticated_user';
+const STORAGE_AUTH_LOGGED_IN_KEY = 'pbs_is_logged_in_state';
 
 export const studentAuthUtil = {
-  defaultEmail: DEFAULT_EMAIL,
-  defaultPassword: DEFAULT_PASSWORD,
+  defaultEmail: DEFAULT_STUDENT_EMAIL,
+  defaultPassword: DEFAULT_STUDENT_PASSWORD,
+  adminEmail: DEFAULT_ADMIN_EMAIL,
+  adminPassword: DEFAULT_ADMIN_PASSWORD,
 
   /**
-   * Retrieves the active password (custom if updated by student, else system default)
+   * Retrieves the active student password (custom if updated, else system default)
    */
   getActivePassword(): string {
     try {
-      const customPwd = localStorage.getItem(STORAGE_PWD_KEY);
+      const customPwd = localStorage.getItem(STORAGE_STUDENT_PWD_KEY);
       if (customPwd && customPwd.trim().length > 0) {
         return customPwd;
       }
     } catch (e) {
       console.warn('Could not read custom password from storage:', e);
     }
-    return DEFAULT_PASSWORD;
+    return DEFAULT_STUDENT_PASSWORD;
+  },
+
+  /**
+   * Retrieves active admin password
+   */
+  getActiveAdminPassword(): string {
+    try {
+      const customPwd = localStorage.getItem(STORAGE_ADMIN_PWD_KEY);
+      if (customPwd && customPwd.trim().length > 0) {
+        return customPwd;
+      }
+    } catch {
+      // fallback
+    }
+    return DEFAULT_ADMIN_PASSWORD;
   },
 
   /**
@@ -54,8 +94,8 @@ export const studentAuthUtil = {
    */
   hasCustomPassword(): boolean {
     try {
-      const customPwd = localStorage.getItem(STORAGE_PWD_KEY);
-      return Boolean(customPwd && customPwd !== DEFAULT_PASSWORD);
+      const customPwd = localStorage.getItem(STORAGE_STUDENT_PWD_KEY);
+      return Boolean(customPwd && customPwd !== DEFAULT_STUDENT_PASSWORD);
     } catch {
       return false;
     }
@@ -73,37 +113,128 @@ export const studentAuthUtil = {
   },
 
   /**
-   * Verify input email & password
+   * Verify input email & password for either Student or Admin
    */
-  verifyCredentials(emailInput: string, passwordInput: string): { success: boolean; message: string } {
+  verifyCredentials(emailInput: string, passwordInput: string): { 
+    success: boolean; 
+    role?: UserRole; 
+    user?: ActiveSessionUser; 
+    message: string 
+  } {
     const cleanEmail = emailInput.trim().toLowerCase();
     const cleanPwd = passwordInput.trim();
 
-    // Accepted email formats: institutional email or alternative student email
-    const validEmails = [
-      DEFAULT_EMAIL.toLowerCase(),
-      'pravinsyadavpsy99@gmail.com',
-      'pravin.yadav@pbs.com'
+    // 1. Check for Admin Login (admin@pbs.com / admin@123)
+    const adminEmails = [
+      DEFAULT_ADMIN_EMAIL.toLowerCase(),
+      'admin@pragmaticbim.com',
+      'pravinsyadavpsy99@gmail.com' // Alternate admin access
     ];
 
-    if (!validEmails.includes(cleanEmail)) {
+    if (adminEmails.includes(cleanEmail)) {
+      const activeAdminPwd = this.getActiveAdminPassword();
+      if (cleanPwd === activeAdminPwd || cleanPwd === DEFAULT_ADMIN_PASSWORD) {
+        const adminUser: ActiveSessionUser = {
+          id: 'pbs-admin-super-01',
+          name: 'Pravin Yadav (PBS Admin)',
+          email: DEFAULT_ADMIN_EMAIL,
+          role: 'admin',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+          phone: '+91 8208918726'
+        };
+        this.setActiveUser(adminUser);
+        return {
+          success: true,
+          role: 'admin',
+          user: adminUser,
+          message: 'Admin Authentication verified! Welcome to PBS Management Center.'
+        };
+      }
+    }
+
+    // 2. Check for Student Login (pravin.yadav.0926@pbs.com / pravinyadav@123 or dynamically provisioned students)
+    const validStudentEmails = [
+      DEFAULT_STUDENT_EMAIL.toLowerCase(),
+      'pravin.yadav@pbs.com',
+      'sneha.kulkarni.0826@pbs.com',
+      'amit.deshmukh.0726@pbs.com'
+    ];
+
+    // 2. Check for Student Login in dynamic roster or defaults
+    try {
+      const storedRoster = localStorage.getItem('pbs_admin_student_roster');
+      if (storedRoster) {
+        const roster = JSON.parse(storedRoster);
+        const match = roster.find((s: any) => 
+          s.email?.toLowerCase() === cleanEmail ||
+          s.rollNumber?.toLowerCase() === cleanEmail ||
+          s.studentId?.toLowerCase() === cleanEmail
+        );
+
+        if (match) {
+          const validPwd = match.password || this.getActivePassword() || DEFAULT_STUDENT_PASSWORD;
+          if (cleanPwd === validPwd || cleanPwd === DEFAULT_STUDENT_PASSWORD || cleanPwd === this.getActivePassword()) {
+            const studentUser: ActiveSessionUser = {
+              id: match.id || match.studentId || 'pbs-stu-dyn',
+              studentId: match.studentId || 'PBS-STU-2026-8492',
+              rollNumber: match.rollNumber || 'PBS/2026/BIM-084',
+              name: match.name,
+              email: match.email,
+              role: 'student',
+              avatar: match.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(match.name)}`,
+              phone: match.phone,
+              specialization: match.specialization,
+              batch: match.batch
+            };
+            this.setActiveUser(studentUser);
+            return {
+              success: true,
+              role: 'student',
+              user: studentUser,
+              message: `Welcome back, ${match.name}! Signed into PBS LMS.`
+            };
+          } else {
+            return {
+              success: false,
+              message: 'Invalid password. Please check your student credentials.'
+            };
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading dynamic roster:', e);
+    }
+
+    if (!validStudentEmails.includes(cleanEmail) && !adminEmails.includes(cleanEmail)) {
       return {
         success: false,
-        message: `Unrecognized student email. Please use your PBS institutional ID: ${DEFAULT_EMAIL}`
+        message: `Unrecognized student account. Please check your institutional email (${DEFAULT_STUDENT_EMAIL}) or enroll via Admin Portal.`
       };
     }
 
-    const currentPwd = this.getActivePassword();
-    if (cleanPwd !== currentPwd && cleanPwd !== DEFAULT_PASSWORD) {
+    const currentStudentPwd = this.getActivePassword();
+    if (cleanPwd !== currentStudentPwd && cleanPwd !== DEFAULT_STUDENT_PASSWORD) {
       return {
         success: false,
-        message: 'Invalid password. Please check your credentials or reset your password.'
+        message: 'Invalid password. Please check your credentials.'
       };
     }
+
+    const studentUser: ActiveSessionUser = {
+      id: 'user-student-pravin',
+      name: 'Pravin Yadav',
+      email: cleanEmail,
+      role: 'student',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+      phone: '+91 8208918726'
+    };
+    this.setActiveUser(studentUser);
 
     return {
       success: true,
-      message: 'Authentication successful! Welcome to PBS Student LMS.'
+      role: 'student',
+      user: studentUser,
+      message: 'Student Authentication successful! Welcome to PBS Student LMS.'
     };
   },
 
@@ -113,7 +244,7 @@ export const studentAuthUtil = {
   updatePassword(oldPasswordInput: string, newPasswordInput: string): { success: boolean; message: string } {
     const currentPwd = this.getActivePassword();
 
-    if (oldPasswordInput.trim() !== currentPwd && oldPasswordInput.trim() !== DEFAULT_PASSWORD) {
+    if (oldPasswordInput.trim() !== currentPwd && oldPasswordInput.trim() !== DEFAULT_STUDENT_PASSWORD) {
       return {
         success: false,
         message: 'Current password is incorrect. Please re-enter your existing password.'
@@ -128,7 +259,7 @@ export const studentAuthUtil = {
     }
 
     try {
-      localStorage.setItem(STORAGE_PWD_KEY, newPasswordInput.trim());
+      localStorage.setItem(STORAGE_STUDENT_PWD_KEY, newPasswordInput.trim());
       const nowFormatted = new Date().toLocaleDateString('en-IN', {
         day: '2-digit',
         month: 'short',
@@ -150,12 +281,55 @@ export const studentAuthUtil = {
   },
 
   /**
-   * Login state persistence
+   * Set custom password directly for a student from admin
    */
+  setStudentPasswordByAdmin(newPassword: string): boolean {
+    try {
+      localStorage.setItem(STORAGE_STUDENT_PWD_KEY, newPassword.trim());
+      const nowFormatted = new Date().toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      localStorage.setItem(STORAGE_PWD_CHANGED_KEY, nowFormatted);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  /**
+   * Active User Session persistence
+   */
+  getActiveUser(): ActiveSessionUser {
+    try {
+      const stored = localStorage.getItem(STORAGE_AUTH_USER_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    // Default to student Pravin Yadav
+    return {
+      id: 'user-student-pravin',
+      name: 'Pravin Yadav',
+      email: DEFAULT_STUDENT_EMAIL,
+      role: 'student',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+      phone: '+91 8208918726'
+    };
+  },
+
+  setActiveUser(user: ActiveSessionUser): void {
+    try {
+      localStorage.setItem(STORAGE_AUTH_USER_KEY, JSON.stringify(user));
+      localStorage.setItem(STORAGE_AUTH_LOGGED_IN_KEY, 'true');
+    } catch {}
+  },
+
   isLoggedIn(): boolean {
     try {
       const item = localStorage.getItem(STORAGE_AUTH_LOGGED_IN_KEY);
-      return item === null || item === 'true'; // Default logged in for fast review
+      return item === null || item === 'true';
     } catch {
       return true;
     }
@@ -164,6 +338,9 @@ export const studentAuthUtil = {
   setLoggedIn(state: boolean): void {
     try {
       localStorage.setItem(STORAGE_AUTH_LOGGED_IN_KEY, state ? 'true' : 'false');
+      if (!state) {
+        localStorage.removeItem(STORAGE_AUTH_USER_KEY);
+      }
     } catch {}
   },
 
@@ -176,7 +353,7 @@ export const studentAuthUtil = {
       studentId: 'PBS-STU-2026-8492',
       rollNumber: 'PBS/2026/BIM-084',
       fullName: 'Pravin Yadav',
-      institutionalEmail: DEFAULT_EMAIL,
+      institutionalEmail: DEFAULT_STUDENT_EMAIL,
       personalEmail: 'pravinsyadavpsy99@gmail.com',
       phone: '+91 8208918726',
       defaultPasswordHint: hasCustom ? '●●●●●●●● (Custom User Updated)' : 'pravinyadav@123 (Default System)',
@@ -189,7 +366,9 @@ export const studentAuthUtil = {
       totalFee: 41997,
       paidFee: 34498,
       pendingFee: 7499,
-      iso19650Code: 'PBS-ISO-19650-VERIFIED-2026'
+      iso19650Code: 'PBS-ISO-19650-VERIFIED-2026',
+      placementStatus: 'Shortlisted for MNC Interview (Atkins / WSP)',
+      interviewReadiness: 'Ready for Senior BIM Coordinator Role'
     };
   },
 
@@ -214,7 +393,9 @@ export const studentAuthUtil = {
       'Total Fee (INR)',
       'Paid Fee (INR)',
       'Pending Balance (INR)',
-      'ISO 19650 Verification Code'
+      'ISO 19650 Verification Code',
+      'Placement Assistance Status',
+      'Interview Readiness'
     ];
 
     const row = [
@@ -233,7 +414,9 @@ export const studentAuthUtil = {
       r.totalFee,
       r.paidFee,
       r.pendingFee,
-      `"${r.iso19650Code}"`
+      `"${r.iso19650Code}"`,
+      `"${r.placementStatus || 'In Progress'}"`,
+      `"${r.interviewReadiness || 'Level 4'}"`
     ];
 
     const csvContent = '\uFEFF' + [headers.join(','), row.join(',')].join('\n');
@@ -248,3 +431,9 @@ export const studentAuthUtil = {
     URL.revokeObjectURL(url);
   }
 };
+
+function currentStudentStudentPwd(cleanPwd: string, currentStudentPwd: string): string {
+  if (cleanPwd === currentStudentPwd) return cleanPwd;
+  if (cleanPwd === DEFAULT_STUDENT_PASSWORD) return cleanPwd;
+  return currentStudentPwd;
+}

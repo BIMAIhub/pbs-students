@@ -69,6 +69,7 @@ import {
   DOWNLOADABLE_ASSETS_DATA 
 } from './dashboardData';
 import { studentAuthUtil } from '../../utils/studentAuth';
+import { pbsAdminStore, ManagedStudent } from '../../utils/pbsAdminStore';
 import { soundFx } from '../../utils/soundEffects';
 
 interface StudentDashboardProps {
@@ -137,6 +138,113 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   // Live session countdown timer (hours, mins, secs)
   const [countdown, setCountdown] = useState({ hours: 2, minutes: 14, seconds: 45 });
 
+  // Dynamically resolve student profile from database
+  useEffect(() => {
+    const studentQuery = user?.email || user?.studentId || user?.rollNumber || user?.id || studentAuthUtil.getActiveUser()?.email;
+    const match = studentQuery ? pbsAdminStore.getStudentByQuery(studentQuery) : null;
+
+    if (match) {
+      setProfileData(prev => ({
+        ...prev,
+        studentId: match.studentId || prev.studentId,
+        rollNumber: match.rollNumber || prev.rollNumber,
+        fullName: match.name || prev.fullName,
+        email: match.email || prev.email,
+        phone: match.phone || prev.phone,
+        avatarUrl: match.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(match.name)}`,
+        currentCompanyRole: match.specialization || prev.currentCompanyRole,
+        specializationTrack: match.specialization || prev.specializationTrack,
+        targetCareerRole: match.placement?.targetRole || prev.targetCareerRole,
+        expectedSalary: match.placement?.expectedSalary || prev.expectedSalary,
+        bio: `Enrolled BIM student in ${match.specialization || 'Revit MEP'} cohort with ${match.attendancePercent || 92}% verified attendance record.`
+      }));
+
+      if (match.growthScore) {
+        setStudentXp(match.growthScore);
+      }
+
+      // Map dynamic courses
+      const allCatalogCourses = pbsAdminStore.getCourses();
+      const matchingCatalogCourses = allCatalogCourses.filter(c => 
+        match.enrolledCourseIds?.includes(c.id) || 
+        (match.specialization && c.title.toLowerCase().includes(match.specialization.toLowerCase()))
+      );
+
+      if (matchingCatalogCourses.length > 0) {
+        const dynamicEnrolled: EnrolledCourseItem[] = matchingCatalogCourses.map((c, idx) => ({
+          id: `enr-dyn-${idx}`,
+          courseId: c.id,
+          courseTitle: c.title,
+          category: c.category || 'Revit',
+          level: 'Cohort Core Track',
+          badge: idx === 0 ? 'Primary Specialization' : 'Elective Track',
+          batchMode: match.batch || 'Offline Weekend (Sat-Sun, 4 hrs/day)',
+          batchSchedule: 'Saturdays & Sundays (06:00 PM - 09:30 PM IST)',
+          progressPercent: 0,
+          completedModules: 0,
+          totalModules: c.modules?.length || 10,
+          enrolledDate: 'Sept 2026',
+          status: 'Active',
+          instructor: 'Pravin Yadav (15+ Yrs Industry Exp)',
+          totalFee: match.totalFee || 14999,
+          paidAmount: match.paidAmount || 7500,
+          pendingBalance: match.pendingBalance || 7499,
+          certificateEarned: match.capstoneStatus === 'Approved & Certified',
+          image: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=600&q=80',
+          accentColor: '#10b981'
+        }));
+        setEnrolledCourses(dynamicEnrolled);
+        setActiveCourseId(matchingCatalogCourses[0].id);
+      } else {
+        setEnrolledCourses(prev => prev.map((c, i) => i === 0 ? {
+          ...c,
+          courseTitle: match.specialization || c.courseTitle,
+          totalFee: match.totalFee || c.totalFee,
+          paidAmount: match.paidAmount || c.paidAmount,
+          pendingBalance: match.pendingBalance || c.pendingBalance,
+          progressPercent: 0,
+          completedModules: 0,
+          certificateEarned: false,
+          status: 'Active'
+        } : {
+          ...c,
+          progressPercent: 0,
+          completedModules: 0,
+          certificateEarned: false,
+          status: 'Active'
+        }));
+      }
+
+      // Generate dynamic fee receipt
+      if (match.paidAmount > 0) {
+        setFeeReceipts([
+          {
+            receiptId: `PBS-REC-${(match.studentId || '2026').replace('PBS-STU-', '')}-01`,
+            courseId: match.enrolledCourseIds?.[0] || 'revit-mep-pro',
+            courseTitle: match.specialization || 'Autodesk Revit MEP Masterclass (LOD 300 - 500)',
+            amountPaid: match.paidAmount,
+            totalCourseFee: match.totalFee,
+            paymentDate: 'Aug 2026',
+            paymentMode: 'Instant NetBanking / UPI Verified',
+            transactionRef: `UPI/PBS/${(match.rollNumber || '8492').replace(/[^a-zA-Z0-9]/g, '')}/TXN99`,
+            status: 'Verified',
+            receiptPdfUrl: '#'
+          }
+        ]);
+      }
+    } else if (user?.name) {
+      setProfileData(prev => ({
+        ...prev,
+        fullName: user.name,
+        email: user.email || prev.email,
+        studentId: user.studentId || prev.studentId,
+        rollNumber: user.rollNumber || prev.rollNumber,
+        phone: user.phone || prev.phone,
+        avatarUrl: user.avatar || prev.avatarUrl
+      }));
+    }
+  }, [user]);
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown(prev => {
@@ -149,8 +257,26 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     return () => clearInterval(timer);
   }, []);
 
-  const userName = profileData.fullName || user?.name || 'Pravin Yadav';
-  const userAvatar = profileData.avatarUrl || user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80';
+  const userName = profileData.fullName || user?.name || 'Student';
+  const userAvatar = profileData.avatarUrl || user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userName)}`;
+
+  const handleExportStudentJSON = () => {
+    soundFx.playClick();
+    const jsonStr = pbsAdminStore.exportStudentDossierJSON(profileData.studentId || profileData.email) || JSON.stringify({ student: profileData }, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `PBS_Student_Academic_Dossier_${profileData.fullName.replace(/\s+/g, '_')}_${profileData.studentId}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    soundFx.playSuccess();
+    setNotificationAlert(`Academic Dossier (.json) downloaded for ${profileData.fullName}!`);
+    setTimeout(() => setNotificationAlert(null), 5000);
+  };
 
   const toggleSound = () => {
     const next = !soundEnabled;

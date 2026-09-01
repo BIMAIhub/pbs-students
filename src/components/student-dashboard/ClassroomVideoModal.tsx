@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Play, 
@@ -19,35 +19,64 @@ import {
   Send,
   Sparkles,
   Layers,
-  BookOpen
+  BookOpen,
+  ShieldCheck,
+  Lock,
+  ExternalLink,
+  Video
 } from 'lucide-react';
 import { COURSE_MODULES_DATA } from './dashboardData';
-import { CourseContentModule, CourseModuleLesson } from './types';
+import { pbsAdminStore, AdminCourse, VideoLesson } from '../../utils/pbsAdminStore';
 
 interface ClassroomVideoModalProps {
   onClose: () => void;
+  initialCourseId?: string;
 }
 
-export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ onClose }) => {
+export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ 
+  onClose,
+  initialCourseId
+}) => {
   const [activeTab, setActiveTab] = useState<'content' | 'forum'>('content');
-  const [expandedModuleId, setExpandedModuleId] = useState<string>('mod-2'); // default Module 02
+  const [expandedModuleId, setExpandedModuleId] = useState<string>('mod-0');
+  
+  // Fetch courses and videos from admin store
+  const adminCourses = pbsAdminStore.getCourses();
+  const currentCourse = adminCourses.find(c => c.id === initialCourseId) || adminCourses[0];
+
   const [currentLesson, setCurrentLesson] = useState<{
     moduleTitle: string;
     lessonTitle: string;
     duration: string;
     isDone: boolean;
+    videoUrl?: string;
+    videoType?: string;
   }>({
-    moduleTitle: 'Basics of Revit Modelling',
-    lessonTitle: 'Opening and Saving Files',
-    duration: '15 min',
-    isDone: true,
+    moduleTitle: 'Introduction to Oneistox & PBS BIM Course',
+    lessonTitle: 'Welcome to the BIM Professional Cohort',
+    duration: '10 min',
+    isDone: false,
+    videoUrl: 'https://drive.google.com/file/d/1BimRevitMEP_ClassroomLecture_2026/preview',
+    videoType: 'google-drive'
   });
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isCompleted, setIsCompleted] = useState(true);
-  const [showIssueModal, setShowIssueModal] = useState(false);
+  const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
+
+  const toggleLessonComplete = () => {
+    const nextCompleted = !isCompleted;
+    setIsCompleted(nextCompleted);
+    // Track completed lesson ID
+    const activeId = currentLesson.lessonTitle;
+    if (nextCompleted) {
+      setCompletedLessonIds(prev => prev.includes(activeId) ? prev : [...prev, activeId]);
+    } else {
+      setCompletedLessonIds(prev => prev.filter(id => id !== activeId));
+    }
+  };
+  const [issueSubmitted, setIssueSubmitted] = useState(false);
+  const [issueText, setIssueText] = useState('');
 
   // Discussion state
   const [forumPosts, setForumPosts] = useState([
@@ -55,7 +84,7 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ onClos
       id: 'p1',
       author: 'Pravin Yadav',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-      role: 'Student',
+      role: 'Student (PBS)',
       time: '1 day ago',
       title: 'Default Project Template (.rte) location in Revit 2026',
       content: 'When starting a new project in metric units, make sure to set the English Metric template folder in Options -> File Locations.',
@@ -64,7 +93,7 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ onClos
     },
     {
       id: 'p2',
-      author: 'BIM Instructor Rajesh',
+      author: 'BIM Instructor (Pravin Yadav)',
       avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80',
       role: 'Faculty',
       time: '2 days ago',
@@ -95,9 +124,14 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ onClos
     setNewComment('');
   };
 
+  const formattedEmbedUrl = currentLesson.videoUrl 
+    ? pbsAdminStore.formatEmbedVideoUrl(currentLesson.videoUrl)
+    : '';
+
   return (
-    <div className="fixed inset-0 z-50 bg-[#121212] text-white flex flex-col overflow-hidden font-sans">
-      {/* Top Bar matching screenshot 5 */}
+    <div className="fixed inset-0 z-50 bg-[#121212] text-white flex flex-col overflow-hidden font-sans select-none">
+      
+      {/* Top Bar */}
       <header className="h-14 bg-[#1e1e1e] border-b border-[#2d2d2d] px-4 sm:px-6 flex items-center justify-between shrink-0">
         {/* Left: Brand / Breadcrumbs */}
         <div className="flex items-center gap-4 min-w-0">
@@ -110,14 +144,20 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ onClos
 
           {/* Breadcrumb Title */}
           <div className="text-xs sm:text-sm text-slate-300 truncate">
-            <span className="text-slate-400 font-medium">Bim and Revit professional Course</span>
+            <span className="text-slate-400 font-medium">{currentCourse?.title || 'BIM & Revit Professional Course'}</span>
             <span className="text-slate-500 mx-2">/</span>
             <span className="text-emerald-400 font-semibold">{currentLesson.lessonTitle}</span>
           </div>
         </div>
 
-        {/* Right Actions: COURSE CONTENT | DISCUSSION FORUM | Close */}
-        <div className="flex items-center gap-4 sm:gap-6">
+        {/* Right Actions: Protection Badge | COURSE CONTENT | DISCUSSION FORUM | Close */}
+        <div className="flex items-center gap-3 sm:gap-6">
+          
+          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[10px] font-bold">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Protected DRM Stream (No Downloads)</span>
+          </div>
+
           <button
             id="classroom-tab-content"
             onClick={() => setActiveTab('content')}
@@ -163,64 +203,65 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ onClos
 
       {/* Main Studio Split Body */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        
         {/* Left Section: Video Player Theater */}
         <div className="flex-1 flex flex-col bg-black justify-between overflow-y-auto">
+          
           {/* Video Player Display Container */}
-          <div className="relative flex-1 flex items-center justify-center p-4 sm:p-8 bg-[#0a0a0a] min-h-[360px]">
-            <div className="relative w-full max-w-5xl aspect-video bg-[#181818] rounded-xl overflow-hidden shadow-2xl border border-[#2a2a2a] group">
-              {/* Revit Screen Simulation Background matching screenshot 5 */}
-              <div className="absolute inset-0 bg-slate-900 flex items-center justify-center">
-                <img
-                  src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1200&q=80"
-                  alt="Revit Autodesk Simulation"
-                  className="w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity"
-                />
-
-                {/* Subtitle Caption matching screenshot 5 */}
-                <div className="absolute bottom-12 left-0 right-0 text-center px-4">
-                  <span className="bg-black/80 backdrop-blur-sm text-slate-200 text-xs sm:text-sm font-medium px-4 py-1.5 rounded-lg inline-block border border-white/10 shadow-lg">
-                    Now, let's start with opening a new Revit project and setting project units to metric.
-                  </span>
-                </div>
-              </div>
-
-              {/* Big Centered Play/Pause Button */}
-              <button
-                id="btn-theater-play-toggle"
-                onClick={() => setIsPlaying(!isPlaying)}
-                className="absolute inset-0 m-auto w-16 h-16 rounded-full bg-white/20 backdrop-blur-md border border-white/40 text-white flex items-center justify-center hover:scale-110 transition-transform cursor-pointer shadow-2xl"
-              >
-                {isPlaying ? (
-                  <Pause className="w-8 h-8 fill-current" />
-                ) : (
-                  <Play className="w-8 h-8 ml-1 fill-current" />
-                )}
-              </button>
-
-              {/* Bottom Video Progress & Control Bar */}
-              <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex items-center justify-between text-xs text-white">
-                <div className="flex items-center gap-3 w-full max-w-md">
-                  <button onClick={() => setIsPlaying(!isPlaying)} className="hover:text-emerald-400">
-                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                  </button>
-                  <div className="flex-1 h-1.5 bg-white/30 rounded-full overflow-hidden cursor-pointer relative">
-                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: '42%' }}></div>
+          <div className="relative flex-1 flex items-center justify-center p-4 sm:p-6 bg-[#0a0a0a] min-h-[380px]">
+            <div className="relative w-full max-w-5xl aspect-video bg-[#181818] rounded-2xl overflow-hidden shadow-2xl border border-[#2a2a2a] group">
+              
+              {/* If we have a Google Drive / YouTube embed URL */}
+              {formattedEmbedUrl ? (
+                <div className="w-full h-full relative">
+                  <iframe
+                    src={formattedEmbedUrl}
+                    title={currentLesson.lessonTitle}
+                    className="w-full h-full border-0 pointer-events-auto"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                  {/* Anti-Download Protection Overlay & Security Watermark */}
+                  <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-md px-3 py-1 rounded-lg border border-white/10 text-[10px] font-mono text-emerald-400 flex items-center gap-1.5 pointer-events-none">
+                    <Lock className="w-3 h-3 text-emerald-400" />
+                    <span>Protected Student ID: PBS-STU-2026-8492</span>
                   </div>
-                  <span className="text-[11px] text-slate-300 font-mono">06:18 / 15:00</span>
                 </div>
+              ) : (
+                /* Fallback Revit Screen Simulation */
+                <div className="absolute inset-0 bg-slate-900 flex items-center justify-center">
+                  <img
+                    src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1200&q=80"
+                    alt="Revit Autodesk Simulation"
+                    className="w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity"
+                  />
 
-                <div className="flex items-center gap-3">
-                  <button onClick={() => setIsMuted(!isMuted)} className="hover:text-emerald-400">
-                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  {/* Subtitle Caption */}
+                  <div className="absolute bottom-12 left-0 right-0 text-center px-4">
+                    <span className="bg-black/80 backdrop-blur-sm text-slate-200 text-xs sm:text-sm font-medium px-4 py-1.5 rounded-lg inline-block border border-white/10 shadow-lg">
+                      Now, let's start with opening a new Revit project and setting project units to metric.
+                    </span>
+                  </div>
+
+                  {/* Big Centered Play/Pause Button */}
+                  <button
+                    id="btn-theater-play-toggle"
+                    onClick={() => setIsPlaying(!isPlaying)}
+                    className="absolute inset-0 m-auto w-16 h-16 rounded-full bg-white/20 backdrop-blur-md border border-white/40 text-white flex items-center justify-center hover:scale-110 transition-transform cursor-pointer shadow-2xl"
+                  >
+                    {isPlaying ? (
+                      <Pause className="w-8 h-8 fill-current" />
+                    ) : (
+                      <Play className="w-8 h-8 ml-1 fill-current" />
+                    )}
                   </button>
-                  <span className="bg-white/10 px-2 py-0.5 rounded text-[10px] font-bold">1080p HD</span>
-                  <Maximize2 className="w-4 h-4 hover:text-emerald-400 cursor-pointer" />
                 </div>
-              </div>
+              )}
+
             </div>
           </div>
 
-          {/* Bottom Bar: Report Issue & Mark Done matching screenshot 5 */}
+          {/* Bottom Bar: Report Issue & Mark Done */}
           <div className="h-16 bg-[#161616] border-t border-[#262626] px-6 flex items-center justify-between shrink-0">
             <button
               id="btn-report-issue"
@@ -231,22 +272,29 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ onClos
               <span>REPORT ISSUE</span>
             </button>
 
-            <button
-              id="btn-mark-done"
-              onClick={() => setIsCompleted(!isCompleted)}
-              className={`px-6 py-2.5 rounded-lg text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer ${
-                isCompleted 
-                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white' 
-                  : 'bg-emerald-500 hover:bg-emerald-600 text-white'
-              }`}
-            >
-              <Check className="w-4 h-4 stroke-[3]" />
-              <span>{isCompleted ? 'COMPLETED' : 'MARK DONE'}</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <span className="text-[11px] text-slate-400 hidden sm:inline">
+                Lesson: <strong className="text-white">{currentLesson.lessonTitle}</strong> ({currentLesson.duration})
+              </span>
+              
+              <button
+                id="btn-mark-done"
+                onClick={toggleLessonComplete}
+                className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer ${
+                  isCompleted 
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20' 
+                    : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                }`}
+              >
+                <Check className="w-4 h-4 stroke-[3]" />
+                <span>{isCompleted ? 'COMPLETED' : 'MARK DONE'}</span>
+              </button>
+            </div>
           </div>
+
         </div>
 
-        {/* Right Section: Course Content Drawer / Forum (Screenshot 5) */}
+        {/* Right Section: Course Content Drawer / Forum */}
         <div className="w-full lg:w-96 bg-[#1a1a1a] border-l border-[#2d2d2d] flex flex-col h-full overflow-hidden shrink-0">
           {activeTab === 'content' ? (
             <>
@@ -254,11 +302,11 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ onClos
               <div className="p-4 border-b border-[#2d2d2d] space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-bold text-white">Course Content</h3>
-                    <p className="text-[11px] text-slate-400">BIM Professional Course</p>
+                    <h3 className="text-sm font-bold text-white">Course Video Lessons</h3>
+                    <p className="text-[11px] text-slate-400">{currentCourse?.title || 'PBS BIM Masterclass'}</p>
                   </div>
                   <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded font-mono">
-                    8 Modules
+                    {currentCourse?.modules.length || COURSE_MODULES_DATA.length} Modules
                   </span>
                 </div>
 
@@ -267,7 +315,7 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ onClos
                   <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Search course content..."
+                    placeholder="Search video lectures..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#242424] text-white placeholder-slate-500 border border-[#333] rounded-lg focus:outline-none focus:border-emerald-500"
@@ -275,26 +323,117 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ onClos
                 </div>
               </div>
 
-              {/* Accordion Modules List matching screenshot 5 */}
+              {/* Accordion Modules List */}
               <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+                {/* 1. Admin Dynamic Course Modules */}
+                {currentCourse && currentCourse.modules.length > 0 && currentCourse.modules.map((m) => {
+                  const isExpanded = expandedModuleId === m.id;
+                  const isModDone = m.lessons.length > 0 && m.lessons.every(l => completedLessonIds.includes(l.title) || l.isCompleted);
+
+                  return (
+                    <div
+                      key={m.id}
+                      className="bg-[#222222] border border-[#2e2e2e] rounded-xl overflow-hidden"
+                    >
+                      <button
+                        onClick={() => setExpandedModuleId(isExpanded ? '' : m.id)}
+                        className="w-full p-3 flex items-center justify-between text-left hover:bg-[#2a2a2a] transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {isModDone ? (
+                            <div className="w-5 h-5 rounded bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                              <Check className="w-3 h-3 stroke-[3]" />
+                            </div>
+                          ) : (
+                            <div className="w-5 h-5 rounded bg-slate-800 text-emerald-400 border border-slate-700 flex items-center justify-center shrink-0">
+                              <Play className="w-2.5 h-2.5 fill-current" />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-white">{m.moduleCode}</span>
+                              <span className="text-[10px] bg-slate-800 text-emerald-400 px-1.5 py-0.2 rounded font-mono">
+                                {m.duration}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-300 truncate mt-0.5">{m.title}</p>
+                          </div>
+                        </div>
+                        <div className="text-slate-400 ml-2 shrink-0">
+                          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </div>
+                      </button>
+
+                      {isExpanded && (
+                        <div className="px-3 pb-3 pt-1 space-y-1.5 bg-[#1c1c1c] border-t border-[#2a2a2a]">
+                          {m.lessons.map((les) => {
+                            const isActive = currentLesson.lessonTitle === les.title;
+                            const isLesDone = completedLessonIds.includes(les.title) || les.isCompleted || (isActive && isCompleted);
+                            return (
+                              <button
+                                key={les.id}
+                                onClick={() => {
+                                  setCurrentLesson({
+                                    moduleTitle: m.title,
+                                    lessonTitle: les.title,
+                                    duration: les.duration,
+                                    isDone: isLesDone,
+                                    videoUrl: les.videoUrl,
+                                    videoType: les.videoType
+                                  });
+                                  setIsCompleted(isLesDone);
+                                }}
+                                className={`w-full text-left p-2.5 rounded-xl flex items-center justify-between gap-2 text-xs transition-colors cursor-pointer ${
+                                  isActive
+                                    ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-600/50 font-semibold'
+                                    : 'text-slate-300 hover:bg-[#282828] hover:text-white'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  {isLesDone ? (
+                                    <Check className="w-3.5 h-3.5 shrink-0 text-emerald-400 stroke-[2.5]" />
+                                  ) : (
+                                    <Video className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-emerald-400' : 'text-slate-500'}`} />
+                                  )}
+                                  <span className="truncate">{les.title}</span>
+                                </div>
+                                <span className="text-[10px] font-mono text-emerald-400 shrink-0">
+                                  {les.duration}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* 2. Default Standard Curriculum */}
                 {COURSE_MODULES_DATA.map((module) => {
                   const isExpanded = expandedModuleId === module.id;
+                  const allLessons = module.subSections.flatMap(s => s.lessons);
+                  const isModDone = module.isCompleted || (allLessons.length > 0 && allLessons.every(l => completedLessonIds.includes(l.title) || l.isCompleted));
 
                   return (
                     <div
                       key={module.id}
                       className="bg-[#222222] border border-[#2e2e2e] rounded-xl overflow-hidden"
                     >
-                      {/* Module Header Bar */}
                       <button
                         onClick={() => setExpandedModuleId(isExpanded ? '' : module.id)}
                         className="w-full p-3 flex items-center justify-between text-left hover:bg-[#2a2a2a] transition-colors cursor-pointer"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          {/* Checkbox Icon */}
-                          <div className="w-5 h-5 rounded bg-emerald-600 text-white flex items-center justify-center shrink-0">
-                            <Check className="w-3 h-3 stroke-[3]" />
-                          </div>
+                          {isModDone ? (
+                            <div className="w-5 h-5 rounded bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                              <Check className="w-3 h-3 stroke-[3]" />
+                            </div>
+                          ) : (
+                            <div className="w-5 h-5 rounded bg-slate-800 text-emerald-400 border border-slate-700 flex items-center justify-center shrink-0 font-bold text-[10px]">
+                              <Play className="w-2.5 h-2.5 fill-current" />
+                            </div>
+                          )}
 
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
@@ -302,7 +441,7 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ onClos
                                 {module.moduleCode}
                               </span>
                               <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.2 rounded border border-slate-700">
-                                Done
+                                {isModDone ? 'Completed' : 'In Progress'}
                               </span>
                             </div>
                             <p className="text-[11px] text-slate-400 truncate mt-0.5">
@@ -311,13 +450,11 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ onClos
                           </div>
                         </div>
 
-                        {/* Chevron */}
                         <div className="text-slate-400 ml-2 shrink-0">
                           {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                         </div>
                       </button>
 
-                      {/* Expanded Subsections & Lessons */}
                       {isExpanded && (
                         <div className="px-3 pb-3 pt-1 space-y-3 bg-[#1c1c1c] border-t border-[#2a2a2a]">
                           {module.subSections.map((sec, sIdx) => (
@@ -330,6 +467,7 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ onClos
                               <div className="space-y-1">
                                 {sec.lessons.map((lesson) => {
                                   const isActiveLesson = currentLesson.lessonTitle === lesson.title;
+                                  const isLesDone = completedLessonIds.includes(lesson.title) || lesson.isCompleted || (isActiveLesson && isCompleted);
 
                                   return (
                                     <button
@@ -339,8 +477,10 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ onClos
                                           moduleTitle: module.title,
                                           lessonTitle: lesson.title,
                                           duration: lesson.duration,
-                                          isDone: lesson.isCompleted,
+                                          isDone: isLesDone,
+                                          videoUrl: 'https://drive.google.com/file/d/1BimRevitMEP_ClassroomLecture_2026/preview'
                                         });
+                                        setIsCompleted(isLesDone);
                                       }}
                                       className={`w-full text-left p-2 rounded-lg flex items-center justify-between gap-2 text-xs transition-colors cursor-pointer ${
                                         isActiveLesson
@@ -349,7 +489,11 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ onClos
                                       }`}
                                     >
                                       <div className="flex items-center gap-2 min-w-0">
-                                        <Play className={`w-3.5 h-3.5 shrink-0 ${isActiveLesson ? 'text-emerald-400 fill-current' : 'text-slate-500'}`} />
+                                        {isLesDone ? (
+                                          <Check className="w-3.5 h-3.5 shrink-0 text-emerald-400 stroke-[2.5]" />
+                                        ) : (
+                                          <Play className={`w-3.5 h-3.5 shrink-0 ${isActiveLesson ? 'text-emerald-400 fill-current' : 'text-slate-500'}`} />
+                                        )}
                                         <span className="truncate">{lesson.title}</span>
                                       </div>
                                       <span className="text-[10px] text-slate-500 shrink-0 font-mono">
@@ -372,8 +516,8 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ onClos
             /* Discussion Forum Tab */
             <div className="flex-1 flex flex-col overflow-hidden">
               <div className="p-4 border-b border-[#2d2d2d]">
-                <h3 className="text-sm font-bold text-white">Lesson Discussion Forum</h3>
-                <p className="text-[11px] text-slate-400">Ask questions and discuss with cohort peers.</p>
+                <h3 className="text-sm font-bold text-white">Lesson Q&A Discussion Forum</h3>
+                <p className="text-[11px] text-slate-400">Ask questions directly to faculty & cohort peers.</p>
               </div>
 
               {/* Forum Posts List */}
@@ -415,7 +559,7 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ onClos
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Type your question or tip..."
+                    placeholder="Type your question for Pravin Yadav / PBS faculty..."
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handlePostComment()}
@@ -432,6 +576,7 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ onClos
             </div>
           )}
         </div>
+
       </div>
 
       {/* Report Issue Modal */}
@@ -441,30 +586,46 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ onClos
             <div className="flex items-center justify-between">
               <h4 className="text-base font-bold text-white flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-400" />
-                Report Lesson Issue
+                <span>Report Lesson Issue</span>
               </h4>
               <button onClick={() => setShowIssueModal(false)} className="text-slate-400 hover:text-white">✕</button>
             </div>
-            <p className="text-xs text-slate-400">
-              Found a broken link, audio sync issue, or question on Revit files for <strong>{currentLesson.lessonTitle}</strong>?
-            </p>
-            <textarea
-              rows={3}
-              placeholder="Describe the issue in detail..."
-              className="w-full p-3 text-xs bg-[#181818] border border-[#333] rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
-            ></textarea>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowIssueModal(false)} className="px-3 py-1.5 text-xs text-slate-300">Cancel</button>
-              <button 
-                onClick={() => {
-                  alert('Issue reported to PBS technical support.');
-                  setShowIssueModal(false);
-                }} 
-                className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg"
-              >
-                Submit Ticket
-              </button>
-            </div>
+            
+            {issueSubmitted ? (
+              <div className="p-4 bg-emerald-950/60 border border-emerald-700 rounded-xl text-emerald-300 text-xs font-bold flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                <span>Issue ticket logged! PBS admin team will review shortly.</span>
+              </div>
+            ) : (
+              <>
+                <p className="text-xs text-slate-400">
+                  Found a broken link, audio sync issue, or question on files for <strong>{currentLesson.lessonTitle}</strong>?
+                </p>
+                <textarea
+                  rows={3}
+                  value={issueText}
+                  onChange={(e) => setIssueText(e.target.value)}
+                  placeholder="Describe the issue in detail..."
+                  className="w-full p-3 text-xs bg-[#181818] border border-[#333] rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                />
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => setShowIssueModal(false)} className="px-3 py-1.5 text-xs text-slate-300">Cancel</button>
+                  <button 
+                    onClick={() => {
+                      setIssueSubmitted(true);
+                      setTimeout(() => {
+                        setShowIssueModal(false);
+                        setIssueSubmitted(false);
+                        setIssueText('');
+                      }, 1500);
+                    }} 
+                    className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg cursor-pointer"
+                  >
+                    Submit Ticket
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

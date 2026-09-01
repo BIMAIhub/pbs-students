@@ -48,10 +48,10 @@ export const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({
       {/* Top Interactive Metric Highlights */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Overall Academic GPA', val: '98.2%', sub: 'Rank #1 in Cohort', icon: Award, color: 'text-amber-600 bg-amber-50 border-amber-200' },
-          { label: 'Evaluated Tasks', val: '87 / 87', sub: '100% On-Time Submittal', icon: CheckCircle2, color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
-          { label: 'Active Study Streak', val: '18 Days', sub: 'Top 1% Consistency', icon: Flame, color: 'text-orange-600 bg-orange-50 border-orange-200' },
-          { label: 'BIM Skill Mastery', val: 'Level 4', sub: '4,850 / 5,000 XP', icon: Zap, color: 'text-teal-600 bg-teal-50 border-teal-200' },
+          { label: 'Academic Standing', val: 'Active', sub: 'Module 01 Enrolled', icon: Award, color: 'text-amber-600 bg-amber-50 border-amber-200' },
+          { label: 'Evaluated Tasks', val: '0 / 87', sub: 'Starting Module 1 Assignments', icon: CheckCircle2, color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
+          { label: 'Active Study Streak', val: 'Day 1', sub: 'Fresh Cohort Enrollment', icon: Flame, color: 'text-orange-600 bg-orange-50 border-orange-200' },
+          { label: 'BIM Skill Mastery', val: 'Level 1', sub: 'Starting from Module 1', icon: Zap, color: 'text-teal-600 bg-teal-50 border-teal-200' },
         ].map((m, i) => {
           const Icon = m.icon;
           return (
@@ -94,7 +94,7 @@ export const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({
                 Performance Leaderboard
               </h2>
               <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
-                Track your BIM coordination submissions, task velocity, and peer rankings till graduation day in the Cohort Leaderboard.
+                Track your BIM coordination submissions, task velocity, and peer rankings as you advance through each module in the Cohort Leaderboard.
               </p>
               
               <div className="pt-2">
@@ -117,8 +117,8 @@ export const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({
               <div className="w-40 h-40 bg-gradient-to-tr from-emerald-100/70 via-teal-50 to-emerald-50 rounded-full flex items-center justify-center relative shadow-inner">
                 {/* Floating 5-star badge */}
                 <div className="absolute top-2 right-0 bg-white/95 backdrop-blur-sm border border-emerald-300 px-2.5 py-1 rounded-full shadow-md flex items-center gap-1 z-10">
-                  <span className="text-[11px] font-bold text-emerald-700">★★★★★</span>
-                  <span className="text-[10px] font-bold text-slate-700">Top 1%</span>
+                  <span className="text-[11px] font-bold text-emerald-700">★ Active</span>
+                  <span className="text-[10px] font-bold text-slate-700">Cohort 2026</span>
                 </div>
                 
                 {/* Avatar illustration visual */}
@@ -131,7 +131,7 @@ export const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({
                     />
                   </div>
                   <div className="mt-1.5 inline-block bg-slate-900 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-                    Rank #1 in Cohort
+                    Starting Module 1
                   </div>
                 </div>
               </div>
@@ -143,14 +143,14 @@ export const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({
             <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
               <motion.div 
                 initial={{ width: 0 }}
-                animate={{ width: '92%' }}
+                animate={{ width: '4%' }}
                 transition={{ duration: 1, ease: 'easeOut' }}
                 className="h-full bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-400 rounded-full"
               />
             </div>
             <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-              <span>Overall Cohort Progress: <strong className="text-emerald-700 font-bold">92% Complete</strong></span>
-              <span>87 / 87 Tasks Submitted & Evaluated</span>
+              <span>Overall Cohort Progress: <strong className="text-emerald-700 font-bold">Starting from Module 1</strong></span>
+              <span>0 / 87 Tasks Submitted (Fresh Enrollment)</span>
             </div>
           </div>
         </motion.div>

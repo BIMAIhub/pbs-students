@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { StudentDashboard } from './components/student-dashboard/StudentDashboard';
 import { StudentLoginPortal } from './components/student-dashboard/StudentLoginPortal';
+import { AdminPortal } from './components/admin-dashboard/AdminPortal';
 import { CourseRegistrationModal } from './components/CourseRegistrationModal';
 import { Course, StudentRegistration, AuthUser } from './types';
 import { PRELOADED_USERS } from './data/pbsData';
-import { studentAuthUtil } from './utils/studentAuth';
+import { studentAuthUtil, ActiveSessionUser } from './utils/studentAuth';
 import { CheckCircle2, X } from 'lucide-react';
 
 export default function App() {
   // Authentication State
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => studentAuthUtil.isLoggedIn());
+  const [activeSessionUser, setActiveSessionUser] = useState<ActiveSessionUser>(() => studentAuthUtil.getActiveUser());
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(PRELOADED_USERS[0]);
 
   // Modal states
@@ -27,8 +29,9 @@ export default function App() {
     setIsLoggedIn(false);
   };
 
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = (user: ActiveSessionUser) => {
     studentAuthUtil.setLoggedIn(true);
+    setActiveSessionUser(user);
     setIsLoggedIn(true);
   };
 
@@ -36,12 +39,51 @@ export default function App() {
     return <StudentLoginPortal onSuccessLogin={handleLoginSuccess} />;
   }
 
+  // Render Admin Portal if signed in as Admin
+  if (activeSessionUser?.role === 'admin') {
+    return (
+      <AdminPortal
+        user={activeSessionUser}
+        onLogout={handleLogout}
+        onSwitchToStudentView={(student) => {
+          if (student) {
+            const stuUser: ActiveSessionUser = {
+              id: student.studentId || student.id,
+              studentId: student.studentId,
+              rollNumber: student.rollNumber,
+              name: student.name,
+              email: student.email,
+              role: 'student',
+              avatar: student.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(student.name)}`,
+              phone: student.phone,
+              specialization: student.specialization,
+              batch: student.batch
+            };
+            setActiveSessionUser(stuUser);
+          } else {
+            setActiveSessionUser({
+              id: 'user-student-pravin',
+              studentId: 'PBS-STU-2026-8492',
+              rollNumber: 'PBS/2026/BIM-084',
+              name: 'Pravin Yadav',
+              email: 'pravin.yadav.0926@pbs.com',
+              role: 'student',
+              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+              phone: '+91 8208918726'
+            });
+          }
+        }}
+      />
+    );
+  }
+
+  // Render Student Dashboard if signed in as Student
   return (
     <div className="min-h-screen bg-[#FDFCFE] text-slate-900 font-sans antialiased selection:bg-emerald-500 selection:text-white">
       
       {/* Student Page Rendered Directly as the Primary View */}
       <StudentDashboard
-        user={currentUser}
+        user={activeSessionUser}
         onLogout={handleLogout}
       />
 

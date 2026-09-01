@@ -112,23 +112,23 @@ export const FeeFinancialsTab: React.FC<FeeFinancialsTabProps> = ({
     doc.setFontSize(9);
     doc.setTextColor(51, 65, 85);
     doc.text(receipt.courseTitle, 15, 118);
-    doc.text(receipt.paymentType, 120, 118);
-    doc.text(`₹${receipt.amount.toLocaleString('en-IN')}`, 165, 118);
+    doc.text(receipt.paymentType || 'Installment', 120, 118);
+    doc.text(`₹${(receipt.amount || 0).toLocaleString('en-IN')}`, 165, 118);
     
     // Summary calculation box
     doc.roundedRect(120, 135, 75, 45, 2, 2);
     doc.setFontSize(8);
     doc.setTextColor(100, 116, 139);
     doc.text('Subtotal (Base Fee):', 125, 143);
-    doc.text(`₹${(receipt.amount - (receipt.taxGst || 0)).toLocaleString('en-IN')}`, 175, 143);
+    doc.text(`₹${((receipt.amount || 0) - (receipt.taxGst || 0)).toLocaleString('en-IN')}`, 175, 143);
     
     doc.text('IGST / CGST+SGST (18%):', 125, 151);
-    doc.text(`₹${(receipt.taxGst || Math.round(receipt.amount * 0.18)).toLocaleString('en-IN')}`, 175, 151);
+    doc.text(`₹${(receipt.taxGst || Math.round((receipt.amount || 0) * 0.18)).toLocaleString('en-IN')}`, 175, 151);
     
     doc.setFontSize(10);
     doc.setTextColor(16, 185, 129);
     doc.text('TOTAL PAID:', 125, 163);
-    doc.text(`₹${receipt.amount.toLocaleString('en-IN')}`, 175, 163);
+    doc.text(`₹${(receipt.amount || 0).toLocaleString('en-IN')}`, 175, 163);
     
     doc.setFontSize(8);
     doc.setTextColor(100, 116, 139);
@@ -240,16 +240,16 @@ export const FeeFinancialsTab: React.FC<FeeFinancialsTabProps> = ({
                 <div className="space-y-2 pt-2 border-t border-slate-200/80 text-xs">
                   <div className="flex justify-between text-slate-600">
                     <span>Total Fee:</span>
-                    <span className="font-mono font-bold text-slate-900">₹{course.totalFee.toLocaleString('en-IN')}</span>
+                    <span className="font-mono font-bold text-slate-900">₹{(course.totalFee || 0).toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between text-emerald-700">
                     <span>Paid Amount:</span>
-                    <span className="font-mono font-bold">₹{course.paidAmount.toLocaleString('en-IN')}</span>
+                    <span className="font-mono font-bold">₹{(course.paidAmount || 0).toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between text-slate-600">
                     <span>Pending Due:</span>
-                    <span className={`font-mono font-bold ${course.pendingBalance > 0 ? 'text-amber-600' : 'text-slate-400'}`}>
-                      ₹{course.pendingBalance.toLocaleString('en-IN')}
+                    <span className={`font-mono font-bold ${(course.pendingBalance || 0) > 0 ? 'text-amber-600' : 'text-slate-400'}`}>
+                      ₹{(course.pendingBalance || 0).toLocaleString('en-IN')}
                     </span>
                   </div>
                 </div>
@@ -262,11 +262,11 @@ export const FeeFinancialsTab: React.FC<FeeFinancialsTabProps> = ({
                     </div>
                   ) : (
                     <button
-                      onClick={() => onOpenPayFeeModal(course.courseTitle, course.courseId, course.pendingBalance)}
+                      onClick={() => onOpenPayFeeModal(course.courseTitle, course.courseId, course.pendingBalance || 0)}
                       className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <CreditCard className="w-4 h-4" />
-                      <span>Pay Balance (₹{course.pendingBalance.toLocaleString('en-IN')})</span>
+                      <span>Pay Balance (₹{(course.pendingBalance || 0).toLocaleString('en-IN')})</span>
                     </button>
                   )}
                 </div>
@@ -353,9 +353,9 @@ export const FeeFinancialsTab: React.FC<FeeFinancialsTabProps> = ({
 
                   <td className="py-3.5 px-3">
                     <span className="font-mono font-black text-slate-900 text-sm">
-                      ₹{receipt.amount.toLocaleString('en-IN')}
+                      ₹{(receipt.amount || 0).toLocaleString('en-IN')}
                     </span>
-                    <span className="text-[10px] text-slate-400 block">+ ₹{receipt.taxGst} GST (18%)</span>
+                    <span className="text-[10px] text-slate-400 block">+ ₹{receipt.taxGst || 0} GST (18%)</span>
                   </td>
 
                   <td className="py-3.5 px-3 text-right">

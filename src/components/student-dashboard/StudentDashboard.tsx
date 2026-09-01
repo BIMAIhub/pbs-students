@@ -61,6 +61,7 @@ import { BimAiCopilotDrawer } from './BimAiCopilotDrawer';
 import { TaskSubmissionModal } from './TaskSubmissionModal';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import { StudentExcelRegistryModal } from './StudentExcelRegistryModal';
+import { CourseUpiEnrollModal } from './CourseUpiEnrollModal';
 import { LiveSession, StudentProfileData, EnrolledCourseItem, FeeReceiptItem, DownloadableAsset } from './types';
 import { 
   STUDENT_PROFILE_DEFAULT, 
@@ -69,7 +70,7 @@ import {
   DOWNLOADABLE_ASSETS_DATA 
 } from './dashboardData';
 import { studentAuthUtil } from '../../utils/studentAuth';
-import { pbsAdminStore, ManagedStudent } from '../../utils/pbsAdminStore';
+import { pbsAdminStore, ManagedStudent, AdminCourse } from '../../utils/pbsAdminStore';
 import { soundFx } from '../../utils/soundEffects';
 
 interface StudentDashboardProps {
@@ -130,6 +131,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const [showCertificateModal, setShowCertificateModal] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [showExcelRegistryModal, setShowExcelRegistryModal] = useState(false);
+  const [showCourseUpiEnrollModal, setShowCourseUpiEnrollModal] = useState(false);
+  const [selectedCourseForUpiEnroll, setSelectedCourseForUpiEnroll] = useState<AdminCourse | null>(null);
   const [policyModalType, setPolicyModalType] = useState<'placement' | 'faq' | 'certification' | null>(null);
   const [selectedLiveSession, setSelectedLiveSession] = useState<LiveSession | null>(null);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
@@ -220,15 +223,17 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         setFeeReceipts([
           {
             receiptId: `PBS-REC-${(match.studentId || '2026').replace('PBS-STU-', '')}-01`,
+            invoiceNumber: `INV/PBS/2026-27/0${(match.rollNumber || '8492').slice(-3)}`,
             courseId: match.enrolledCourseIds?.[0] || 'revit-mep-pro',
             courseTitle: match.specialization || 'Autodesk Revit MEP Masterclass (LOD 300 - 500)',
-            amountPaid: match.paidAmount,
-            totalCourseFee: match.totalFee,
-            paymentDate: 'Aug 2026',
-            paymentMode: 'Instant NetBanking / UPI Verified',
-            transactionRef: `UPI/PBS/${(match.rollNumber || '8492').replace(/[^a-zA-Z0-9]/g, '')}/TXN99`,
-            status: 'Verified',
-            receiptPdfUrl: '#'
+            amount: match.paidAmount || 0,
+            paymentMethod: 'Instant NetBanking / UPI Verified',
+            transactionId: `UPI/PBS/${(match.rollNumber || '8492').replace(/[^a-zA-Z0-9]/g, '')}/TXN99`,
+            date: 'Aug 2026',
+            paymentType: (match.pendingBalance || 0) === 0 ? 'Full Payment' : 'Installment #1',
+            status: 'Paid',
+            taxGst: Math.round((match.paidAmount || 0) * 0.18),
+            downloadUrl: '#'
           }
         ]);
       }
@@ -763,6 +768,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                 onOpenCertificateModal={() => setShowCertificateModal(true)}
                 onOpenFeeTab={() => setActiveTab('fee_financials')}
                 onOpenDownloadSyllabus={handleDownloadSyllabus}
+                onOpenUpiEnrollModal={(course) => {
+                  soundFx.playClick();
+                  setSelectedCourseForUpiEnroll(course);
+                  setShowCourseUpiEnrollModal(true);
+                }}
               />
             )}
 
@@ -940,6 +950,25 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           onOpenClassroom={() => {
             setSelectedLiveSession(null);
             setShowClassroomModal(true);
+          }}
+        />
+      )}
+
+      {showCourseUpiEnrollModal && (
+        <CourseUpiEnrollModal
+          isOpen={showCourseUpiEnrollModal}
+          initialCourse={selectedCourseForUpiEnroll}
+          studentUser={user}
+          onClose={() => {
+            setShowCourseUpiEnrollModal(false);
+            setSelectedCourseForUpiEnroll(null);
+          }}
+          onEnrollmentSubmitted={(_req) => {
+            soundFx.playSuccess();
+            setNotificationAlert(
+              `Payment UTR submitted! Your enrollment request has been sent to Admin Pravin Yadav. Once verified within 24 hours, the course will automatically appear in your LMS.`
+            );
+            setTimeout(() => setNotificationAlert(null), 7000);
           }}
         />
       )}

@@ -191,8 +191,8 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                   Limited Seats Offer
                 </span>
                 <div className="flex items-baseline gap-3 pt-2">
-                  <span className="text-3xl font-black text-slate-900">₹{course.discountedPrice.toLocaleString('en-IN')}</span>
-                  <span className="text-sm text-slate-400 line-through">₹{course.originalPrice.toLocaleString('en-IN')}</span>
+                  <span className="text-3xl font-black text-slate-900">₹{(course.discountedPrice || 0).toLocaleString('en-IN')}</span>
+                  <span className="text-sm text-slate-400 line-through">₹{(course.originalPrice || 0).toLocaleString('en-IN')}</span>
                 </div>
                 {course.installmentPrice && (
                   <div className="text-xs text-emerald-700 font-semibold">

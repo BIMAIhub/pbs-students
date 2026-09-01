@@ -92,15 +92,15 @@ export const AdminRecordFeeModal: React.FC<AdminRecordFeeModalProps> = ({
               <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl grid grid-cols-3 gap-2 text-center text-xs">
                 <div>
                   <div className="text-[10px] text-slate-500 font-medium">Total Fee</div>
-                  <div className="font-extrabold text-slate-900 mt-0.5">₹{student.totalFee.toLocaleString('en-IN')}</div>
+                  <div className="font-extrabold text-slate-900 mt-0.5">₹{(student.totalFee || 0).toLocaleString('en-IN')}</div>
                 </div>
                 <div>
                   <div className="text-[10px] text-emerald-700 font-medium">Paid Fee</div>
-                  <div className="font-extrabold text-emerald-700 mt-0.5">₹{student.paidAmount.toLocaleString('en-IN')}</div>
+                  <div className="font-extrabold text-emerald-700 mt-0.5">₹{(student.paidAmount || 0).toLocaleString('en-IN')}</div>
                 </div>
                 <div>
                   <div className="text-[10px] text-rose-600 font-medium">Pending</div>
-                  <div className="font-extrabold text-rose-600 mt-0.5">₹{student.pendingBalance.toLocaleString('en-IN')}</div>
+                  <div className="font-extrabold text-rose-600 mt-0.5">₹{(student.pendingBalance || 0).toLocaleString('en-IN')}</div>
                 </div>
               </div>
 

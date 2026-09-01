@@ -14,9 +14,12 @@ import {
   GraduationCap,
   PlayCircle,
   ShieldCheck,
-  PlusCircle
+  PlusCircle,
+  QrCode,
+  ArrowUpRight
 } from 'lucide-react';
 import { EnrolledCourseItem } from './types';
+import { pbsAdminStore, AdminCourse } from '../../utils/pbsAdminStore';
 
 interface EnrolledCoursesTabProps {
   enrolledCourses: EnrolledCourseItem[];
@@ -26,6 +29,7 @@ interface EnrolledCoursesTabProps {
   onOpenCertificateModal: () => void;
   onOpenFeeTab: () => void;
   onOpenDownloadSyllabus: (courseTitle: string) => void;
+  onOpenUpiEnrollModal?: (course: AdminCourse) => void;
 }
 
 export const EnrolledCoursesTab: React.FC<EnrolledCoursesTabProps> = ({
@@ -35,12 +39,16 @@ export const EnrolledCoursesTab: React.FC<EnrolledCoursesTabProps> = ({
   onOpenVideoClassroom,
   onOpenCertificateModal,
   onOpenFeeTab,
-  onOpenDownloadSyllabus
+  onOpenDownloadSyllabus,
+  onOpenUpiEnrollModal
 }) => {
   const activeCourse = enrolledCourses.find((c) => c.courseId === activeCourseId) || enrolledCourses[0];
   const completedCount = enrolledCourses.filter(c => c.status === 'Completed').length;
   const activeCount = enrolledCourses.filter(c => c.status === 'Active').length;
   const totalEarnedCertificates = enrolledCourses.filter(c => c.certificateEarned).length;
+  
+  // Available Published Courses from Admin Store
+  const catalogCourses = pbsAdminStore.getCourses();
 
   return (
     <div id="enrolled-courses-tab-container" className="space-y-8 pb-16">
@@ -286,6 +294,105 @@ export const EnrolledCoursesTab: React.FC<EnrolledCoursesTabProps> = ({
                   </div>
                 </div>
 
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ================= NEW COURSE LAUNCHES & INSTANT UPI ENROLLMENT ================= */}
+      <div className="space-y-4 pt-6 border-t border-slate-200">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
+                New 2026 Course Launches
+              </span>
+              <span className="text-xs text-amber-700 font-bold flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" /> 24-Hour Admin Verification SLA
+              </span>
+            </div>
+            <h3 className="text-lg font-black text-slate-900 mt-1">
+              Explore More Masterclasses & Elective Specializations
+            </h3>
+            <p className="text-xs text-slate-600">
+              Select any newly launched BIM course, scan the instant UPI QR code via GPay / PhonePe (<code className="text-slate-900 font-bold bg-slate-100 px-1 py-0.5 rounded">pravinsyadavpsy99-03@oksbi</code>), and submit your transaction UTR number to enroll.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {catalogCourses.map((c) => {
+            const isAlreadyEnrolled = enrolledCourses.some(e => e.courseId === c.id || e.courseTitle === c.title);
+            const totalLessons = c.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0;
+
+            return (
+              <div
+                key={c.id}
+                className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col justify-between group"
+              >
+                <div>
+                  {/* Card Thumbnail */}
+                  <div className="h-40 relative overflow-hidden bg-slate-900">
+                    <img
+                      src={c.thumbnail}
+                      alt={c.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-90"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-4 justify-between">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-slate-950">
+                        {c.category} • {c.level}
+                      </span>
+                      <span className="text-xs font-black text-white bg-slate-900/80 px-2 py-0.5 rounded-md border border-white/20">
+                        {c.modules?.length || 10} Modules
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card Details */}
+                  <div className="p-5 space-y-3">
+                    <h4 className="font-extrabold text-slate-900 text-sm leading-snug line-clamp-2">
+                      {c.title}
+                    </h4>
+                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                      {c.description}
+                    </p>
+
+                    <div className="space-y-1.5 pt-2 border-t border-slate-100 text-xs">
+                      <div className="flex justify-between text-slate-600">
+                        <span>Instructor:</span>
+                        <span className="font-bold text-slate-800">{c.instructor}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600">
+                        <span>Curriculum:</span>
+                        <span className="font-bold text-indigo-700">{totalLessons} Lessons + BIM Datasets</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600">
+                        <span>Fee:</span>
+                        <span className="font-black text-emerald-700 text-sm">₹{c.totalFee.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Enroll CTA */}
+                <div className="p-5 pt-0">
+                  {isAlreadyEnrolled ? (
+                    <div className="w-full py-2.5 bg-emerald-50 text-emerald-800 font-bold text-xs rounded-2xl text-center border border-emerald-200 flex items-center justify-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span>Already In Your LMS</span>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => onOpenUpiEnrollModal && onOpenUpiEnrollModal(c)}
+                      className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer group-hover:shadow-emerald-600/30"
+                    >
+                      <QrCode className="w-4 h-4 text-amber-300" />
+                      <span>Enroll with UPI QR (₹{c.totalFee.toLocaleString('en-IN')})</span>
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })}

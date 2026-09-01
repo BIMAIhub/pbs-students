@@ -24,6 +24,30 @@ export interface StudentPlacementRecord {
   }[];
 }
 
+export interface EnrollmentRequest {
+  id: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  studentPhone: string;
+  courseId: string;
+  courseTitle: string;
+  totalFee: number;
+  amountPaid: number;
+  pendingBalance: number;
+  paymentPlan: 'Full Payment' | 'Part Payment (50%)';
+  paymentMethod: 'UPI' | 'GPay' | 'PhonePe' | 'Paytm' | 'Bank Transfer';
+  upiId: string; // 'pravinsyadavpsy99-03@oksbi'
+  transactionId: string; // UTR / Reference number
+  screenshotUrl?: string;
+  submittedAt: string;
+  slaDeadline: string; // 24 hours from submittedAt
+  status: 'Pending Verification' | 'Approved & Assigned' | 'Rejected';
+  adminNotes?: string;
+  verifiedAt?: string;
+  verifiedBy?: string;
+}
+
 export interface StudentMessageItem {
   id: string;
   sender: 'admin' | 'student';
@@ -147,25 +171,25 @@ const INITIAL_STUDENTS: ManagedStudent[] = [
       mockInterviewScore: 96,
       mockInterviewFeedback: 'Strong background and enthusiasm for ISO 19650 BEP workflows and MEP engineering. Starting Module 1 of the cohort.',
       mockInterviewDate: 'Sept 01, 2026',
-      readinessStatus: 'Cohort Enrolled - Training Active',
+      readinessStatus: 'In Training',
       referredCompanies: [
         {
           companyName: 'AtkinsRéalis (Dubai / UK Infrastructure)',
           role: 'BIM Coordinator - MEP Systems',
           location: 'Dubai Design District, UAE',
-          status: 'Target Pipeline'
+          status: 'Shortlisted'
         },
         {
           companyName: 'WSP Middle East',
           role: 'Senior BIM MEP Specialist',
           location: 'Riyadh, KSA',
-          status: 'Target Pipeline'
+          status: 'Shortlisted'
         },
         {
           companyName: 'Jacobs Engineering',
           role: 'Digital Delivery Engineer',
           location: 'Pune / London',
-          status: 'Target Pipeline'
+          status: 'Shortlisted'
         }
       ]
     },
@@ -353,8 +377,345 @@ const INITIAL_COURSES: AdminCourse[] = [
 
 const STORAGE_STUDENTS_KEY = 'pbs_admin_student_roster';
 const STORAGE_COURSES_KEY = 'pbs_admin_courses_library';
+const STORAGE_ENROLLMENTS_KEY = 'pbs_admin_enrollment_requests';
+
+const INITIAL_ENROLLMENT_REQUESTS: EnrollmentRequest[] = [
+  {
+    id: 'ENR-2026-091',
+    studentId: 'PBS-STU-2026-8492',
+    studentName: 'Pravin Yadav',
+    studentEmail: 'pravin.yadav.0926@pbs.com',
+    studentPhone: '+91 8208918726',
+    courseId: 'c1',
+    courseTitle: 'Autodesk Revit MEP Masterclass (LOD 300 to LOD 500)',
+    totalFee: 14999,
+    amountPaid: 14999,
+    pendingBalance: 0,
+    paymentPlan: 'Full Payment',
+    paymentMethod: 'UPI',
+    upiId: 'pravinsyadavpsy99-03@oksbi',
+    transactionId: 'UPI/2026/0926/84920199',
+    submittedAt: '2026-09-01T09:30:00.000Z',
+    slaDeadline: '2026-09-02T09:30:00.000Z',
+    status: 'Approved & Assigned',
+    verifiedAt: '2026-09-01T09:45:00.000Z',
+    verifiedBy: 'PBS Academic Director'
+  }
+];
 
 export const pbsAdminStore = {
+  /**
+   * Get all enrollment requests
+   */
+  getEnrollmentRequests(): EnrollmentRequest[] {
+    try {
+      const stored = localStorage.getItem(STORAGE_ENROLLMENTS_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.warn('Could not read enrollment requests from storage:', e);
+    }
+    return INITIAL_ENROLLMENT_REQUESTS;
+  },
+
+  /**
+   * Save enrollment requests
+   */
+  saveEnrollmentRequests(requests: EnrollmentRequest[]): void {
+    try {
+      localStorage.setItem(STORAGE_ENROLLMENTS_KEY, JSON.stringify(requests));
+    } catch (e) {
+      console.warn('Could not save enrollment requests:', e);
+    }
+  },
+
+  /**
+   * Submit a new student course enrollment request via UPI
+   */
+  submitEnrollmentRequest(data: {
+    studentId?: string;
+    studentName: string;
+    studentEmail: string;
+    studentPhone: string;
+    courseId: string;
+    courseTitle: string;
+    totalFee: number;
+    amountPaid: number;
+    pendingBalance: number;
+    paymentPlan: 'Full Payment' | 'Part Payment (50%)';
+    paymentMethod: 'UPI' | 'GPay' | 'PhonePe' | 'Paytm' | 'Bank Transfer';
+    upiId?: string;
+    transactionId: string;
+    screenshotUrl?: string;
+  }): EnrollmentRequest {
+    const list = this.getEnrollmentRequests();
+    const now = new Date();
+    const sla = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours SLA
+
+    const newRequest: EnrollmentRequest = {
+      id: `ENR-${Date.now().toString().slice(-6)}`,
+      studentId: data.studentId || `PBS-STU-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+      studentName: data.studentName,
+      studentEmail: data.studentEmail,
+      studentPhone: data.studentPhone,
+      courseId: data.courseId,
+      courseTitle: data.courseTitle,
+      totalFee: data.totalFee,
+      amountPaid: data.amountPaid,
+      pendingBalance: data.pendingBalance,
+      paymentPlan: data.paymentPlan,
+      paymentMethod: data.paymentMethod,
+      upiId: data.upiId || 'pravinsyadavpsy99-03@oksbi',
+      transactionId: data.transactionId,
+      screenshotUrl: data.screenshotUrl,
+      submittedAt: now.toISOString(),
+      slaDeadline: sla.toISOString(),
+      status: 'Pending Verification'
+    };
+
+    list.unshift(newRequest);
+    this.saveEnrollmentRequests(list);
+    return newRequest;
+  },
+
+  /**
+   * Approve an enrollment request and assign course to student account immediately
+   */
+  approveEnrollmentRequest(requestId: string, adminName: string = 'PBS Academic Director'): { success: boolean; message: string; student?: ManagedStudent } {
+    const list = this.getEnrollmentRequests();
+    const reqIndex = list.findIndex(r => r.id === requestId);
+    if (reqIndex === -1) {
+      return { success: false, message: 'Enrollment request not found.' };
+    }
+
+    const req = list[reqIndex];
+    req.status = 'Approved & Assigned';
+    req.verifiedAt = new Date().toISOString();
+    req.verifiedBy = adminName;
+    this.saveEnrollmentRequests(list);
+
+    // Update or create student in roster
+    let student = this.getStudentByQuery(req.studentEmail) || this.getStudentByQuery(req.studentId);
+    if (!student) {
+      // Create new student
+      student = this.addStudent({
+        studentId: req.studentId,
+        rollNumber: `PBS/2026/BIM-${Math.floor(100 + Math.random() * 899)}`,
+        name: req.studentName,
+        email: req.studentEmail,
+        password: this.generateStudentDefaultPassword(req.studentName),
+        phone: req.studentPhone,
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+        specialization: req.courseTitle,
+        batch: '09/2026 (Sept 2026 Weekend Cohort)',
+        enrolledCourseIds: [req.courseId],
+        enrolledCourseTitles: [req.courseTitle],
+        attendancePercent: 100,
+        totalFee: req.totalFee,
+        paidAmount: req.amountPaid,
+        pendingBalance: req.pendingBalance,
+        paymentStatus: req.pendingBalance === 0 ? 'Full Paid' : 'Part Paid',
+        capstoneStatus: 'Stage 0: Strategic Definition in Progress',
+        capstoneGrade: 'In Progress',
+        growthScore: 20,
+        registrationDate: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+        placement: {
+          studentId: req.studentId,
+          targetRole: 'BIM Coordinator / MEP Engineer',
+          targetLocations: ['Pune / Bangalore', 'Dubai / UAE'],
+          expectedSalary: '₹12.0 - ₹16.0 LPA',
+          portfolioUrl: '',
+          resumeStatus: 'Under Review',
+          mockInterviewScore: 88,
+          mockInterviewFeedback: 'New course enrollment approved. Initial cohort curriculum unlocked.',
+          mockInterviewDate: 'Scheduled in 30 Days',
+          readinessStatus: 'In Training',
+          referredCompanies: [
+            {
+              companyName: 'AtkinsRéalis / WSP Global',
+              role: 'BIM Engineer',
+              location: 'Dubai / Pune',
+              status: 'Shortlisted'
+            }
+          ]
+        },
+        messages: []
+      });
+    } else {
+      // Add course if not already enrolled
+      const currentCourses = student.enrolledCourseIds || [];
+      const currentTitles = student.enrolledCourseTitles || [];
+      
+      const newCourseIds = currentCourses.includes(req.courseId) ? currentCourses : [...currentCourses, req.courseId];
+      const newCourseTitles = currentTitles.includes(req.courseTitle) ? currentTitles : [...currentTitles, req.courseTitle];
+      
+      const newTotalFee = (student.totalFee || 0) + req.totalFee;
+      const newPaidAmount = (student.paidAmount || 0) + req.amountPaid;
+      const newPending = Math.max(0, newTotalFee - newPaidAmount);
+      
+      this.updateStudent(student.studentId, {
+        enrolledCourseIds: newCourseIds,
+        enrolledCourseTitles: newCourseTitles,
+        totalFee: newTotalFee,
+        paidAmount: newPaidAmount,
+        pendingBalance: newPending,
+        paymentStatus: newPending === 0 ? 'Full Paid' : 'Part Paid'
+      });
+      student = this.getStudentByQuery(student.studentId) || student;
+    }
+
+    // Send confirmation message to student
+    this.sendMessageToStudent(
+      student.studentId,
+      `🎉 Course Assigned: ${req.courseTitle} Unlocked!`,
+      `Hello ${req.studentName}, your UPI payment of ₹${req.amountPaid.toLocaleString('en-IN')} (Ref: ${req.transactionId}) has been verified and confirmed by Admin. The complete course curriculum, 10 modular video lectures, and BIM dataset files are now unlocked in your dashboard.`
+    );
+
+    return {
+      success: true,
+      message: `Enrollment for ${req.studentName} approved! Course "${req.courseTitle}" assigned to student profile.`,
+      student
+    };
+  },
+
+  /**
+   * Reject an enrollment request with reason
+   */
+  rejectEnrollmentRequest(requestId: string, reason: string = 'Payment reference could not be verified in bank ledger.'): boolean {
+    const list = this.getEnrollmentRequests();
+    const req = list.find(r => r.id === requestId);
+    if (!req) return false;
+
+    req.status = 'Rejected';
+    req.adminNotes = reason;
+    req.verifiedAt = new Date().toISOString();
+    this.saveEnrollmentRequests(list);
+
+    // Send alert message if student exists
+    const student = this.getStudentByQuery(req.studentEmail) || this.getStudentByQuery(req.studentId);
+    if (student) {
+      this.sendMessageToStudent(
+        student.studentId,
+        `⚠️ Enrollment Verification Update: ${req.courseTitle}`,
+        `We could not verify transaction UTR ${req.transactionId}. Reason: ${reason}. Please contact Admin or resubmit your UPI payment receipt.`
+      );
+    }
+
+    return true;
+  },
+
+  /**
+   * Detect video provider from link
+   */
+  detectVideoType(url: string): 'youtube' | 'microsoft-drive' | 'google-drive' | 'direct' | 'pbs-secure' {
+    if (!url) return 'pbs-secure';
+    const clean = url.toLowerCase();
+    if (clean.includes('youtube.com') || clean.includes('youtu.be')) return 'youtube';
+    if (clean.includes('onedrive.live.com') || clean.includes('1drv.ms') || clean.includes('sharepoint.com')) return 'microsoft-drive';
+    if (clean.includes('drive.google.com')) return 'google-drive';
+    if (clean.endsWith('.mp4') || clean.endsWith('.webm') || clean.endsWith('.m3u8')) return 'direct';
+    return 'pbs-secure';
+  },
+
+  /**
+   * Generate complete 10-Module curriculum structure for courses
+   */
+  generate10ModuleCurriculum(courseTitle: string, category: string = 'Revit', videoLinks: string[] = [], cloudDriveUrl?: string): AdminCourseModule[] {
+    const BIM_MODULE_SYLLABI: Record<string, { title: string; desc: string; lessons: string[] }[]> = {
+      default: [
+        {
+          title: 'Module 01: Foundations & BIM Project Standards Setup',
+          desc: 'Project templates, unit configurations, shared parameters & ISO 19650 BEP initialization.',
+          lessons: ['Workspace & Project Template Architecture', 'Linking CAD, IFC & Multi-Disciplinary Models', 'Coordinate Systems & Shared Grids']
+        },
+        {
+          title: 'Module 02: Core Modeling Workflows & Parametric Design',
+          desc: 'Parametric geometry authoring, LOD 300 elements, view templates and filters.',
+          lessons: ['Parametric Geometry & Design Guidelines', 'Custom View Filters & Graphic Overrides', 'Worksharing & Central File Syncing']
+        },
+        {
+          title: 'Module 03: MEP / Architectural Advanced Systems',
+          desc: 'Mechanical HVAC, Electrical Power, Plumbing fixtures and technical routing.',
+          lessons: ['System Logical Routing & Sizing Takeoffs', 'Pressure Drop & Flow Calculations', 'Equipment Families & Connector Logic']
+        },
+        {
+          title: 'Module 04: Family Editor & Custom Parametric Components',
+          desc: 'Formulas, nested parametric families, catalog parameters & look-up tables.',
+          lessons: ['Nested Family Hierarchy & Shared Parameters', 'Lookup Tables & CSV Data Mapping', 'LOD 400 Manufacturing Fabrication Parts']
+        },
+        {
+          title: 'Module 05: Navisworks Clash Coordination & Issue Management',
+          desc: 'Federated model aggregation, hard/soft clearance clash detection & matrix reporting.',
+          lessons: ['Federating Multi-Disciplinary NWD Models', 'Clash Matrix, Tolerances & Grouping', 'BCF Export & Issue Tracking to Revit']
+        },
+        {
+          title: 'Module 06: 4D TimeLiner Construction Sequencing',
+          desc: 'Linking MS Project / Primavera P6 schedules to 3D elements for Gantt playback.',
+          lessons: ['TimeLiner Task Assignment & Rules', 'Planned vs Actual 4D Visual Comparison', 'Exporting Animation Videos for Client Handover']
+        },
+        {
+          title: 'Module 07: 5D Quantity Takeoff (QTO) & Cost Estimation',
+          desc: 'Automated BOQ extraction, material takeoff formulas & Excel schedule sync.',
+          lessons: ['Material Takeoff Parameters & Unit Costs', 'Bidirectional Excel Parameter Syncing', 'Carbon Footprint & Lifecycle Assessment']
+        },
+        {
+          title: 'Module 08: Computational Automation with Dynamo & Python',
+          desc: 'Visual programming nodes, mass element tagging, geometry algorithms & Revit API.',
+          lessons: ['Dynamo Visual Scripting Fundamentals', 'Automated Sheet Generation & Re-numbering', 'Python Nodes for Custom Revit API Automations']
+        },
+        {
+          title: 'Module 09: ISO 19650 CDE & Digital Twin Asset Handover',
+          desc: 'Common Data Environment workflows, COBie spreadsheets & CAFM sensor integration.',
+          lessons: ['CDE Container States (WIP, Shared, Published)', 'COBie Data Tagging & Spreadsheet Export', 'IoT Sensor Integrations & Facility Management']
+        },
+        {
+          title: 'Module 10: Capstone Project Defense & MNC Placement Portfolio',
+          desc: 'End-to-end multi-disciplinary project submission, portfolio review and mock interviews.',
+          lessons: ['Comprehensive BIM Portfolio Compilation', 'ISO 19650 BEP Presentation Defense', 'Technical MNC Interview Prep & Reference Referrals']
+        }
+      ]
+    };
+
+    const templateModules = BIM_MODULE_SYLLABI.default;
+
+    return templateModules.map((m, index) => {
+      const moduleCode = `MOD-${(index + 1).toString().padStart(2, '0')}`;
+      const videoForThisModule = videoLinks[index] || (videoLinks.length > 0 ? videoLinks[index % videoLinks.length] : '');
+      const videoType = this.detectVideoType(videoForThisModule);
+
+      const lessons: AdminVideoLesson[] = m.lessons.map((lessonTitle, lIndex) => {
+        const link = (lIndex === 0 && videoForThisModule) ? videoForThisModule : (videoLinks[(index * 3 + lIndex) % (videoLinks.length || 1)] || '');
+        return {
+          id: `les-${index + 1}-${lIndex + 1}-${Date.now()}`,
+          title: `${moduleCode}.${lIndex + 1} - ${lessonTitle}`,
+          duration: `${25 + (index * 3 + lIndex * 5) % 25} min`,
+          videoType: this.detectVideoType(link),
+          videoUrl: this.formatEmbedVideoUrl(link || (cloudDriveUrl ? `${cloudDriveUrl}#mod${index+1}` : '')),
+          isCompleted: false,
+          assignedStudentId: 'all',
+          addedBy: 'Admin (Pravin Yadav)',
+          addedDate: new Date().toISOString().split('T')[0],
+          description: `Comprehensive hands-on demonstration covering ${lessonTitle.toLowerCase()} with live real-world BIM datasets.`,
+          learningObjectives: [
+            `Understand industry standard workflows for ${lessonTitle}`,
+            `Execute LOD 300-500 modeling and coordination steps`,
+            `Apply ISO 19650 naming conventions and verification checklists`
+          ],
+          cloudDriveFolderUrl: cloudDriveUrl || 'https://onedrive.live.com/?authkey=%21APBSMEP2026Data&id=PBS_Central_Datasets',
+          bimDatasetUrl: 'https://onedrive.live.com/download?cid=PBS2026&resid=MOD_CENTRAL_DATASET.rvt'
+        };
+      });
+
+      return {
+        id: `mod-${index + 1}-${Date.now()}`,
+        moduleCode,
+        title: m.title,
+        duration: `${(2.5 + (index % 3) * 0.8).toFixed(1)} Hours`,
+        lessons
+      };
+    });
+  },
   /**
    * Get all students
    */
@@ -655,10 +1016,10 @@ export const pbsAdminStore = {
       return `https://drive.google.com/file/d/${driveOpenMatch[1]}/preview`;
     }
 
-    // 3. YouTube Links
-    const ytMatch = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+    // 3. YouTube Links (Standard reliable embed with clean modest branding)
+    const ytMatch = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/);
     if (ytMatch && ytMatch[1]) {
-      return `https://www.youtube.com/embed/${ytMatch[1]}?modestbranding=1&rel=0`;
+      return `https://www.youtube.com/embed/${ytMatch[1]}?rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
     }
 
     return trimmed;

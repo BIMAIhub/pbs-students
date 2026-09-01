@@ -246,7 +246,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               <span>Revenue Received</span>
               <TrendingUp className="w-4 h-4 text-emerald-600" />
             </div>
-            <div className="text-2xl font-black text-emerald-700">₹{totalRevenueCollected.toLocaleString()}</div>
+            <div className="text-2xl font-black text-emerald-700">₹{(totalRevenueCollected || 0).toLocaleString()}</div>
             <div className="text-[10px] text-slate-500 font-medium">Collected Fees</div>
           </div>
 
@@ -255,7 +255,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               <span>Pending Fees Dues</span>
               <AlertCircle className="w-4 h-4 text-amber-600" />
             </div>
-            <div className="text-2xl font-black text-amber-700">₹{totalPendingFees.toLocaleString()}</div>
+            <div className="text-2xl font-black text-amber-700">₹{(totalPendingFees || 0).toLocaleString()}</div>
             <div className="text-[10px] text-amber-800 font-medium">Installments Pending</div>
           </div>
 
@@ -575,8 +575,8 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               <div className="text-xs space-y-1">
                 <div className="font-extrabold text-slate-900">{selectedStudentForPayment.studentName}</div>
                 <div className="text-slate-500">{selectedStudentForPayment.email}</div>
-                <div className="text-emerald-700 font-bold">Currently Paid: ₹{selectedStudentForPayment.paidAmount.toLocaleString()}</div>
-                <div className="text-amber-700 font-bold">Pending Dues: ₹{selectedStudentForPayment.pendingBalance.toLocaleString()}</div>
+                <div className="text-emerald-700 font-bold">Currently Paid: ₹{(selectedStudentForPayment.paidAmount || 0).toLocaleString()}</div>
+                <div className="text-amber-700 font-bold">Pending Dues: ₹{(selectedStudentForPayment.pendingBalance || 0).toLocaleString()}</div>
               </div>
 
               <div>

@@ -196,9 +196,9 @@ export const StudentExcelRegistryModal: React.FC<StudentExcelRegistryModalProps>
                   <tr className="hover:bg-slate-50">
                     <td className="py-2.5 px-3 font-semibold text-slate-500 border-r border-slate-100 bg-slate-50/40">Financial Ledger</td>
                     <td className="py-2.5 px-4">
-                      Total: <span className="font-bold">₹{record.totalFee.toLocaleString('en-IN')}</span> | 
-                      Paid: <span className="font-bold text-emerald-700">₹{record.paidFee.toLocaleString('en-IN')}</span> | 
-                      Pending: <span className="font-bold text-amber-700">₹{record.pendingFee.toLocaleString('en-IN')}</span>
+                      Total: <span className="font-bold">₹{(record.totalFee || 0).toLocaleString('en-IN')}</span> | 
+                      Paid: <span className="font-bold text-emerald-700">₹{(record.paidFee || 0).toLocaleString('en-IN')}</span> | 
+                      Pending: <span className="font-bold text-amber-700">₹{(record.pendingFee || 0).toLocaleString('en-IN')}</span>
                     </td>
                     <td className="py-2.5 px-3 text-[11px] text-emerald-600 font-semibold border-l border-slate-100">GST Invoice #PBS-INV-2026-849</td>
                   </tr>

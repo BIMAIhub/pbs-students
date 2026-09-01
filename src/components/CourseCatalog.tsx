@@ -195,8 +195,8 @@ export const CourseCatalog: React.FC<CourseCatalogProps> = ({
                   <div className="pt-3 border-t border-slate-100 flex items-baseline justify-between">
                     <div>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-black text-slate-900">₹{course.discountedPrice.toLocaleString('en-IN')}</span>
-                        <span className="text-xs text-slate-400 line-through">₹{course.originalPrice.toLocaleString('en-IN')}</span>
+                        <span className="text-2xl font-black text-slate-900">₹{(course.discountedPrice || 0).toLocaleString('en-IN')}</span>
+                        <span className="text-xs text-slate-400 line-through">₹{(course.originalPrice || 0).toLocaleString('en-IN')}</span>
                       </div>
                       {course.installmentPrice && (
                         <div className="text-[11px] text-emerald-700 font-extrabold mt-0.5">

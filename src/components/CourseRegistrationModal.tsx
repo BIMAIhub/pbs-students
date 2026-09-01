@@ -235,9 +235,9 @@ export const CourseRegistrationModal: React.FC<CourseRegistrationModalProps> = (
     pdf.text(`Email: ${studentEmail}`, 14, 69);
     pdf.text(`Course: ${selectedCourse.title}`, 14, 79);
     pdf.text(`Batch Mode: ${batchMode}`, 14, 86);
-    pdf.text(`Total Course Fee: INR ${finalCalculatedFee.toLocaleString()}`, 14, 98);
-    pdf.text(`Amount Paid: INR ${latestReceipt?.amount.toLocaleString()}`, 14, 106);
-    pdf.text(`Pending Balance: INR ${latestReceipt?.remainingFeeAfterPayment.toLocaleString()}`, 14, 114);
+    pdf.text(`Total Course Fee: INR ${(finalCalculatedFee || 0).toLocaleString()}`, 14, 98);
+    pdf.text(`Amount Paid: INR ${(latestReceipt?.amount || 0).toLocaleString()}`, 14, 106);
+    pdf.text(`Pending Balance: INR ${(latestReceipt?.remainingFeeAfterPayment || 0).toLocaleString()}`, 14, 114);
 
     pdf.setFontSize(9);
     pdf.setTextColor(100, 100, 100);
@@ -482,11 +482,11 @@ export const CourseRegistrationModal: React.FC<CourseRegistrationModalProps> = (
                     <div className="flex items-center justify-between font-extrabold text-xs sm:text-sm text-slate-900">
                       <span>🌓 Part Payment (50% Down)</span>
                       <span className="bg-emerald-600 text-white font-black text-xs px-2.5 py-0.5 rounded-full">
-                        ₹{Math.round(finalCalculatedFee / 2).toLocaleString()} Now
+                        ₹{Math.round((finalCalculatedFee || 0) / 2).toLocaleString()} Now
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-600 mt-1 leading-snug">
-                      Pay 50% now to reserve seat. Remaining ₹{Math.round(finalCalculatedFee / 2).toLocaleString()} due after 30 days.
+                      Pay 50% now to reserve seat. Remaining ₹{Math.round((finalCalculatedFee || 0) / 2).toLocaleString()} due after 30 days.
                     </p>
                   </button>
 
@@ -503,7 +503,7 @@ export const CourseRegistrationModal: React.FC<CourseRegistrationModalProps> = (
                     <div className="flex items-center justify-between font-extrabold text-xs sm:text-sm text-slate-900">
                       <span>💳 Full Payment (100%)</span>
                       <span className="bg-slate-900 text-white font-black text-xs px-2.5 py-0.5 rounded-full">
-                        ₹{finalCalculatedFee.toLocaleString()}
+                        ₹{(finalCalculatedFee || 0).toLocaleString()}
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-600 mt-1 leading-snug">
@@ -518,15 +518,15 @@ export const CourseRegistrationModal: React.FC<CourseRegistrationModalProps> = (
               <div className="bg-emerald-950 text-white p-4 rounded-2xl space-y-1.5 border border-emerald-800">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-emerald-200">Total Program Fee:</span>
-                  <span className="font-bold">₹{finalCalculatedFee.toLocaleString()}</span>
+                  <span className="font-bold">₹{(finalCalculatedFee || 0).toLocaleString()}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-emerald-200">Amount Payable Today:</span>
-                  <span className="text-amber-300 font-black text-base">₹{amountToPayNow.toLocaleString()}</span>
+                  <span className="text-amber-300 font-black text-base">₹{(amountToPayNow || 0).toLocaleString()}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs border-t border-emerald-800/80 pt-1.5 text-emerald-300 font-medium">
                   <span>Pending Fee Balance After Payment:</span>
-                  <span className="font-bold text-white">₹{pendingBalanceAfter.toLocaleString()}</span>
+                  <span className="font-bold text-white">₹{(pendingBalanceAfter || 0).toLocaleString()}</span>
                 </div>
               </div>
 
@@ -536,7 +536,7 @@ export const CourseRegistrationModal: React.FC<CourseRegistrationModalProps> = (
                 className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-extrabold text-sm sm:text-base py-3.5 rounded-2xl shadow-xl transition-transform hover:scale-[1.01] flex items-center justify-center gap-2"
               >
                 <CreditCard className="w-5 h-5 text-amber-300" />
-                <span>Pay ₹{amountToPayNow.toLocaleString()} & Get Instant Email Receipt</span>
+                <span>Pay ₹{(amountToPayNow || 0).toLocaleString()} & Get Instant Email Receipt</span>
                 <ArrowRight className="w-5 h-5" />
               </button>
             </form>
@@ -638,15 +638,15 @@ export const CourseRegistrationModal: React.FC<CourseRegistrationModalProps> = (
                   <div className="p-3.5 space-y-2">
                     <div className="flex justify-between">
                       <span className="text-slate-700 font-medium">Total Course Fee</span>
-                      <span className="font-bold">₹{completedRegistration.totalFee.toLocaleString()}</span>
+                      <span className="font-bold">₹{(completedRegistration.totalFee || 0).toLocaleString()}</span>
                     </div>
                     <div style={{ color: '#047857' }} className="flex justify-between font-extrabold">
                       <span>Paid in Current Transaction ({latestReceipt.paymentType})</span>
-                      <span>₹{latestReceipt.amount.toLocaleString()}</span>
+                      <span>₹{(latestReceipt.amount || 0).toLocaleString()}</span>
                     </div>
                     <div style={{ borderTop: '1px solid #e2e8f0', color: '#92400e' }} className="flex justify-between pt-2 font-black text-sm">
                       <span>Pending Fee Balance Due</span>
-                      <span>₹{completedRegistration.pendingBalance.toLocaleString()}</span>
+                      <span>₹{(completedRegistration.pendingBalance || 0).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>

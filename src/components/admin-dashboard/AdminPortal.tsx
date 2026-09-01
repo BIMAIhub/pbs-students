@@ -37,13 +37,18 @@ import {
   Layers,
   Phone,
   Mail,
-  Calendar
+  Calendar,
+  QrCode,
+  CheckCircle,
+  XCircle,
+  CreditCard
 } from 'lucide-react';
 import { 
   pbsAdminStore, 
   ManagedStudent, 
   AdminCourse, 
-  AdminVideoLesson 
+  AdminVideoLesson,
+  EnrollmentRequest 
 } from '../../utils/pbsAdminStore';
 import { studentAuthUtil } from '../../utils/studentAuth';
 import { soundFx } from '../../utils/soundEffects';
@@ -52,6 +57,7 @@ import { soundFx } from '../../utils/soundEffects';
 import { AdminAddStudentModal } from './AdminAddStudentModal';
 import { AdminAddCourseModal } from './AdminAddCourseModal';
 import { AdminAddVideoModal } from './AdminAddVideoModal';
+import { AdminAiCourseCreatorModal } from './AdminAiCourseCreatorModal';
 import { AdminStudentPasswordModal } from './AdminStudentPasswordModal';
 import { AdminPlacementModal } from './AdminPlacementModal';
 import { AdminRecordFeeModal } from './AdminRecordFeeModal';
@@ -71,17 +77,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   onNavigateToStudentPortal,
   onSwitchToStudentView
 }) => {
-  const [activeTab, setActiveTab] = useState<'students' | 'courses' | 'placements' | 'financials' | 'qa'>('students');
+  const [activeTab, setActiveTab] = useState<'students' | 'courses' | 'enrollments' | 'placements' | 'financials' | 'qa'>('students');
   const [students, setStudents] = useState<ManagedStudent[]>([]);
   const [courses, setCourses] = useState<AdminCourse[]>([]);
+  const [enrollmentRequests, setEnrollmentRequests] = useState<EnrollmentRequest[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterBatch, setFilterBatch] = useState('all');
   const [filterFee, setFilterFee] = useState('all');
+  const [filterEnrollmentStatus, setFilterEnrollmentStatus] = useState<string>('all');
 
   // Modal States
   const [showBackupModal, setShowBackupModal] = useState(false);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [showAddCourseModal, setShowAddCourseModal] = useState(false);
+  const [showAiCourseCreatorModal, setShowAiCourseCreatorModal] = useState(false);
   const [courseToEdit, setCourseToEdit] = useState<AdminCourse | null>(null);
   const [showAddVideoModal, setShowAddVideoModal] = useState(false);
   const [selectedCourseForVideo, setSelectedCourseForVideo] = useState<string | undefined>(undefined);
@@ -98,8 +107,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const refreshData = () => {
     const freshStudents = pbsAdminStore.getStudents();
     const freshCourses = pbsAdminStore.getCourses();
+    const freshEnrollments = pbsAdminStore.getEnrollmentRequests();
     setStudents(freshStudents);
     setCourses(freshCourses);
+    setEnrollmentRequests(freshEnrollments);
   };
 
   useEffect(() => {
@@ -125,6 +136,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const totalPendingBalance = students.reduce((acc, s) => acc + s.pendingBalance, 0);
   const fullyPaidCount = students.filter(s => s.paymentStatus === 'Full Paid').length;
   const placementReadyCount = students.filter(s => s.placement?.readinessStatus === 'Ready for MNC Placement').length;
+  const pendingEnrollmentsCount = enrollmentRequests.filter(r => r.status === 'pending').length;
 
   const handleExportCSV = () => {
     soundFx.playClick();
@@ -247,6 +259,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           {[
             { id: 'students', label: 'Students Roster & Control', icon: Users, count: students.length },
             { id: 'courses', label: 'Course Curriculum & Videos', icon: BookOpen, count: courses.length },
+            { 
+              id: 'enrollments', 
+              label: 'UPI Enrollments & Approvals', 
+              icon: CreditCard, 
+              badge: pendingEnrollmentsCount > 0 ? `${pendingEnrollmentsCount} Pending (24h SLA)` : undefined,
+              count: enrollmentRequests.length
+            },
             { id: 'placements', label: 'MNC Placements & Interviews', icon: Briefcase, count: placementReadyCount },
             { id: 'financials', label: 'Fee Accounting & Dues', icon: IndianRupee, badge: `₹${(totalPendingBalance / 1000).toFixed(0)}k Due` },
             { id: 'qa', label: 'Q&A & Student Messaging', icon: MessageSquare, count: 1 }
@@ -555,15 +574,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       <div className="space-y-1 text-xs">
                         <div className="flex justify-between">
                           <span className="text-slate-500">Total Fee:</span>
-                          <span className="font-bold text-slate-800">₹{s.totalFee.toLocaleString('en-IN')}</span>
+                          <span className="font-bold text-slate-800">₹{(s.totalFee || 0).toLocaleString('en-IN')}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-500">Paid Amount:</span>
-                          <span className="font-bold text-emerald-700">₹{s.paidAmount.toLocaleString('en-IN')}</span>
+                          <span className="font-bold text-emerald-700">₹{(s.paidAmount || 0).toLocaleString('en-IN')}</span>
                         </div>
                         <div className="flex justify-between border-t border-slate-200 pt-1">
                           <span className="text-slate-600 font-medium">Pending Dues:</span>
-                          <span className="font-extrabold text-rose-600">₹{s.pendingBalance.toLocaleString('en-IN')}</span>
+                          <span className="font-extrabold text-rose-600">₹{(s.pendingBalance || 0).toLocaleString('en-IN')}</span>
                         </div>
                       </div>
 
@@ -700,7 +719,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => setShowAiCourseCreatorModal(true)}
+                  className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md shadow-indigo-600/30 cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-300 animate-spin" />
+                  <span>AI Course Studio & 10-Module Builder</span>
+                </button>
+
                 <button
                   onClick={() => setShowAddVideoModal(true)}
                   className="px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
@@ -841,6 +868,195 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               })}
             </div>
 
+          </div>
+        )}
+
+        {/* ================= TAB: UPI ENROLLMENTS & COURSE APPROVALS ================= */}
+        {activeTab === 'enrollments' && (
+          <div className="space-y-6 animate-fadeIn">
+            {/* Header */}
+            <div className="bg-white p-6 rounded-3xl border border-emerald-100 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    UPI Payment Gateway Sync
+                  </span>
+                  <span className="text-xs text-amber-700 font-bold flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5" /> 24-Hour Verification SLA
+                  </span>
+                </div>
+                <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2 mt-1">
+                  <CreditCard className="w-5 h-5 text-emerald-700" />
+                  <span>Student UPI Course Enrollments & Fee Approvals</span>
+                </h2>
+                <p className="text-xs text-slate-600 mt-1 max-w-2xl leading-relaxed">
+                  Students scan the dynamic QR code to pay fees directly to <strong className="text-slate-900 font-mono bg-slate-100 px-1.5 py-0.5 rounded border border-slate-300">pravinsyadavpsy99-03@oksbi</strong> via GPay/PhonePe/Paytm and submit their 12-digit UTR Transaction ID. Verify bank credit and assign courses to student profiles with 1 click.
+                </p>
+              </div>
+
+              {/* Status Filter Badges */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {[
+                  { id: 'all', label: 'All Requests' },
+                  { id: 'pending', label: `Pending (${pendingEnrollmentsCount})` },
+                  { id: 'approved', label: 'Approved & Assigned' },
+                  { id: 'rejected', label: 'Rejected' }
+                ].map((st) => (
+                  <button
+                    key={st.id}
+                    onClick={() => setFilterEnrollmentStatus(st.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                      filterEnrollmentStatus === st.id
+                        ? 'bg-emerald-800 text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {st.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* List of Enrollment Requests */}
+            {enrollmentRequests
+              .filter(r => filterEnrollmentStatus === 'all' || r.status === filterEnrollmentStatus)
+              .length === 0 ? (
+              <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-xs space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
+                  <CreditCard className="w-6 h-6" />
+                </div>
+                <div className="text-sm font-bold text-slate-800">No Enrollment Requests Found</div>
+                <div className="text-xs text-slate-500 max-w-md mx-auto">
+                  Students who scan the UPI QR code and submit their UTR transaction details from the course catalog will appear here immediately for admin approval.
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {enrollmentRequests
+                  .filter(r => filterEnrollmentStatus === 'all' || r.status === filterEnrollmentStatus)
+                  .map((req) => {
+                    const isPending = req.status === 'pending';
+                    const isApproved = req.status === 'approved';
+                    const isRejected = req.status === 'rejected';
+
+                    return (
+                      <div
+                        key={req.id}
+                        className={`bg-white rounded-3xl p-5 border transition-all shadow-xs hover:shadow-md flex flex-col justify-between space-y-4 ${
+                          isPending
+                            ? 'border-amber-300 ring-2 ring-amber-400/20'
+                            : isApproved
+                            ? 'border-emerald-200'
+                            : 'border-slate-200 opacity-75'
+                        }`}
+                      >
+                        <div className="space-y-3">
+                          
+                          {/* Request Header */}
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                                isPending
+                                  ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                  : isApproved
+                                  ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                                  : 'bg-rose-100 text-rose-900 border border-rose-300'
+                              }`}>
+                                {isPending ? '⏳ Awaiting 24h Verification' : isApproved ? '✅ Verified & Assigned' : '❌ Rejected'}
+                              </span>
+                              <h3 className="font-extrabold text-slate-900 text-sm mt-2">{req.studentName}</h3>
+                              <div className="text-[11px] text-slate-500 font-mono">{req.studentEmail} • {req.studentPhone}</div>
+                            </div>
+
+                            <div className="text-right">
+                              <div className="text-sm font-black text-emerald-800">
+                                ₹{req.amountPaid.toLocaleString('en-IN')}
+                              </div>
+                              <span className="text-[10px] text-slate-500 uppercase font-semibold">
+                                {req.planSelected}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Course Requested */}
+                          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+                            <div className="text-[10px] uppercase font-bold text-slate-500">Requested Course</div>
+                            <div className="text-xs font-bold text-slate-900">{req.courseTitle}</div>
+                            <div className="text-[10px] text-indigo-600 font-bold">{req.category}</div>
+                          </div>
+
+                          {/* UPI & UTR Verification Details */}
+                          <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-2xl space-y-1.5 text-xs">
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-600 text-[11px]">UPI Beneficiary:</span>
+                              <span className="font-mono font-bold text-slate-900 text-[11px]">{req.upiIdUsed}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-600 text-[11px]">UTR / Ref No:</span>
+                              <span className="font-mono font-extrabold text-indigo-900 text-xs bg-white px-2 py-0.5 rounded border border-indigo-200">
+                                {req.utrNumber}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-600 text-[11px]">Submitted On:</span>
+                              <span className="text-slate-700 text-[10px]">{req.submittedDate}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
+                          {isPending ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (window.confirm(`Approve payment of ₹${req.amountPaid} for ${req.studentName} and assign "${req.courseTitle}" to their student profile?`)) {
+                                    soundFx.playClick();
+                                    pbsAdminStore.approveEnrollmentRequest(req.id);
+                                    refreshData();
+                                    setExportNotice(`Payment verified! "${req.courseTitle}" assigned to ${req.studentName}.`);
+                                    setTimeout(() => setExportNotice(null), 4000);
+                                  }
+                                }}
+                                className="flex-1 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-md shadow-emerald-700/20 transition-all cursor-pointer"
+                              >
+                                <CheckCircle className="w-3.5 h-3.5" />
+                                <span>Approve & Assign Course</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const reason = window.prompt('Please enter the reason for rejection (e.g. UTR not found in bank statement, amount mismatch):', 'UTR transaction could not be reconciled in bank statement.');
+                                  if (reason) {
+                                    soundFx.playClick();
+                                    pbsAdminStore.rejectEnrollmentRequest(req.id, reason);
+                                    refreshData();
+                                  }
+                                }}
+                                className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl transition-colors cursor-pointer"
+                                title="Reject Request"
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </button>
+                            </>
+                          ) : isApproved ? (
+                            <div className="w-full py-2 bg-emerald-50 text-emerald-800 rounded-xl text-xs font-bold text-center border border-emerald-200 flex items-center justify-center gap-1.5">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                              <span>Course Live on Student LMS</span>
+                            </div>
+                          ) : (
+                            <div className="w-full py-2 bg-rose-50 text-rose-800 rounded-xl text-xs font-medium text-center border border-rose-200 truncate">
+                              Rejected: {req.adminNotes || 'Payment not verified'}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
           </div>
         )}
 
@@ -987,7 +1203,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <div className="bg-white p-5 rounded-3xl border border-emerald-100 shadow-sm">
                 <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">Total Billed Fees</div>
                 <div className="text-2xl font-black text-slate-900 mt-1">
-                  ₹{students.reduce((acc, s) => acc + s.totalFee, 0).toLocaleString('en-IN')}
+                  ₹{(students.reduce((acc, s) => acc + (s.totalFee || 0), 0) || 0).toLocaleString('en-IN')}
                 </div>
                 <div className="text-[11px] text-slate-500 mt-1">Across all registered cohorts</div>
               </div>
@@ -995,7 +1211,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <div className="bg-white p-5 rounded-3xl border border-emerald-100 shadow-sm">
                 <div className="text-xs text-emerald-700 font-bold uppercase tracking-wider">Collected Revenue</div>
                 <div className="text-2xl font-black text-emerald-700 mt-1">
-                  ₹{totalRevenueCollected.toLocaleString('en-IN')}
+                  ₹{(totalRevenueCollected || 0).toLocaleString('en-IN')}
                 </div>
                 <div className="text-[11px] text-emerald-600 mt-1">Bank, UPI & Offline receipts</div>
               </div>
@@ -1003,7 +1219,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <div className="bg-white p-5 rounded-3xl border border-rose-100 shadow-sm">
                 <div className="text-xs text-rose-600 font-bold uppercase tracking-wider">Total Pending Dues</div>
                 <div className="text-2xl font-black text-rose-600 mt-1">
-                  ₹{totalPendingBalance.toLocaleString('en-IN')}
+                  ₹{(totalPendingBalance || 0).toLocaleString('en-IN')}
                 </div>
                 <div className="text-[11px] text-rose-500 mt-1">Installment balance to collect</div>
               </div>
@@ -1049,13 +1265,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           {s.specialization}
                         </td>
                         <td className="px-4 py-4 font-bold text-slate-800">
-                          ₹{s.totalFee.toLocaleString('en-IN')}
+                          ₹{(s.totalFee || 0).toLocaleString('en-IN')}
                         </td>
                         <td className="px-4 py-4 font-bold text-emerald-700">
-                          ₹{s.paidAmount.toLocaleString('en-IN')}
+                          ₹{(s.paidAmount || 0).toLocaleString('en-IN')}
                         </td>
                         <td className="px-4 py-4 font-black text-rose-600">
-                          ₹{s.pendingBalance.toLocaleString('en-IN')}
+                          ₹{(s.pendingBalance || 0).toLocaleString('en-IN')}
                         </td>
                         <td className="px-4 py-4">
                           <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
@@ -1241,6 +1457,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           student={selectedStudentForMessage}
           onClose={() => setSelectedStudentForMessage(null)}
           onMessageSent={refreshData}
+        />
+      )}
+
+      {showAiCourseCreatorModal && (
+        <AdminAiCourseCreatorModal
+          isOpen={showAiCourseCreatorModal}
+          onClose={() => setShowAiCourseCreatorModal(false)}
+          onCourseCreated={() => {
+            refreshData();
+            setExportNotice('New course launched and published successfully!');
+            setTimeout(() => setExportNotice(null), 4000);
+          }}
         />
       )}
 

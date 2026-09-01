@@ -98,7 +98,17 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   // Persistent Student Data States
   const [profileData, setProfileData] = useState<StudentProfileData>(STUDENT_PROFILE_DEFAULT);
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourseItem[]>(ENROLLED_COURSES_DATA);
-  const [feeReceipts, setFeeReceipts] = useState<FeeReceiptItem[]>(FEE_RECEIPTS_DATA);
+  const [feeReceipts, setFeeReceipts] = useState<FeeReceiptItem[]>(() => {
+    try {
+      const stored = localStorage.getItem('pbs_student_receipts');
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return FEE_RECEIPTS_DATA;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('pbs_student_receipts', JSON.stringify(feeReceipts));
+  }, [feeReceipts]);
   const [downloadableAssets, setDownloadableAssets] = useState<DownloadableAsset[]>(DOWNLOADABLE_ASSETS_DATA);
   const [activeCourseId, setActiveCourseId] = useState<string>('revit-mep-pro');
 
@@ -218,25 +228,29 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         }));
       }
 
-      // Generate dynamic fee receipt
-      if (match.paidAmount > 0) {
-        setFeeReceipts([
-          {
-            receiptId: `PBS-REC-${(match.studentId || '2026').replace('PBS-STU-', '')}-01`,
-            invoiceNumber: `INV/PBS/2026-27/0${(match.rollNumber || '8492').slice(-3)}`,
-            courseId: match.enrolledCourseIds?.[0] || 'revit-mep-pro',
-            courseTitle: match.specialization || 'Autodesk Revit MEP Masterclass (LOD 300 - 500)',
-            amount: match.paidAmount || 0,
-            paymentMethod: 'Instant NetBanking / UPI Verified',
-            transactionId: `UPI/PBS/${(match.rollNumber || '8492').replace(/[^a-zA-Z0-9]/g, '')}/TXN99`,
-            date: 'Aug 2026',
-            paymentType: (match.pendingBalance ?? 0) === 0 ? 'Full Payment' : 'Installment #1',
-            status: 'Paid',
-            taxGst: Math.round((match.paidAmount || 0) * 0.18),
-            downloadUrl: '#'
-          }
-        ]);
-      }
+      // Generate dynamic fee receipt if none exist
+      setFeeReceipts(prev => {
+        if (prev.length > 0) return prev;
+        if (match.paidAmount > 0) {
+          return [
+            {
+              receiptId: `PBS-REC-${(match.studentId || '2026').replace('PBS-STU-', '')}-01`,
+              invoiceNumber: `INV/PBS/2026-27/0${(match.rollNumber || '8492').slice(-3)}`,
+              courseId: match.enrolledCourseIds?.[0] || 'revit-mep-pro',
+              courseTitle: match.specialization || 'Autodesk Revit MEP Masterclass (LOD 300 - 500)',
+              amount: match.paidAmount || 0,
+              paymentMethod: 'Instant NetBanking / UPI Verified',
+              transactionId: `UPI/PBS/${(match.rollNumber || '8492').replace(/[^a-zA-Z0-9]/g, '')}/TXN99`,
+              date: 'Aug 2026',
+              paymentType: (match.pendingBalance ?? 0) === 0 ? 'Full Payment' : 'Installment #1',
+              status: 'Paid',
+              taxGst: Math.round((match.paidAmount || 0) * 0.18),
+              downloadUrl: '#'
+            }
+          ];
+        }
+        return prev;
+      });
     } else if (user?.name) {
       setProfileData(prev => ({
         ...prev,
@@ -983,13 +997,13 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
       {showCourseUpiEnrollModal && (
         <CourseUpiEnrollModal
           isOpen={showCourseUpiEnrollModal}
-          initialCourse={selectedCourseForUpiEnroll}
-          studentUser={user}
+          course={selectedCourseForUpiEnroll}
+          currentUser={user}
           onClose={() => {
             setShowCourseUpiEnrollModal(false);
             setSelectedCourseForUpiEnroll(null);
           }}
-          onEnrollmentSubmitted={(_req) => {
+          onEnrollmentSuccess={(_req) => {
             soundFx.playSuccess();
             setNotificationAlert(
               `Payment UTR submitted! Your enrollment request has been sent to Admin Pravin Yadav. Once verified within 24 hours, the course will automatically appear in your LMS.`

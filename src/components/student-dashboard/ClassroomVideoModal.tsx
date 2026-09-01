@@ -79,6 +79,7 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({
   const [isCompleted, setIsCompleted] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showIssueModal, setShowIssueModal] = useState(false);
+  const [showYoutubeAlert, setShowYoutubeAlert] = useState(true);
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
   const [simProgress, setSimProgress] = useState(15);
   const [simTimeSeconds, setSimTimeSeconds] = useState(180);
@@ -854,6 +855,51 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({
         </div>
 
       </div>
+
+      {/* YouTube / Google Account Sign In Reminder */}
+      {showYoutubeAlert && (
+        <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#1e1e1e] border border-[#333] rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl animate-scaleIn">
+            <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-2 border border-red-500/20">
+              <Tv className="w-6 h-6 text-red-500" />
+            </div>
+            
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-bold text-white">YouTube Access Verification</h3>
+              <p className="text-sm text-slate-300 leading-relaxed">
+                To access your private masterclass videos seamlessly, please ensure you are signed into YouTube / Google on this device.
+              </p>
+            </div>
+
+            <div className="bg-[#2a2a2a] p-4 rounded-xl border border-[#3a3a3a] text-center space-y-1">
+              <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Your Registered Email</div>
+              {studentProfile?.googleEmailId ? (
+                <div className="text-sm font-mono font-bold text-emerald-400 break-all">
+                  {studentProfile.googleEmailId}
+                </div>
+              ) : (
+                <div className="text-xs font-semibold text-rose-400 bg-rose-500/10 py-1 px-2 rounded">
+                  No Google account linked. Please update your profile settings.
+                </div>
+              )}
+            </div>
+
+            <p className="text-xs text-slate-400 text-center italic">
+              * If you see a "Video Unavailable" or "Private" error, it means you are not logged in with the above email.
+            </p>
+
+            <button
+              onClick={() => {
+                soundFx.playClick();
+                setShowYoutubeAlert(false);
+              }}
+              className="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl shadow-lg shadow-red-900/20 transition-all active:scale-95"
+            >
+              I Understand, Continue to Class
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Report Issue Modal */}
       {showIssueModal && (

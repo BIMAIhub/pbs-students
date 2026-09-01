@@ -342,9 +342,9 @@ export const studentAuthUtil = {
   isLoggedIn(): boolean {
     try {
       const item = localStorage.getItem(STORAGE_AUTH_LOGGED_IN_KEY);
-      return item === null || item === 'true';
+      return item === 'true';
     } catch {
-      return true;
+      return false;
     }
   },
 

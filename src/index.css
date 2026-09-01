@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --pbs-green-primary: #10b981;
+    --pbs-green-light: #34d399;
+    --pbs-green-dark: #059669;
+    --pbs-green-neon: #00f59b;
+    --pbs-black-jet: #050811;
+    --pbs-black-card: #0b1120;
+    --pbs-green-glow: rgba(16, 185, 129, 0.2);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+
+  body {
+    background-color: #ffffff;
+    color: #0f172a;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #10b981;
+}
+
+/* High-Tech Cyber Scan Lines */
+@keyframes laser-scan {
+  0% {
+    top: -5%;
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    top: 105%;
+    opacity: 0.1;
+  }
+}
+
+.animate-laser-scan {
+  animation: laser-scan 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Radar ping and rotation */
+@keyframes radar-sweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-radar-sweep {
+  animation: radar-sweep 4s linear infinite;
+}
+
+/* PBS Logo Badge animation & frame styling */
+.pbs-logo-frame {
+  border: 2px solid #10b981;
+  border-radius: 18px 4px 18px 4px;
+  position: relative;
+}
+
+/* Pulse highlight for CTA */
+@keyframes pbs-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+}
+
+.pbs-btn-pulse {
+  animation: pbs-pulse 2s infinite;
+}
+
+/* High-tech glow pulse */
+@keyframes cyber-glow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.2), inset 0 0 15px rgba(16, 185, 129, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.4), inset 0 0 25px rgba(16, 185, 129, 0.2);
+  }
+}
+
+.cyber-box-glow {
+  animation: cyber-glow 3s ease-in-out infinite;
+}
+
+/* Shimmer animation for Learning Progress Bar */
+@keyframes shimmer-slide {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer-bar {
+  background: linear-gradient(
+    90deg,
+    #10b981 0%,
+    #34d399 25%,
+    #fbbf24 50%,
+    #34d399 75%,
+    #10b981 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-slide 3s infinite linear;
+}
+
+@keyframes head-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 12px 3px rgba(52, 211, 153, 0.9), 0 0 20px 6px rgba(251, 191, 36, 0.6);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 18px 6px rgba(52, 211, 153, 1), 0 0 28px 10px rgba(251, 191, 36, 0.9);
+    transform: scale(1.15);
+  }
+}
+
+.progress-head-glow {
+  animation: head-glow-pulse 1.5s infinite ease-in-out;
+}
+

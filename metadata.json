@@ -1,0 +1,8 @@
+{
+  "name": "Pragmatic BIM Solution - Student LMS & Academic Portal",
+  "description": "Comprehensive Student Dashboard with BIM Profile Settings, Course Enrollments, Fee & Invoices, Download Vault, and Mentorship Feedback.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

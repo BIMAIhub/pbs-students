@@ -866,7 +866,7 @@ export const pbsAdminStore = {
     
     let baseEmail = `${slug || 'student'}@pbs.com`;
 
-    const allStudents = this.getAllStudents();
+    const allStudents = this.getStudents();
     const existingEmails = new Set(allStudents.map(s => s.email.toLowerCase()));
 
     if (!existingEmails.has(baseEmail)) {

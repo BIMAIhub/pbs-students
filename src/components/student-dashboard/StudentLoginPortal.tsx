@@ -14,6 +14,7 @@ import {
   FileSpreadsheet,
   Shield
 } from 'lucide-react';
+import { motion } from 'motion/react';
 import { studentAuthUtil, ActiveSessionUser } from '../../utils/studentAuth';
 import { soundFx } from '../../utils/soundEffects';
 import { ChangePasswordModal } from './ChangePasswordModal';
@@ -81,8 +82,16 @@ export const StudentLoginPortal: React.FC<StudentLoginPortalProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 text-slate-100 flex flex-col justify-between antialiased selection:bg-emerald-500 selection:text-white p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen bg-[#0b0f19] flex flex-col justify-between antialiased selection:bg-emerald-500 selection:text-white p-4 sm:p-6 md:p-8 relative overflow-hidden font-sans">
       
+      {/* Background Tech Orbs & Grid */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-600/10 rounded-full blur-[100px]"></div>
+        <div className="absolute top-[40%] -right-40 w-96 h-96 bg-teal-600/10 rounded-full blur-[100px]"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+      </div>
+
+      <div className="relative z-10 w-full flex-1 flex flex-col justify-between">
       {/* Modals */}
       {showChangePwdModal && (
         <ChangePasswordModal
@@ -105,18 +114,18 @@ export const StudentLoginPortal: React.FC<StudentLoginPortalProps> = ({
 
       {/* Top Brand Bar */}
       <header className="max-w-6xl mx-auto w-full flex items-center justify-between py-2">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-extrabold text-base shadow-lg shadow-emerald-500/20 border border-emerald-400/30">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white font-black text-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-white/20 font-display tracking-tight">
             PBS
           </div>
           <div>
-            <h1 className="font-extrabold text-sm sm:text-base tracking-tight text-white flex items-center gap-1.5">
+            <h1 className="font-display font-extrabold text-lg sm:text-xl tracking-tight text-white flex items-center gap-2">
               <span>Pragmatic BIM Solution</span>
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
+              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 uppercase tracking-widest font-sans">
                 Institutional Portal
               </span>
             </h1>
-            <p className="text-[11px] text-slate-400">ISO 19650 Certified BIM Academy & Management System</p>
+            <p className="text-[11px] text-slate-400 font-medium tracking-wide">ISO 19650 Certified BIM Academy & Management System</p>
           </div>
         </div>
 
@@ -132,7 +141,12 @@ export const StudentLoginPortal: React.FC<StudentLoginPortalProps> = ({
       </header>
 
       {/* Main Login Card Area */}
-      <main className="max-w-md w-full mx-auto my-8">
+      <motion.main 
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+        className="max-w-md w-full mx-auto my-8"
+      >
         
         {/* Toast Alert */}
         {toastMsg && (
@@ -294,7 +308,7 @@ export const StudentLoginPortal: React.FC<StudentLoginPortalProps> = ({
 
         </div>
 
-      </main>
+      </motion.main>
 
       {/* Bottom Info Bar */}
       <footer className="max-w-4xl mx-auto w-full text-center py-4 text-xs text-slate-400 space-y-1">
@@ -306,6 +320,7 @@ export const StudentLoginPortal: React.FC<StudentLoginPortalProps> = ({
           <span className="text-emerald-400">All Rights Reserved © 2026</span>
         </p>
       </footer>
+      </div>
 
     </div>
   );

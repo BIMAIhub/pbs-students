@@ -474,19 +474,19 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                 className="flex items-center gap-2 cursor-pointer group"
                 title="Pragmatic BIM Solution Academic Portal"
               >
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-700 via-emerald-600 to-teal-600 flex items-center justify-center text-white font-black text-base tracking-wider shadow-md group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-black text-lg tracking-tight shadow-[0_0_15px_rgba(16,185,129,0.3)] border border-emerald-400/30 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.5)] group-hover:scale-105 transition-all font-display">
                   PBS
                 </div>
                 <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900">PRAGMATIC</span>
-                    <span className="font-bold text-sm sm:text-base tracking-tight text-emerald-600">BIM</span>
-                    <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider hidden sm:inline">
-                      STUDENT LMS
+                  <div className="flex items-center gap-1.5 font-display">
+                    <span className="font-extrabold text-sm sm:text-lg tracking-tight text-slate-900">PRAGMATIC</span>
+                    <span className="font-black text-sm sm:text-lg tracking-tight text-emerald-600">BIM</span>
+                    <span className="bg-emerald-100/80 text-emerald-800 border border-emerald-200/50 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest hidden sm:inline ml-1 font-sans shadow-sm">
+                      LMS Portal
                     </span>
                   </div>
-                  <span className="text-[10px] text-slate-400 block -mt-1 font-semibold uppercase tracking-wider">
-                    ISO 19650 Accredited Learning Hub
+                  <span className="text-[10px] text-slate-500 block -mt-0.5 font-semibold uppercase tracking-wider font-sans">
+                    ISO 19650 Accredited Hub
                   </span>
                 </div>
               </div>

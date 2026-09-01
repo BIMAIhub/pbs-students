@@ -786,13 +786,40 @@ export const pbsAdminStore = {
   /**
    * Record fee payment for student
    */
-  recordFeePayment(studentId: string, paidAmountAdd: number): ManagedStudent | null {
+  recordFeePayment(studentId: string, paidAmountAdd: number, paymentMethod: string = 'Cash / Cheque', txnRef: string = 'N/A'): ManagedStudent | null {
     const student = this.getStudents().find(s => s.studentId === studentId || s.id === studentId);
     if (!student) return null;
 
     const newPaid = student.paidAmount + paidAmountAdd;
     const newPending = Math.max(0, student.totalFee - newPaid);
     const newStatus = newPending === 0 ? 'Full Paid' : 'Part Paid';
+
+    // Generate a receipt and append to pbs_student_receipts
+    try {
+      const stored = localStorage.getItem('pbs_student_receipts');
+      let receipts = [];
+      if (stored) receipts = JSON.parse(stored);
+      
+      const newReceipt = {
+        receiptId: `PBS-REC-${Math.floor(100000 + Math.random() * 900000)}`,
+        invoiceNumber: `INV/PBS/2026-27/${Math.floor(1000 + Math.random() * 9000)}`,
+        courseId: student.enrolledCourseIds[0] || 'general',
+        courseTitle: student.enrolledCourseTitles[0] || 'Course Fee',
+        amount: paidAmountAdd,
+        paymentMethod: paymentMethod,
+        transactionId: txnRef,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        paymentType: newPending === 0 ? 'Full Payment' : 'Installment',
+        status: 'Paid',
+        taxGst: Math.round(paidAmountAdd * 0.18),
+        downloadUrl: '#'
+      };
+      
+      receipts.unshift(newReceipt);
+      localStorage.setItem('pbs_student_receipts', JSON.stringify(receipts));
+    } catch (e) {
+      console.warn('Failed to append receipt:', e);
+    }
 
     return this.updateStudent(student.studentId, {
       paidAmount: newPaid,

@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Info
 } from 'lucide-react';
+import { ScrollReveal } from '../ScrollReveal';
 import { LIVE_SESSIONS_DATA } from './dashboardData';
 import { LiveSession } from './types';
 
@@ -77,7 +78,7 @@ export const LiveLearningTab: React.FC<LiveLearningTabProps> = ({ onSelectSessio
       </div>
 
       {/* "Phew! You've no live sessions scheduled for this week" Banner (matching screenshot 2) */}
-      <div className="bg-emerald-50/40 border border-emerald-100 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-center gap-6 text-center sm:text-left">
+      <ScrollReveal className="bg-emerald-50/40 border border-emerald-100 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-center gap-6 text-center sm:text-left">
         <div className="w-32 h-32 shrink-0 bg-white rounded-full p-2 border border-emerald-200 shadow-sm flex items-center justify-center">
           <img 
             src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=250&q=80" 
@@ -98,7 +99,7 @@ export const LiveLearningTab: React.FC<LiveLearningTabProps> = ({ onSelectSessio
             It's time to let your mind rest, catch up on module recordings, or refine your Capstone project drawings.
           </p>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* Tabs Row: YOUR REQUIRED SESSIONS vs BONUS SESSIONS (14) */}
       <div className="border-b border-slate-200">
@@ -150,7 +151,7 @@ export const LiveLearningTab: React.FC<LiveLearningTabProps> = ({ onSelectSessio
       </div>
 
       {/* Complete Sessions List (matching screenshot 2 style) */}
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xs divide-y divide-slate-100">
+      <ScrollReveal delay={0.1} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xs divide-y divide-slate-100">
         {filteredSessions.map((session) => (
           <div
             key={session.id}
@@ -207,7 +208,7 @@ export const LiveLearningTab: React.FC<LiveLearningTabProps> = ({ onSelectSessio
             </div>
           </div>
         ))}
-      </div>
+      </ScrollReveal>
     </div>
   );
 };

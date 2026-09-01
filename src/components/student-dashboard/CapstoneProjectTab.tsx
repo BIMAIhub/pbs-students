@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
+import { ScrollReveal } from '../ScrollReveal';
 import { 
   Check, 
   CheckCircle2, 
@@ -27,48 +29,64 @@ export const CapstoneProjectTab: React.FC = () => {
   return (
     <div id="capstone-project-container" className="space-y-10 pb-16">
       {/* Top Stepper Milestone Bar matching screenshot 3 */}
-      <div className="bg-white border border-emerald-100 rounded-2xl p-6 sm:p-8 shadow-sm">
+      <ScrollReveal className="bg-white border border-emerald-100 rounded-2xl p-6 sm:p-8 shadow-sm">
         <div className="relative">
           {/* Connecting Green Horizontal Line */}
-          <div className="absolute top-4 left-6 right-6 h-1 bg-emerald-600 -translate-y-1/2 z-0"></div>
+          <div className="absolute top-4 left-6 right-6 h-1 bg-emerald-100 -translate-y-1/2 z-0 rounded-full">
+            <motion.div 
+              className="h-full bg-emerald-600 rounded-full" 
+              initial={{ width: 0 }}
+              animate={{ width: `${(3 / (CAPSTONE_STAGES_DATA.length - 1)) * 100}%` }}
+              transition={{ duration: 1, ease: "easeInOut" }}
+            />
+          </div>
 
           {/* Stepper Nodes Stage 0 to Stage 8 */}
           <div className="relative z-10 flex items-center justify-between">
-            {CAPSTONE_STAGES_DATA.map((stage, idx) => (
-              <button
+            {CAPSTONE_STAGES_DATA.map((stage, idx) => {
+              const isCompleted = idx <= 3;
+              const isCurrent = idx === 3;
+              
+              return (
+              <motion.button
                 key={stage.stageNumber}
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: idx * 0.1 }}
                 onClick={() => setExpandedStageIndex(idx)}
                 className="flex flex-col items-center group cursor-pointer focus:outline-none"
               >
-                {/* Emerald Circular Checked Node */}
+                {/* Circular Checked Node */}
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
-                  expandedStageIndex === idx 
+                  isCurrent
                     ? 'bg-emerald-600 text-white border-white ring-4 ring-emerald-200 scale-110' 
-                    : 'bg-emerald-600 text-white border-white shadow-sm'
+                    : isCompleted
+                      ? 'bg-emerald-600 text-white border-white shadow-sm'
+                      : 'bg-white text-slate-300 border-slate-200'
                 }`}>
-                  <Check className="w-4 h-4 stroke-[3]" />
+                  <Check className={`w-4 h-4 stroke-[3] ${isCompleted ? 'block' : 'hidden'}`} />
                 </div>
                 {/* Label: Stage 0, Stage 1 */}
-                <span className="text-[11px] font-semibold text-slate-500 mt-2">
+                <span className={`text-[11px] font-semibold mt-2 transition-colors ${isCompleted ? 'text-slate-500' : 'text-slate-400'}`}>
                   Stage
                 </span>
-                <span className="text-xs font-bold text-slate-800">
+                <span className={`text-xs font-bold transition-colors ${isCurrent ? 'text-emerald-700' : isCompleted ? 'text-slate-800' : 'text-slate-400'}`}>
                   {stage.stageIndex}
                 </span>
-              </button>
-            ))}
+              </motion.button>
+            )})}
           </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* Project Stages Section */}
-      <div className="space-y-4">
+      <ScrollReveal delay={0.1} className="space-y-4">
         <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
           Project Stages
         </h2>
 
         {/* List of Stages matching screenshot 3 */}
-        <div className="space-y-4">
+        <ScrollReveal delay={0.1} className="space-y-4">
           {CAPSTONE_STAGES_DATA.map((stage, idx) => {
             const isExpanded = expandedStageIndex === idx;
 
@@ -225,7 +243,14 @@ export const CapstoneProjectTab: React.FC = () => {
               </div>
             );
           })}
-        </div>
+        </ScrollReveal>
+      </ScrollReveal>
+      {/* Admin Notice */}
+      <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-start gap-3 text-sm text-slate-500">
+        <Sparkles className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+        <p>
+          <strong>Note:</strong> Capstone project assignments, grading, and stage progression are actively managed by instructors via the Admin Portal. Your progress here will automatically sync when an admin evaluates your submissions.
+        </p>
       </div>
     </div>
   );

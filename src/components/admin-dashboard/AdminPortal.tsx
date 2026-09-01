@@ -61,6 +61,7 @@ import { AdminAiCourseCreatorModal } from './AdminAiCourseCreatorModal';
 import { AdminStudentPasswordModal } from './AdminStudentPasswordModal';
 import { AdminPlacementModal } from './AdminPlacementModal';
 import { AdminRecordFeeModal } from './AdminRecordFeeModal';
+import { AdminPaymentHistoryModal } from './AdminPaymentHistoryModal';
 import { AdminStudentGrowthModal } from './AdminStudentGrowthModal';
 import { AdminMessageStudentModal } from './AdminMessageStudentModal';
 import { AdminDatabaseBackupModal } from './AdminDatabaseBackupModal';
@@ -98,6 +99,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [selectedStudentForPassword, setSelectedStudentForPassword] = useState<ManagedStudent | null>(null);
   const [selectedStudentForPlacement, setSelectedStudentForPlacement] = useState<ManagedStudent | null>(null);
   const [selectedStudentForFee, setSelectedStudentForFee] = useState<ManagedStudent | null>(null);
+  const [selectedStudentForHistory, setSelectedStudentForHistory] = useState<ManagedStudent | null>(null);
   const [selectedStudentForGrowth, setSelectedStudentForGrowth] = useState<ManagedStudent | null>(null);
   const [selectedStudentForMessage, setSelectedStudentForMessage] = useState<ManagedStudent | null>(null);
 
@@ -136,7 +138,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const totalPendingBalance = students.reduce((acc, s) => acc + s.pendingBalance, 0);
   const fullyPaidCount = students.filter(s => s.paymentStatus === 'Full Paid').length;
   const placementReadyCount = students.filter(s => s.placement?.readinessStatus === 'Ready for MNC Placement').length;
-  const pendingEnrollmentsCount = enrollmentRequests.filter(r => r.status === 'pending').length;
+  const pendingEnrollmentsCount = enrollmentRequests.filter(r => r.status === 'Pending Verification').length;
 
   const handleExportCSV = () => {
     soundFx.playClick();
@@ -898,9 +900,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <div className="flex items-center gap-2 flex-wrap">
                 {[
                   { id: 'all', label: 'All Requests' },
-                  { id: 'pending', label: `Pending (${pendingEnrollmentsCount})` },
-                  { id: 'approved', label: 'Approved & Assigned' },
-                  { id: 'rejected', label: 'Rejected' }
+                  { id: 'Pending Verification', label: `Pending (${pendingEnrollmentsCount})` },
+                  { id: 'Approved & Assigned', label: 'Approved & Assigned' },
+                  { id: 'Rejected', label: 'Rejected' }
                 ].map((st) => (
                   <button
                     key={st.id}
@@ -935,9 +937,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 {enrollmentRequests
                   .filter(r => filterEnrollmentStatus === 'all' || r.status === filterEnrollmentStatus)
                   .map((req) => {
-                    const isPending = req.status === 'pending';
-                    const isApproved = req.status === 'approved';
-                    const isRejected = req.status === 'rejected';
+                    const isPending = req.status === 'Pending Verification';
+                    const isApproved = req.status === 'Approved & Assigned';
+                    const isRejected = req.status === 'Rejected';
 
                     return (
                       <div
@@ -1283,15 +1285,26 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           </span>
                         </td>
                         <td className="px-5 py-4 text-right">
-                          <button
-                            onClick={() => {
-                              soundFx.playClick();
-                              setSelectedStudentForFee(s);
-                            }}
-                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
-                          >
-                            + Record Payment
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => {
+                                soundFx.playClick();
+                                setSelectedStudentForHistory(s);
+                              }}
+                              className="px-3 py-1.5 bg-white hover:bg-slate-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
+                            >
+                              History
+                            </button>
+                            <button
+                              onClick={() => {
+                                soundFx.playClick();
+                                setSelectedStudentForFee(s);
+                              }}
+                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
+                            >
+                              + Record Payment
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -1441,6 +1454,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           student={selectedStudentForFee}
           onClose={() => setSelectedStudentForFee(null)}
           onUpdated={refreshData}
+        />
+      )}
+
+      {selectedStudentForHistory && (
+        <AdminPaymentHistoryModal
+          student={selectedStudentForHistory}
+          onClose={() => setSelectedStudentForHistory(null)}
         />
       )}
 

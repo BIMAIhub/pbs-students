@@ -17,6 +17,8 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { FeeReceiptItem, EnrolledCourseItem } from './types';
+import { AnimatedCounter } from '../AnimatedCounter';
+import { ScrollReveal } from '../ScrollReveal';
 import jsPDF from 'jspdf';
 
 interface FeeFinancialsTabProps {
@@ -148,62 +150,66 @@ export const FeeFinancialsTab: React.FC<FeeFinancialsTabProps> = ({
     <div id="fee-financials-tab-container" className="space-y-8 pb-16">
       
       {/* Top Financial Stats Banner */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+      <ScrollReveal className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2 transition-transform hover:-translate-y-1 hover:shadow-md">
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-500 font-semibold">Total Program Fees</span>
             <span className="p-2 rounded-xl bg-slate-100 text-slate-700">
               <DollarSign className="w-4 h-4" />
             </span>
           </div>
-          <h3 className="text-2xl font-black text-slate-900 font-mono">
-            ₹{totalFees.toLocaleString('en-IN')}
+          <h3 className="text-2xl font-black text-slate-900 font-display tracking-tight flex items-center">
+            <span className="mr-1">₹</span>
+            <AnimatedCounter value={totalFees} />
           </h3>
-          <p className="text-[11px] text-slate-400">Sum of 3 enrolled masterclasses</p>
+          <p className="text-[11px] text-slate-400 font-medium">Sum of 3 enrolled masterclasses</p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-emerald-200 shadow-sm space-y-2 bg-emerald-50/20">
+        <div className="bg-white p-5 rounded-2xl border border-emerald-200 shadow-sm space-y-2 bg-emerald-50/20 transition-transform hover:-translate-y-1 hover:shadow-md">
           <div className="flex items-center justify-between">
             <span className="text-xs text-emerald-800 font-semibold">Total Paid Amount</span>
             <span className="p-2 rounded-xl bg-emerald-100 text-emerald-700">
               <CheckCircle2 className="w-4 h-4" />
             </span>
           </div>
-          <h3 className="text-2xl font-black text-emerald-700 font-mono">
-            ₹{totalPaid.toLocaleString('en-IN')}
+          <h3 className="text-2xl font-black text-emerald-700 font-display tracking-tight flex items-center">
+            <span className="mr-1">₹</span>
+            <AnimatedCounter value={totalPaid} />
           </h3>
           <p className="text-[11px] text-emerald-600 font-semibold">82% of overall fees settled</p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm space-y-2 bg-amber-50/20">
+        <div className="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm space-y-2 bg-amber-50/20 transition-transform hover:-translate-y-1 hover:shadow-md">
           <div className="flex items-center justify-between">
             <span className="text-xs text-amber-800 font-semibold">Pending Balance Due</span>
             <span className="p-2 rounded-xl bg-amber-100 text-amber-700">
               <Clock className="w-4 h-4" />
             </span>
           </div>
-          <h3 className="text-2xl font-black text-amber-700 font-mono">
-            ₹{totalPending.toLocaleString('en-IN')}
+          <h3 className="text-2xl font-black text-amber-700 font-display tracking-tight flex items-center">
+            <span className="mr-1">₹</span>
+            <AnimatedCounter value={totalPending} />
           </h3>
           <p className="text-[11px] text-amber-600 font-semibold">Revit MEP 2nd Installment</p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-purple-200 shadow-sm space-y-2 bg-purple-50/20">
+        <div className="bg-white p-5 rounded-2xl border border-purple-200 shadow-sm space-y-2 bg-purple-50/20 transition-transform hover:-translate-y-1 hover:shadow-md">
           <div className="flex items-center justify-between">
             <span className="text-xs text-purple-800 font-semibold">Scholarship Grant Saved</span>
             <span className="p-2 rounded-xl bg-purple-100 text-purple-700">
               <Sparkles className="w-4 h-4" />
             </span>
           </div>
-          <h3 className="text-2xl font-black text-purple-700 font-mono">
-            ₹{totalScholarshipSaved.toLocaleString('en-IN')}
+          <h3 className="text-2xl font-black text-purple-700 font-display tracking-tight flex items-center">
+            <span className="mr-1">₹</span>
+            <AnimatedCounter value={totalScholarshipSaved} />
           </h3>
           <p className="text-[11px] text-purple-600 font-semibold">Merit BIM Grant applied</p>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* Course-Wise Fee Breakdown Cards */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+      <ScrollReveal delay={0.1} className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
         <div>
           <h3 className="text-lg font-bold text-slate-900 tracking-tight">Course-Wise Fee Settlement Status</h3>
           <p className="text-xs text-slate-500">Track tuition payments, upcoming installment schedules, and settle remaining dues directly.</p>
@@ -274,10 +280,10 @@ export const FeeFinancialsTab: React.FC<FeeFinancialsTabProps> = ({
             );
           })}
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* Official Payment Receipts & Tax Invoices Table */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+      <ScrollReveal delay={0.1} className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h3 className="text-lg font-bold text-slate-900 tracking-tight">Payment Receipts & Tax Invoices</h3>
@@ -379,7 +385,7 @@ export const FeeFinancialsTab: React.FC<FeeFinancialsTabProps> = ({
             No receipts found matching your search term.
           </div>
         )}
-      </div>
+      </ScrollReveal>
 
     </div>
   );

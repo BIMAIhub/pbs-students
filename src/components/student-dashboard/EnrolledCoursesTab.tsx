@@ -21,6 +21,9 @@ import {
 import { EnrolledCourseItem } from './types';
 import { pbsAdminStore, AdminCourse } from '../../utils/pbsAdminStore';
 
+import { AnimatedCounter } from '../AnimatedCounter';
+import { ScrollReveal } from '../ScrollReveal';
+
 interface EnrolledCoursesTabProps {
   enrolledCourses: EnrolledCourseItem[];
   activeCourseId: string;
@@ -54,50 +57,70 @@ export const EnrolledCoursesTab: React.FC<EnrolledCoursesTabProps> = ({
     <div id="enrolled-courses-tab-container" className="space-y-8 pb-16">
       
       {/* Top Metrics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xl">
+      <ScrollReveal className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm flex items-start gap-4 transition-transform hover:-translate-y-1 hover:shadow-md">
+          <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xl shrink-0">
             <BookOpen className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-slate-500 font-semibold">Total Enrolled Programs</p>
-            <h3 className="text-2xl font-black text-slate-900">{enrolledCourses.length} Courses</h3>
+            <p className="text-xs text-slate-500 font-semibold mb-1">Total Enrolled Programs</p>
+            <div className="flex flex-col items-start leading-none">
+              <h3 className="text-2xl font-black text-slate-900 mb-1">
+                <AnimatedCounter value={enrolledCourses.length} />
+              </h3>
+              <span className="text-[13px] font-bold text-emerald-700 tracking-wide">Courses</span>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold text-xl">
+        <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm flex items-start gap-4 transition-transform hover:-translate-y-1 hover:shadow-md">
+          <div className="w-12 h-12 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold text-xl shrink-0">
             <Clock className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-slate-500 font-semibold">Active In-Training</p>
-            <h3 className="text-2xl font-black text-slate-900">{activeCount} Tracks</h3>
+            <p className="text-xs text-slate-500 font-semibold mb-1">Active In-Training</p>
+            <div className="flex flex-col items-start leading-none">
+              <h3 className="text-2xl font-black text-slate-900 mb-1">
+                <AnimatedCounter value={activeCount} />
+              </h3>
+              <span className="text-[13px] font-bold text-sky-700 tracking-wide">Tracks</span>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xl">
+        <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm flex items-start gap-4 transition-transform hover:-translate-y-1 hover:shadow-md">
+          <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xl shrink-0">
             <Award className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-slate-500 font-semibold">Completed & Certified</p>
-            <h3 className="text-2xl font-black text-slate-900">{completedCount} Masterclasses</h3>
+            <p className="text-xs text-slate-500 font-semibold mb-1">Completed & Certified</p>
+            <div className="flex flex-col items-start leading-none">
+              <h3 className="text-2xl font-black text-slate-900 mb-1">
+                <AnimatedCounter value={completedCount} />
+              </h3>
+              <span className="text-[13px] font-bold text-amber-700 tracking-wide">Masterclasses</span>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xl">
+        <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm flex items-start gap-4 transition-transform hover:-translate-y-1 hover:shadow-md">
+          <div className="w-12 h-12 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xl shrink-0">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-slate-500 font-semibold">ISO 19650 Credentials</p>
-            <h3 className="text-2xl font-black text-slate-900">{totalEarnedCertificates} Verified</h3>
+            <p className="text-xs text-slate-500 font-semibold mb-1">ISO 19650 Credentials</p>
+            <div className="flex flex-col items-start leading-none">
+              <h3 className="text-2xl font-black text-slate-900 mb-1">
+                <AnimatedCounter value={totalEarnedCertificates} />
+              </h3>
+              <span className="text-[13px] font-bold text-purple-700 tracking-wide">Verified</span>
+            </div>
           </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* Current Active Workspace Highlight Banner */}
-      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-emerald-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-emerald-900/50 relative overflow-hidden">
+      <ScrollReveal delay={0.1} className="bg-gradient-to-r from-slate-950 via-slate-900 to-emerald-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-emerald-900/50 relative overflow-hidden">
         <div className="absolute right-0 top-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
@@ -155,7 +178,7 @@ export const EnrolledCoursesTab: React.FC<EnrolledCoursesTabProps> = ({
             </div>
           </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* Enrolled Courses Grid */}
       <div className="space-y-4">
@@ -169,7 +192,7 @@ export const EnrolledCoursesTab: React.FC<EnrolledCoursesTabProps> = ({
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <ScrollReveal delay={0.2} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {enrolledCourses.map((course) => {
             const isCurrent = course.courseId === activeCourseId;
 
@@ -297,7 +320,7 @@ export const EnrolledCoursesTab: React.FC<EnrolledCoursesTabProps> = ({
               </div>
             );
           })}
-        </div>
+        </ScrollReveal>
       </div>
 
       {/* ================= NEW COURSE LAUNCHES & INSTANT UPI ENROLLMENT ================= */}
@@ -321,7 +344,7 @@ export const EnrolledCoursesTab: React.FC<EnrolledCoursesTabProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <ScrollReveal delay={0.2} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {catalogCourses.map((c) => {
             const isAlreadyEnrolled = enrolledCourses.some(e => e.courseId === c.id || e.courseTitle === c.title);
             const totalLessons = c.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0;
@@ -396,7 +419,7 @@ export const EnrolledCoursesTab: React.FC<EnrolledCoursesTabProps> = ({
               </div>
             );
           })}
-        </div>
+        </ScrollReveal>
       </div>
 
     </div>

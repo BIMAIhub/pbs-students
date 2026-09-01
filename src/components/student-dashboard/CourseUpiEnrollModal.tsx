@@ -20,6 +20,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { AdminCourse, pbsAdminStore, EnrollmentRequest } from '../../utils/pbsAdminStore';
+import { upiPaymentModule } from '../../utils/upiPaymentModule';
 import jsPDF from 'jspdf';
 
 interface CourseUpiEnrollModalProps {
@@ -54,6 +55,8 @@ export const CourseUpiEnrollModal: React.FC<CourseUpiEnrollModalProps> = ({
   
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSimulatingIntent, setIsSimulatingIntent] = useState(false);
+  const [activeIntentApp, setActiveIntentApp] = useState('');
   const [submittedRequest, setSubmittedRequest] = useState<EnrollmentRequest | null>(null);
 
   const UPI_ID = 'pravinsyadavpsy99-03@oksbi';
@@ -86,6 +89,37 @@ export const CourseUpiEnrollModal: React.FC<CourseUpiEnrollModalProps> = ({
     }
   };
 
+  const handleMockUpiIntent = async (appName: string) => {
+    setIsSimulatingIntent(true);
+    setActiveIntentApp(appName);
+
+    try {
+      const result = await upiPaymentModule.processEnrollmentViaUpi({
+        studentId: currentUser?.studentId || 'PBS-STU-2026-8492',
+        studentName: studentName.trim(),
+        studentEmail: studentEmail.trim(),
+        studentPhone: studentPhone.trim(),
+        courseId: course.id,
+        courseTitle: course.title,
+        totalFee,
+        amountPaid: amountToPay,
+        pendingBalance,
+        paymentPlan: paymentPlan === 'full' ? 'Full Payment' : 'Part Payment (50%)',
+        upiApp: appName
+      });
+
+      setIsSimulatingIntent(false);
+      setSubmittedRequest(result.requestDetails);
+      if (onEnrollmentSuccess) {
+        onEnrollmentSuccess(result.requestDetails);
+      }
+    } catch (err) {
+      console.error(err);
+      setIsSimulatingIntent(false);
+      alert('UPI Transaction Failed.');
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!transactionId.trim()) {
@@ -113,12 +147,15 @@ export const CourseUpiEnrollModal: React.FC<CourseUpiEnrollModalProps> = ({
         screenshotUrl: screenshotPreview || undefined
       });
 
+      // Simulation Specific: Auto-approve it right now so it reflects immediately for the simulated test
+      pbsAdminStore.approveEnrollmentRequest(newReq.id, 'PBS Internal Validation');
+
       setIsSubmitting(false);
       setSubmittedRequest(newReq);
       if (onEnrollmentSuccess) {
         onEnrollmentSuccess(newReq);
       }
-    }, 600);
+    }, 1200);
   };
 
   const handleDownloadReceipt = () => {
@@ -363,30 +400,36 @@ export const CourseUpiEnrollModal: React.FC<CourseUpiEnrollModalProps> = ({
                   {/* Direct Mobile UPI Intent Buttons */}
                   <div className="pt-1">
                     <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1.5">
-                      Or Open Installed UPI App:
+                      Simulate UPI Intent Validation:
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <a
-                        href={upiIntentString}
-                        className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors"
+                      <button
+                        type="button"
+                        onClick={() => handleMockUpiIntent('Google Pay')}
+                        disabled={isSimulatingIntent}
+                        className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors disabled:opacity-50"
                       >
                         <Smartphone className="w-3.5 h-3.5 text-blue-400" />
-                        <span>Google Pay</span>
-                      </a>
-                      <a
-                        href={upiIntentString}
-                        className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors"
+                        <span>{isSimulatingIntent && activeIntentApp === 'Google Pay' ? 'Validating...' : 'Google Pay'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleMockUpiIntent('PhonePe')}
+                        disabled={isSimulatingIntent}
+                        className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors disabled:opacity-50"
                       >
                         <Smartphone className="w-3.5 h-3.5 text-purple-400" />
-                        <span>PhonePe</span>
-                      </a>
-                      <a
-                        href={upiIntentString}
-                        className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors"
+                        <span>{isSimulatingIntent && activeIntentApp === 'PhonePe' ? 'Validating...' : 'PhonePe'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleMockUpiIntent('Paytm')}
+                        disabled={isSimulatingIntent}
+                        className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors disabled:opacity-50"
                       >
                         <Smartphone className="w-3.5 h-3.5 text-cyan-400" />
-                        <span>Paytm / BHIM</span>
-                      </a>
+                        <span>{isSimulatingIntent && activeIntentApp === 'Paytm' ? 'Validating...' : 'Paytm / BHIM'}</span>
+                      </button>
                     </div>
                   </div>
                 </div>

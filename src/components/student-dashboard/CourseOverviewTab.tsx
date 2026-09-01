@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { soundFx } from '../../utils/soundEffects';
+import { AnimatedCounter } from '../AnimatedCounter';
+import { ScrollReveal } from '../ScrollReveal';
 
 interface CourseOverviewTabProps {
   onOpenCohortLeaderboard: () => void;
@@ -49,14 +51,18 @@ export const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Academic Standing', val: 'Active', sub: 'Module 01 Enrolled', icon: Award, color: 'text-amber-600 bg-amber-50 border-amber-200' },
-          { label: 'Evaluated Tasks', val: '0 / 87', sub: 'Starting Module 1 Assignments', icon: CheckCircle2, color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
-          { label: 'Active Study Streak', val: 'Day 1', sub: 'Fresh Cohort Enrollment', icon: Flame, color: 'text-orange-600 bg-orange-50 border-orange-200' },
-          { label: 'BIM Skill Mastery', val: 'Level 1', sub: 'Starting from Module 1', icon: Zap, color: 'text-teal-600 bg-teal-50 border-teal-200' },
+          { label: 'Evaluated Tasks', val: <><AnimatedCounter value={0} /> / <AnimatedCounter value={87} /></>, sub: 'Starting Module 1 Assignments', icon: CheckCircle2, color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
+          { label: 'Active Study Streak', val: <>Day <AnimatedCounter value={1} /></>, sub: 'Fresh Cohort Enrollment', icon: Flame, color: 'text-orange-600 bg-orange-50 border-orange-200' },
+          { label: 'BIM Skill Mastery', val: <>Level <AnimatedCounter value={1} /></>, sub: 'Starting from Module 1', icon: Zap, color: 'text-teal-600 bg-teal-50 border-teal-200' },
         ].map((m, i) => {
           const Icon = m.icon;
           return (
             <motion.div
               key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
               whileHover={{ y: -4, transition: { duration: 0.2 } }}
               className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"
             >
@@ -67,7 +73,7 @@ export const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({
                 </div>
               </div>
               <div>
-                <div className="text-2xl font-black text-slate-900 tracking-tight">{m.val}</div>
+                <div className="text-2xl font-black text-slate-900 tracking-tight font-display">{m.val}</div>
                 <div className="text-xs text-slate-500 font-medium mt-0.5">{m.sub}</div>
               </div>
             </motion.div>
@@ -76,7 +82,13 @@ export const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({
       </div>
 
       {/* Main Grid: Leaderboard Card (Left) + Important Links (Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-40px" }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+        className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"
+      >
         
         {/* Performance Leaderboard Banner Card */}
         <motion.div 
@@ -252,10 +264,16 @@ export const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({
             </button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Resources & Studio Video Preview Section */}
-      <div className="space-y-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-40px" }}
+        transition={{ duration: 0.6, delay: 0.5 }}
+        className="space-y-4"
+      >
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
             Learning Resources & Video Studio
@@ -371,7 +389,7 @@ export const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

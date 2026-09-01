@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
+import { upiPaymentModule } from '../../utils/upiPaymentModule';
+
 interface PayFeeModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -41,7 +43,7 @@ export const PayFeeModal: React.FC<PayFeeModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleProcessPayment = (e: React.FormEvent) => {
+  const handleProcessPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (paymentAmount <= 0) {
       alert('Please enter a valid payment amount.');
@@ -50,7 +52,17 @@ export const PayFeeModal: React.FC<PayFeeModalProps> = ({
 
     setIsProcessing(true);
 
-    setTimeout(() => {
+    try {
+      let transactionRef = `TXN-${Date.now().toString().slice(-8)}`;
+
+      if (paymentMode === 'upi') {
+        const intentResult = await upiPaymentModule.simulateUpiIntent(paymentAmount, 'pbs@sbi', 'Student Dashboard UPI');
+        transactionRef = intentResult.transactionId;
+      } else {
+        // Fallback simulate delay for non-UPI modes
+        await new Promise(res => setTimeout(res, 1500));
+      }
+
       setIsProcessing(false);
       setIsSuccess(true);
 
@@ -61,7 +73,7 @@ export const PayFeeModal: React.FC<PayFeeModalProps> = ({
         courseTitle: courseTitle,
         amount: paymentAmount,
         paymentMethod: paymentMode === 'upi' ? `UPI (${upiId})` : paymentMode === 'card' ? 'Visa Platinum Card' : 'NetBanking Instant',
-        transactionId: `TXN-${Date.now().toString().slice(-8)}`,
+        transactionId: transactionRef,
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
         paymentType: paymentAmount >= pendingBalance ? 'Full Payment' : 'Installment Settlement',
         status: 'Paid',
@@ -81,7 +93,10 @@ export const PayFeeModal: React.FC<PayFeeModalProps> = ({
       } catch (err) {
         console.warn('Confetti trigger error:', err);
       }
-    }, 1500);
+    } catch (err) {
+      setIsProcessing(false);
+      alert('Payment processing failed.');
+    }
   };
 
   return (

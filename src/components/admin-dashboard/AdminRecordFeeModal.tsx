@@ -39,7 +39,7 @@ export const AdminRecordFeeModal: React.FC<AdminRecordFeeModalProps> = ({
 
     setIsProcessing(true);
     setTimeout(() => {
-      pbsAdminStore.recordFeePayment(student.studentId, Number(paymentAmount));
+      pbsAdminStore.recordFeePayment(student.studentId, Number(paymentAmount), paymentMethod, txnRef);
       soundFx.playSuccess();
       setIsProcessing(false);
       setReceiptGenerated(true);

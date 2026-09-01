@@ -697,7 +697,7 @@ export const PRELOADED_USERS = [
   {
     id: 'user-student-pravin',
     name: 'Pravin Yadav',
-    email: 'pravin.yadav.0926@pbs.com',
+    email: 'pravin.yadav@pbs.com',
     phone: '+91 8208918726',
     role: 'student' as const,
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',

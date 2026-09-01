@@ -39,9 +39,10 @@ export interface ActiveSessionUser {
   rollNumber?: string;
   specialization?: string;
   batch?: string;
+  googleEmailId?: string;
 }
 
-const DEFAULT_STUDENT_EMAIL = 'pravin.yadav.0926@pbs.com';
+const DEFAULT_STUDENT_EMAIL = 'pravin.yadav@pbs.com';
 const DEFAULT_STUDENT_PASSWORD = 'pravinyadav@123';
 
 const DEFAULT_ADMIN_EMAIL = 'admin@pbs.com';
@@ -152,7 +153,7 @@ export const studentAuthUtil = {
       }
     }
 
-    // 2. Check for Student Login (pravin.yadav.0926@pbs.com / pravinyadav@123 or dynamically provisioned students)
+    // 2. Check for Student Login (pravin.yadav@pbs.com / pravinyadav@123 or dynamically provisioned students)
     const validStudentEmails = [
       DEFAULT_STUDENT_EMAIL.toLowerCase(),
       'pravin.yadav@pbs.com',
@@ -317,6 +318,18 @@ export const studentAuthUtil = {
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
       phone: '+91 8208918726'
     };
+  },
+
+  updateCurrentUser(updates: Partial<ActiveSessionUser>): boolean {
+    try {
+      const current = this.getActiveUser();
+      const updated = { ...current, ...updates };
+      localStorage.setItem(STORAGE_AUTH_USER_KEY, JSON.stringify(updated));
+      return true;
+    } catch (e) {
+      console.warn('Failed to update current user session', e);
+      return false;
+    }
   },
 
   setActiveUser(user: ActiveSessionUser): void {

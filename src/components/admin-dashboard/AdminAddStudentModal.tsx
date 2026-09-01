@@ -33,7 +33,7 @@ export const AdminAddStudentModal: React.FC<AdminAddStudentModalProps> = ({
   const [paidAmount, setPaidAmount] = useState<number>(7500);
 
   // Auto generated preview
-  const generatedEmail = fullName ? pbsAdminStore.generateStudentEmail(fullName, '0926') : 'student.name.0926@pbs.com';
+  const generatedEmail = fullName ? pbsAdminStore.generateStudentEmail(fullName) : 'student.name@pbs.com';
   const generatedPassword = fullName ? pbsAdminStore.generateStudentDefaultPassword(fullName) : 'student@123';
 
   const [isSaving, setIsSaving] = useState(false);

@@ -37,11 +37,13 @@ import { soundFx } from '../../utils/soundEffects';
 interface ClassroomVideoModalProps {
   onClose: () => void;
   initialCourseId?: string;
+  studentProfile?: any;
 }
 
 export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ 
   onClose,
-  initialCourseId
+  initialCourseId,
+  studentProfile
 }) => {
   const [activeTab, setActiveTab] = useState<'content' | 'forum'>('content');
   const [expandedModuleId, setExpandedModuleId] = useState<string>('mod-0');
@@ -335,8 +337,28 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({
                   />
                   <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-md px-3 py-1 rounded-lg border border-white/10 text-[10px] font-mono text-emerald-400 flex items-center gap-1.5 pointer-events-none">
                     <Lock className="w-3 h-3 text-emerald-400" />
-                    <span>Protected Student ID: PBS-STU-2026-8492</span>
+                    <span>Protected Student ID: {studentProfile?.studentId || 'PBS-STU'}</span>
                   </div>
+                </div>
+              ) : (currentLesson.videoType === 'youtube' || (rawVideoUrl && (rawVideoUrl.includes('youtube.com') || rawVideoUrl.includes('youtu.be')))) && (!studentProfile?.googleEmailId) && playerMode === 'embed' ? (
+                /* Block YouTube Videos if Google Email is missing */
+                <div className="w-full h-full relative bg-slate-900 flex flex-col items-center justify-center p-8 text-center border-2 border-dashed border-slate-700 rounded-2xl">
+                  <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-4">
+                    <AlertTriangle className="w-8 h-8 text-rose-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">Google Account Required</h3>
+                  <p className="text-slate-400 max-w-md text-sm mb-6">
+                    This is a private YouTube video. To get access, you must link your personal Google Account email in your Profile Settings.
+                  </p>
+                  <button 
+                    onClick={onClose}
+                    className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-colors"
+                  >
+                    Go to Profile Settings
+                  </button>
+                  <p className="text-[10px] text-slate-500 mt-4 max-w-sm">
+                    Note: Once your Google Account email is set, it cannot be changed manually. You will need to contact the admin for any changes.
+                  </p>
                 </div>
               ) : formattedEmbedUrl && playerMode === 'embed' ? (
                 /* Option B: Embedded Video Frame (YouTube, Google Drive, OneDrive) */
@@ -352,7 +374,7 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({
                   {/* Anti-Download Protection Overlay & Security Watermark */}
                   <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-md px-3 py-1 rounded-lg border border-white/10 text-[10px] font-mono text-emerald-400 flex items-center gap-1.5 pointer-events-none">
                     <Lock className="w-3 h-3 text-emerald-400" />
-                    <span>Protected Student ID: PBS-STU-2026-8492</span>
+                    <span>Protected Student ID: {studentProfile?.studentId || 'PBS-STU'}</span>
                   </div>
                 </div>
               ) : (

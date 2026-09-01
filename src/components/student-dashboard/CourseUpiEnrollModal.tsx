@@ -46,7 +46,7 @@ export const CourseUpiEnrollModal: React.FC<CourseUpiEnrollModalProps> = ({
 
   const [paymentPlan, setPaymentPlan] = useState<'full' | 'part'>('full');
   const [studentName, setStudentName] = useState(currentUser?.fullName || 'Pravin Yadav');
-  const [studentEmail, setStudentEmail] = useState(currentUser?.email || 'pravin.yadav.0926@pbs.com');
+  const [studentEmail, setStudentEmail] = useState(currentUser?.email || 'pravin.yadav@pbs.com');
   const [studentPhone, setStudentPhone] = useState(currentUser?.phone || '+91 8208918726');
   const [transactionId, setTransactionId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'GPay' | 'PhonePe' | 'Paytm' | 'Bank Transfer'>('UPI');
@@ -419,7 +419,7 @@ export const CourseUpiEnrollModal: React.FC<CourseUpiEnrollModalProps> = ({
                     value={studentEmail}
                     onChange={(e) => setStudentEmail(e.target.value)}
                     required
-                    placeholder="pravin.yadav.0926@pbs.com"
+                    placeholder="pravin.yadav@pbs.com"
                     className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   />
                 </div>

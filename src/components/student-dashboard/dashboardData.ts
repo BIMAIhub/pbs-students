@@ -14,7 +14,7 @@ export const STUDENT_PROFILE_DEFAULT: StudentProfileData = {
   studentId: 'PBS-STU-2026-8492',
   rollNumber: 'PBS/2026/BIM-084',
   fullName: 'Pravin Yadav',
-  email: 'pravin.yadav.0926@pbs.com',
+  email: 'pravin.yadav@pbs.com',
   phone: '+91 8208918726',
   avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
   dateOfBirth: '1999-06-18',

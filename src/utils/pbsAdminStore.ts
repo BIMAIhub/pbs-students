@@ -65,6 +65,7 @@ export interface ManagedStudent {
   rollNumber: string;
   name: string;
   email: string;
+  googleEmailId?: string;
   password?: string;
   phone: string;
   avatar: string;
@@ -139,7 +140,7 @@ const INITIAL_STUDENTS: ManagedStudent[] = [
     studentId: 'PBS-STU-2026-8492',
     rollNumber: 'PBS/2026/BIM-084',
     name: 'Pravin Yadav',
-    email: 'pravin.yadav.0926@pbs.com',
+    email: 'pravin.yadav@pbs.com',
     password: 'pravinyadav@123',
     phone: '+91 8208918726',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
@@ -384,7 +385,7 @@ const INITIAL_ENROLLMENT_REQUESTS: EnrollmentRequest[] = [
     id: 'ENR-2026-091',
     studentId: 'PBS-STU-2026-8492',
     studentName: 'Pravin Yadav',
-    studentEmail: 'pravin.yadav.0926@pbs.com',
+    studentEmail: 'pravin.yadav@pbs.com',
     studentPhone: '+91 8208918726',
     courseId: 'c1',
     courseTitle: 'Autodesk Revit MEP Masterclass (LOD 300 to LOD 500)',
@@ -751,7 +752,7 @@ export const pbsAdminStore = {
   deleteStudent(studentId: string): boolean {
     const list = this.getStudents();
     const updated = list.filter(s => s.studentId !== studentId && s.id !== studentId);
-    this.saveStudents(updated.length > 0 ? updated : INITIAL_STUDENTS);
+    this.saveStudents(updated);
     return true;
   },
 
@@ -855,15 +856,31 @@ export const pbsAdminStore = {
   },
 
   /**
-   * Generate official Institutional Student Email from Name and Batch
-   * e.g., "Pravin Yadav" -> "pravin.yadav.0926@pbs.com"
+   * Generate official Institutional Student Email from Name
+   * e.g., "Pravin Yadav" -> "pravin.yadav@pbs.com" or "pravin.yadav1@pbs.com"
    */
-  generateStudentEmail(fullName: string, batchMonthYear: string = '0926'): string {
+  generateStudentEmail(fullName: string): string {
     const clean = fullName.trim().toLowerCase().replace(/[^a-z0-9\s]/g, '');
     const parts = clean.split(/\s+/).filter(Boolean);
     const slug = parts.join('.');
-    const cleanBatch = batchMonthYear.replace(/[^0-9]/g, '') || '0926';
-    return `${slug}.${cleanBatch}@pbs.com`;
+    
+    let baseEmail = `${slug || 'student'}@pbs.com`;
+
+    const allStudents = this.getAllStudents();
+    const existingEmails = new Set(allStudents.map(s => s.email.toLowerCase()));
+
+    if (!existingEmails.has(baseEmail)) {
+      return baseEmail;
+    }
+
+    let counter = 1;
+    let newEmail = `${slug || 'student'}${counter}@pbs.com`;
+    while (existingEmails.has(newEmail)) {
+      counter++;
+      newEmail = `${slug || 'student'}${counter}@pbs.com`;
+    }
+    
+    return newEmail;
   },
 
   /**

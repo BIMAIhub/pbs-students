@@ -66,7 +66,7 @@ export default function App() {
               studentId: 'PBS-STU-2026-8492',
               rollNumber: 'PBS/2026/BIM-084',
               name: 'Pravin Yadav',
-              email: 'pravin.yadav.0926@pbs.com',
+              email: 'pravin.yadav@pbs.com',
               role: 'student',
               avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
               phone: '+91 8208918726'

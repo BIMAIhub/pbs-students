@@ -142,7 +142,7 @@ export const StudentLoginPortal: React.FC<StudentLoginPortalProps> = ({
           </div>
         )}
 
-        <div className="bg-white text-slate-900 rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-100/10 space-y-6">
+        <div className="bg-white/95 backdrop-blur-xl text-slate-900 rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-100/20 space-y-6">
           
           {/* Role Selector Tabs (Student vs Admin) */}
           <div className="grid grid-cols-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200">
@@ -207,7 +207,7 @@ export const StudentLoginPortal: React.FC<StudentLoginPortalProps> = ({
                   type="text"
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
-                  placeholder={selectedRole === 'admin' ? 'admin@pbs.com' : 'e.g. yourname.0926@pbs.com or PBS/2026/...'}
+                  placeholder={selectedRole === 'admin' ? 'admin@pbs.com' : 'Student Email or Roll No.'}
                   required
                   className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium text-slate-900"
                 />

@@ -189,9 +189,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           enrolledDate: 'Sept 2026',
           status: 'Active',
           instructor: 'Pravin Yadav (15+ Yrs Industry Exp)',
-          totalFee: match.totalFee || 14999,
-          paidAmount: match.paidAmount || 7500,
-          pendingBalance: match.pendingBalance || 7499,
+          totalFee: match.totalFee ?? 14999,
+          paidAmount: match.paidAmount ?? 7500,
+          pendingBalance: match.pendingBalance ?? 7499,
           certificateEarned: match.capstoneStatus === 'Approved & Certified',
           image: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=600&q=80',
           accentColor: '#10b981'
@@ -202,9 +202,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         setEnrolledCourses(prev => prev.map((c, i) => i === 0 ? {
           ...c,
           courseTitle: match.specialization || c.courseTitle,
-          totalFee: match.totalFee || c.totalFee,
-          paidAmount: match.paidAmount || c.paidAmount,
-          pendingBalance: match.pendingBalance || c.pendingBalance,
+          totalFee: match.totalFee ?? c.totalFee,
+          paidAmount: match.paidAmount ?? c.paidAmount,
+          pendingBalance: match.pendingBalance ?? c.pendingBalance,
           progressPercent: 0,
           completedModules: 0,
           certificateEarned: false,
@@ -230,7 +230,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             paymentMethod: 'Instant NetBanking / UPI Verified',
             transactionId: `UPI/PBS/${(match.rollNumber || '8492').replace(/[^a-zA-Z0-9]/g, '')}/TXN99`,
             date: 'Aug 2026',
-            paymentType: (match.pendingBalance || 0) === 0 ? 'Full Payment' : 'Installment #1',
+            paymentType: (match.pendingBalance ?? 0) === 0 ? 'Full Payment' : 'Installment #1',
             status: 'Paid',
             taxGst: Math.round((match.paidAmount || 0) * 0.18),
             downloadUrl: '#'
@@ -314,6 +314,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
       return course;
     }));
 
+    // Record fee payment in central admin store if this is a logged in student
+    if (profileData.studentId) {
+      pbsAdminStore.recordFeePayment(profileData.studentId, paidAmount);
+    }
+
     setNotificationAlert(`Payment of ₹${paidAmount.toLocaleString('en-IN')} successfully verified! Receipt: ${newReceipt.receiptId}`);
     setTimeout(() => setNotificationAlert(null), 5000);
   };
@@ -382,7 +387,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
       </AnimatePresence>
 
       {/* Top Header & Live Academic Bar */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+      <header className="bg-white/85 backdrop-blur-xl border-b border-slate-200 sticky top-0 z-40 shadow-sm transition-all duration-300">
         
         {/* Sub-header: Live Countdown, Streak & Quick Tools Bar */}
         <div className="bg-slate-900 text-white px-4 sm:px-8 py-2 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
@@ -584,7 +589,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                             Student Portal
                           </span>
                         </div>
-                        <p className="text-emerald-800 font-mono text-[11px] font-bold">{profileData.email || 'pravin.yadav.0926@pbs.com'}</p>
+                        <p className="text-emerald-800 font-mono text-[11px] font-bold">{profileData.email || 'pravin.yadav@pbs.com'}</p>
                         <p className="text-slate-500 text-[10px] font-mono">{profileData.studentId} • {profileData.rollNumber}</p>
                         <p className="text-[11px] text-emerald-700 font-semibold">{profileData.specializationTrack}</p>
                       </div>
@@ -824,6 +829,23 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         onSaveProfile={(updated) => {
           soundFx.playSuccess();
           setProfileData(updated);
+          // Sync with student store & current user
+          if (updated.studentId) {
+            pbsAdminStore.updateStudent(updated.studentId, {
+              name: updated.fullName,
+              email: updated.email,
+              phone: updated.phone,
+              avatar: updated.avatarUrl,
+              googleEmailId: updated.googleEmailId
+            });
+            studentAuthUtil.updateCurrentUser({
+              name: updated.fullName,
+              email: updated.email,
+              phone: updated.phone,
+              avatar: updated.avatarUrl,
+              googleEmailId: updated.googleEmailId
+            });
+          }
         }}
         onOpenStudentIDCard={() => {
           setShowProfileModal(false);
@@ -914,7 +936,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
       {/* Supporting Interactive Modals */}
       {showClassroomModal && (
-        <ClassroomVideoModal onClose={() => setShowClassroomModal(false)} />
+        <ClassroomVideoModal 
+          onClose={() => setShowClassroomModal(false)} 
+          initialCourseId={activeCourseId}
+          studentProfile={profileData}
+        />
       )}
 
       {showLeaderboardModal && (

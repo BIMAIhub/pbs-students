@@ -27,6 +27,7 @@ export const AdminStudentPasswordModal: React.FC<AdminStudentPasswordModalProps>
   onPasswordUpdated
 }) => {
   const [newPassword, setNewPassword] = useState(student.password || studentAuthUtil.getActivePassword());
+  const [googleEmailId, setGoogleEmailId] = useState(student.googleEmailId || '');
   const [copied, setCopied] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -63,7 +64,10 @@ export const AdminStudentPasswordModal: React.FC<AdminStudentPasswordModalProps>
     }
 
     // Save to admin student roster
-    pbsAdminStore.updateStudent(student.studentId, { password: newPassword });
+    pbsAdminStore.updateStudent(student.studentId, { 
+      password: newPassword,
+      googleEmailId: googleEmailId 
+    });
 
     // Sync to studentAuthUtil if Pravin Yadav
     if (student.studentId === 'PBS-STU-2026-8492' || student.email.includes('pravin')) {
@@ -89,7 +93,7 @@ export const AdminStudentPasswordModal: React.FC<AdminStudentPasswordModalProps>
               <KeyRound className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-extrabold text-sm text-white">Student Password Manager</h3>
+              <h3 className="font-extrabold text-sm text-white">Student Access & Passwords</h3>
               <p className="text-xs text-emerald-200">{student.name} ({student.studentId})</p>
             </div>
           </div>
@@ -125,6 +129,22 @@ export const AdminStudentPasswordModal: React.FC<AdminStudentPasswordModalProps>
               <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Institutional Student Email</div>
               <div className="text-xs font-mono font-bold text-slate-900 truncate">{student.email}</div>
             </div>
+          </div>
+
+          {/* Google Account Email */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-700">Google Account Email</label>
+            <div className="relative">
+              <Mail className="w-4 h-4 text-emerald-600 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="email"
+                value={googleEmailId}
+                onChange={(e) => setGoogleEmailId(e.target.value)}
+                placeholder="Student's personal google account"
+                className="w-full pl-10 pr-4 py-2.5 text-xs font-mono font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900"
+              />
+            </div>
+            <p className="text-[10px] text-slate-500">Admins can override the student's Youtube access email here.</p>
           </div>
 
           {/* Password Input */}

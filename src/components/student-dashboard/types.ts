@@ -119,6 +119,7 @@ export interface StudentProfileData {
   rollNumber: string;
   fullName: string;
   email: string;
+  googleEmailId?: string;
   phone: string;
   avatarUrl: string;
   dateOfBirth: string;

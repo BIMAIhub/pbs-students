@@ -158,7 +158,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col selection:bg-emerald-200 selection:text-emerald-900">
       
       {/* ================= TOP INSTITUTIONAL HEADER (GREEN & WHITE THEME) ================= */}
-      <header className="bg-gradient-to-r from-emerald-800 via-teal-900 to-emerald-950 text-white shadow-md sticky top-0 z-40 border-b border-emerald-700/50">
+      <header className="bg-emerald-950/90 backdrop-blur-xl text-white shadow-md sticky top-0 z-40 border-b border-emerald-800/50 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row items-center justify-between gap-3">
           
           {/* Logo & Portal Badge */}
@@ -511,7 +511,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
                       >
                         <KeyRound className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Manage Password</span>
+                        <span>Manage Access/Pwd</span>
                       </button>
 
                       <button

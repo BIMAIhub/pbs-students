@@ -265,8 +265,6 @@ async function startServer() {
         const sRoll = (s.rollNumber || '').toLowerCase();
         const sId = (s.studentId || '').toLowerCase();
         const sName = (s.name || '').toLowerCase();
-        const sNameSlug = sName.replace(/[^a-z0-9]/g, '.');
-        const sNameNoSpaces = sName.replace(/\s+/g, '');
         const sPhone = (s.phone || '').replace(/[^0-9]/g, '');
 
         return (
@@ -275,13 +273,6 @@ async function startServer() {
           sGoogle === cleanQuery ||
           sRoll === cleanQuery ||
           sId === cleanQuery ||
-          sName === cleanQuery ||
-          sNameSlug === emailPrefix ||
-          sNameNoSpaces === emailPrefix ||
-          sEmail.startsWith(emailPrefix + '.') ||
-          sEmail.startsWith(emailPrefix + '@') ||
-          (sId.length > 0 && cleanQuery.includes(sId)) ||
-          (sRoll.length > 0 && cleanQuery.includes(sRoll)) ||
           (cleanPhoneDigits.length >= 10 && sPhone.includes(cleanPhoneDigits))
         );
       });
@@ -318,79 +309,11 @@ async function startServer() {
         });
       }
 
-      // Auto-provision if it's an institutional email like aa.aa@pbs.com
-      if (cleanQuery.endsWith('@pbs.com') || cleanQuery.endsWith('@pragmaticbim.com') || cleanQuery.includes('.pbs.com')) {
-        const rawName = cleanQuery.split('@')[0].replace(/\./g, ' ').replace(/[0-9]/g, '').trim();
-        const formattedName = rawName
-          ? rawName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-          : 'PBS Student';
-        
-        const dynStudentId = `PBS-STU-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-        const dynRoll = `PBS/2026/BIM-${Math.floor(100 + Math.random() * 900)}`;
-
-        const dynStudent = {
-          id: `user-stu-${Date.now()}`,
-          studentId: dynStudentId,
-          rollNumber: dynRoll,
-          name: formattedName,
-          email: cleanQuery,
-          password: password || 'pravinyadav@123',
-          phone: '+91 8208918726',
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(formattedName)}`,
-          specialization: 'Autodesk Revit MEP Masterclass (LOD 300 - 500)',
-          batch: '09/2026 Weekend Cohort',
-          enrolledCourseIds: ['c1', 'c2'],
-          enrolledCourseTitles: [
-            'Autodesk Revit MEP Masterclass (LOD 300 - 500)',
-            'Navisworks Manage & Multi-Disciplinary Clash Detection'
-          ],
-          attendancePercent: 100,
-          totalFee: 26998,
-          paidAmount: 26998,
-          pendingBalance: 0,
-          paymentStatus: 'Full Paid',
-          capstoneStatus: 'Stage 1: Revit Project Setup Initialized',
-          capstoneGrade: 'In Progress',
-          growthScore: 85,
-          registrationDate: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-          placement: {
-            studentId: dynStudentId,
-            targetRole: 'BIM Engineer',
-            targetLocations: ['Pune / Dubai'],
-            expectedSalary: '₹12.0 LPA',
-            portfolioUrl: '',
-            resumeStatus: 'Verified',
-            mockInterviewScore: 85,
-            mockInterviewFeedback: 'Dynamic institutional account verified. Curriculum ready.',
-            mockInterviewDate: '',
-            readinessStatus: 'In Training',
-            referredCompanies: []
-          },
-          messages: [
-            {
-              id: `msg-dyn-${Date.now()}`,
-              sender: 'admin',
-              senderName: 'PBS Academic Director',
-              timestamp: 'Just now',
-              subject: 'Welcome to Pragmatic BIM Solution LMS!',
-              message: `Welcome ${formattedName}! Your institutional LMS access is verified. Begin your BIM masterclass curriculum now.`,
-              isRead: false
-            }
-          ]
-        };
-
-        db.students = [dynStudent, ...(db.students || [])];
-        db._lastUpdated = Date.now();
-        writeCentralDb(db);
-
-        return res.json({
-          success: true,
-          found: true,
-          student: dynStudent
-        });
-      }
-
-      return res.json({ success: false, found: false, message: "Student account not found on cloud server" });
+      return res.json({ 
+        success: false, 
+        found: false, 
+        message: "No active enrollment found in PBS Student Registry. Please enroll via Admissions or the Admin Portal." 
+      });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }

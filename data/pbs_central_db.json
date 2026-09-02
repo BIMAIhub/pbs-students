@@ -1,61 +1,6 @@
 {
   "students": [
     {
-      "id": "user-stu-1788368176115",
-      "studentId": "PBS-STU-2026-3917",
-      "rollNumber": "PBS/2026/BIM-413",
-      "name": "Aa Aa",
-      "email": "aa.aa@pbs.com",
-      "password": "aa",
-      "phone": "+91 8208918726",
-      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Aa%20Aa",
-      "specialization": "Autodesk Revit MEP Masterclass (LOD 300 - 500)",
-      "batch": "09/2026 Weekend Cohort",
-      "enrolledCourseIds": [
-        "c1",
-        "c2"
-      ],
-      "enrolledCourseTitles": [
-        "Autodesk Revit MEP Masterclass (LOD 300 - 500)",
-        "Navisworks Manage & Multi-Disciplinary Clash Detection"
-      ],
-      "attendancePercent": 100,
-      "totalFee": 26998,
-      "paidAmount": 26998,
-      "pendingBalance": 0,
-      "paymentStatus": "Full Paid",
-      "capstoneStatus": "Stage 1: Revit Project Setup Initialized",
-      "capstoneGrade": "In Progress",
-      "growthScore": 85,
-      "registrationDate": "Sep 02, 2026",
-      "placement": {
-        "studentId": "PBS-STU-2026-3917",
-        "targetRole": "BIM Engineer",
-        "targetLocations": [
-          "Pune / Dubai"
-        ],
-        "expectedSalary": "₹12.0 LPA",
-        "portfolioUrl": "",
-        "resumeStatus": "Verified",
-        "mockInterviewScore": 85,
-        "mockInterviewFeedback": "Dynamic institutional account verified. Curriculum ready.",
-        "mockInterviewDate": "",
-        "readinessStatus": "In Training",
-        "referredCompanies": []
-      },
-      "messages": [
-        {
-          "id": "msg-dyn-1788368176131",
-          "sender": "admin",
-          "senderName": "PBS Academic Director",
-          "timestamp": "Just now",
-          "subject": "Welcome to Pragmatic BIM Solution LMS!",
-          "message": "Welcome Aa Aa! Your institutional LMS access is verified. Begin your BIM masterclass curriculum now.",
-          "isRead": false
-        }
-      ]
-    },
-    {
       "studentId": "PBS-STU-2026-8316",
       "rollNumber": "PBS/2026/BIM-732",
       "name": "pravin yadav",

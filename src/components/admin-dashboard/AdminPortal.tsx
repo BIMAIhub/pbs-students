@@ -41,7 +41,8 @@ import {
   QrCode,
   CheckCircle,
   XCircle,
-  CreditCard
+  CreditCard,
+  HardDrive
 } from 'lucide-react';
 import { 
   pbsAdminStore, 
@@ -67,6 +68,7 @@ import { AdminMessageStudentModal } from './AdminMessageStudentModal';
 import { AdminDatabaseBackupModal } from './AdminDatabaseBackupModal';
 import { AdminCertificateCustomizerModal } from './AdminCertificateCustomizerModal';
 import { AdminStudentActivityModal } from './AdminStudentActivityModal';
+import { AdminCentralHubModal } from './AdminCentralHubModal';
 import { StudentPortfolioModal } from '../student-dashboard/StudentPortfolioModal';
 
 interface AdminPortalProps {
@@ -91,6 +93,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [filterEnrollmentStatus, setFilterEnrollmentStatus] = useState<string>('all');
 
   // Modal States
+  const [showCentralHubModal, setShowCentralHubModal] = useState(false);
   const [showBackupModal, setShowBackupModal] = useState(false);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [showAddCourseModal, setShowAddCourseModal] = useState(false);
@@ -242,6 +245,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <RefreshCw className={`w-3.5 h-3.5 text-sky-200 ${isSyncingCloud ? 'animate-spin' : ''}`} />
               <span>{isSyncingCloud ? 'Syncing Cloud...' : 'Live Cloud Sync'}</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" title="Cloud Server Active"></span>
+            </button>
+
+            {/* Google Drive & Central Data Hub Trigger */}
+            <button
+              onClick={() => {
+                soundFx.playClick();
+                setShowCentralHubModal(true);
+              }}
+              className="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold flex items-center gap-1.5 transition-colors border border-emerald-500/50 cursor-pointer shadow-2xs"
+              title="Configure and manage Google Drive, Google Sheets, and Central Cloud Hub"
+            >
+              <HardDrive className="w-3.5 h-3.5 text-emerald-200" />
+              <span>Drive & Data Hub</span>
             </button>
 
             {/* JSON Database Backup & Restore Modal Trigger */}
@@ -1621,6 +1637,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           isOpen={showBackupModal}
           onClose={() => setShowBackupModal(false)}
           onDataRestored={refreshData}
+        />
+      )}
+
+      {showCentralHubModal && (
+        <AdminCentralHubModal
+          isOpen={showCentralHubModal}
+          onClose={() => setShowCentralHubModal(false)}
         />
       )}
 

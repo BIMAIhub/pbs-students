@@ -1,0 +1,561 @@
+{
+  "students": [
+    {
+      "id": "user-stu-1788368176115",
+      "studentId": "PBS-STU-2026-3917",
+      "rollNumber": "PBS/2026/BIM-413",
+      "name": "Aa Aa",
+      "email": "aa.aa@pbs.com",
+      "password": "aa",
+      "phone": "+91 8208918726",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Aa%20Aa",
+      "specialization": "Autodesk Revit MEP Masterclass (LOD 300 - 500)",
+      "batch": "09/2026 Weekend Cohort",
+      "enrolledCourseIds": [
+        "c1",
+        "c2"
+      ],
+      "enrolledCourseTitles": [
+        "Autodesk Revit MEP Masterclass (LOD 300 - 500)",
+        "Navisworks Manage & Multi-Disciplinary Clash Detection"
+      ],
+      "attendancePercent": 100,
+      "totalFee": 26998,
+      "paidAmount": 26998,
+      "pendingBalance": 0,
+      "paymentStatus": "Full Paid",
+      "capstoneStatus": "Stage 1: Revit Project Setup Initialized",
+      "capstoneGrade": "In Progress",
+      "growthScore": 85,
+      "registrationDate": "Sep 02, 2026",
+      "placement": {
+        "studentId": "PBS-STU-2026-3917",
+        "targetRole": "BIM Engineer",
+        "targetLocations": [
+          "Pune / Dubai"
+        ],
+        "expectedSalary": "₹12.0 LPA",
+        "portfolioUrl": "",
+        "resumeStatus": "Verified",
+        "mockInterviewScore": 85,
+        "mockInterviewFeedback": "Dynamic institutional account verified. Curriculum ready.",
+        "mockInterviewDate": "",
+        "readinessStatus": "In Training",
+        "referredCompanies": []
+      },
+      "messages": [
+        {
+          "id": "msg-dyn-1788368176131",
+          "sender": "admin",
+          "senderName": "PBS Academic Director",
+          "timestamp": "Just now",
+          "subject": "Welcome to Pragmatic BIM Solution LMS!",
+          "message": "Welcome Aa Aa! Your institutional LMS access is verified. Begin your BIM masterclass curriculum now.",
+          "isRead": false
+        }
+      ]
+    },
+    {
+      "studentId": "PBS-STU-2026-8316",
+      "rollNumber": "PBS/2026/BIM-732",
+      "name": "pravin yadav",
+      "email": "pravin.yadav@pbs.com",
+      "password": "pravinyadav@123",
+      "phone": "aa",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+      "specialization": "Autodesk Revit Architecture & Structural Modeling",
+      "batch": "09/2026 Weekend Cohort",
+      "enrolledCourseIds": [
+        "c1",
+        "c2"
+      ],
+      "enrolledCourseTitles": [
+        "Autodesk Revit Architecture & Structural Modeling",
+        "Navisworks Manage & Multi-Disciplinary Clash Detection"
+      ],
+      "attendancePercent": 100,
+      "totalFee": 26998,
+      "paidAmount": 26998,
+      "pendingBalance": 0,
+      "paymentStatus": "Full Paid",
+      "capstoneStatus": "Stage 1: Revit Project Setup Initialized",
+      "capstoneGrade": "In Progress",
+      "growthScore": 85,
+      "registrationDate": "Sep 02, 2026",
+      "placement": {
+        "studentId": "PBS-STU-2026-8316",
+        "targetRole": "BIM Engineer",
+        "targetLocations": [
+          "Pune / Dubai"
+        ],
+        "expectedSalary": "₹12.0 LPA",
+        "portfolioUrl": "",
+        "resumeStatus": "Verified",
+        "mockInterviewScore": 80,
+        "mockInterviewFeedback": "Initial enrollment complete. Capstone pending.",
+        "mockInterviewDate": "",
+        "readinessStatus": "In Training",
+        "referredCompanies": []
+      },
+      "messages": [
+        {
+          "id": "msg-admin-1788361516786",
+          "sender": "admin",
+          "senderName": "PBS Academic Admin Team",
+          "timestamp": "Sep 02, 2026, 08:35 PM",
+          "subject": "jjj",
+          "message": "9090",
+          "isRead": false
+        },
+        {
+          "id": "msg-admin-1788288676542",
+          "sender": "admin",
+          "senderName": "PBS Academic Admin Team",
+          "timestamp": "Sep 02, 2026, 12:21 AM",
+          "subject": "🎉 Course Assigned: Navisworks Manage & Multi-Disciplinary Clash Detection Unlocked!",
+          "message": "Hello Pravin Yadav, your UPI payment of ₹11,999 (Ref: GOO-88676541) has been verified and confirmed by Admin. The complete course curriculum, 10 modular video lectures, and BIM dataset files are now unlocked in your dashboard.",
+          "isRead": false
+        },
+        {
+          "id": "msg-admin-1788288621332",
+          "sender": "admin",
+          "senderName": "PBS Academic Admin Team",
+          "timestamp": "Sep 02, 2026, 12:20 AM",
+          "subject": "ss",
+          "message": "ssss",
+          "isRead": false
+        },
+        {
+          "id": "msg-welcome-1788288602058",
+          "sender": "admin",
+          "senderName": "PBS Academic Director",
+          "timestamp": "Just now",
+          "subject": "Welcome to Pragmatic BIM Solution Academy!",
+          "message": "Welcome pravin yadav! Your institutional account has been provisioned. Access your live masterclasses, Microsoft Drive & Google Drive video lectures under Enrolled Courses.",
+          "isRead": false
+        }
+      ],
+      "id": "user-stu-1788288602059",
+      "googleEmailId": "pravin.yadav.dar99@gmail.com"
+    },
+    {
+      "studentId": "PBS-STU-2026-5773",
+      "rollNumber": "PBS/2026/BIM-931",
+      "name": "Sandip Chavan",
+      "email": "sandip.chavan.0926@pbs.com",
+      "password": "sandipchavan@123",
+      "phone": "+919890173618",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+      "specialization": "Autodesk Revit MEP Masterclass (LOD 300 - 500)",
+      "batch": "09/2026 Weekend Cohort",
+      "enrolledCourseIds": [
+        "c1"
+      ],
+      "enrolledCourseTitles": [
+        "Autodesk Revit MEP Masterclass (LOD 300 - 500)"
+      ],
+      "attendancePercent": 100,
+      "totalFee": 14999,
+      "paidAmount": 14999,
+      "pendingBalance": 0,
+      "paymentStatus": "Full Paid",
+      "capstoneStatus": "Stage 1: Revit Project Setup Initialized",
+      "capstoneGrade": "In Progress",
+      "growthScore": 85,
+      "registrationDate": "Sep 01, 2026",
+      "placement": {
+        "studentId": "PBS-STU-2026-5773",
+        "targetRole": "BIM Engineer",
+        "targetLocations": [
+          "Pune / Dubai"
+        ],
+        "expectedSalary": "₹12.0 LPA",
+        "portfolioUrl": "",
+        "resumeStatus": "Under Review",
+        "mockInterviewScore": 80,
+        "mockInterviewFeedback": "Initial enrollment complete. Capstone pending.",
+        "mockInterviewDate": "",
+        "readinessStatus": "In Training",
+        "referredCompanies": []
+      },
+      "messages": [
+        {
+          "id": "msg-welcome-1788271826379",
+          "sender": "admin",
+          "senderName": "PBS Academic Director",
+          "timestamp": "Just now",
+          "subject": "Welcome to Pragmatic BIM Solution Academy!",
+          "message": "Welcome Sandip Chavan! Your institutional account has been provisioned. Access your live masterclasses, Microsoft Drive & Google Drive video lectures under Enrolled Courses.",
+          "isRead": false
+        }
+      ],
+      "id": "user-stu-1788271826379"
+    },
+    {
+      "id": "user-student-pravin",
+      "studentId": "PBS-STU-2026-8492",
+      "rollNumber": "PBS/2026/BIM-084",
+      "name": "Pravin Yadav",
+      "email": "pravin.yadav.0926@pbs.com",
+      "password": "pravinyadav@1234",
+      "phone": "+91 8208918726",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+      "specialization": "Autodesk Revit MEP Masterclass (LOD 300 - 500)",
+      "batch": "09/2026 (Sept 2026 Weekend Batch)",
+      "enrolledCourseIds": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ],
+      "enrolledCourseTitles": [
+        "Autodesk Revit MEP Masterclass (LOD 300 to 500)",
+        "Navisworks Manage & Multi-Disciplinary Clash Detection",
+        "Computational BIM with Dynamo Visual Scripting",
+        "ISO 19650 Global BIM Project Delivery Framework"
+      ],
+      "attendancePercent": 96.4,
+      "totalFee": 54996,
+      "paidAmount": 54996,
+      "pendingBalance": 0,
+      "paymentStatus": "Full Paid",
+      "capstoneStatus": "Stage 3: Navisworks Clash Matrix Submitted",
+      "capstoneGrade": "B+ Certified (75-84%)",
+      "growthScore": 94,
+      "registrationDate": "Aug 10, 2026",
+      "placement": {
+        "studentId": "PBS-STU-2026-8492",
+        "targetRole": "Senior BIM Coordinator / Digital Delivery Lead",
+        "targetLocations": [
+          "Dubai / UAE",
+          "Riyadh / Saudi Arabia (NEOM)",
+          "United Kingdom",
+          "Pune / Bangalore"
+        ],
+        "expectedSalary": "₹14.5 - ₹18.0 LPA / AED 18,000 - 22,000 pm",
+        "portfolioUrl": "https://pravinyadav-bim.portfolio.site",
+        "resumeStatus": "Verified",
+        "mockInterviewScore": 96,
+        "mockInterviewFeedback": "Exceptional grasp of ISO 19650 BEP workflows, Navisworks clash tolerance, and MEP family parametric creation. Recommended for top-tier MNC referrals.",
+        "mockInterviewDate": "Aug 24, 2026",
+        "readinessStatus": "Ready for MNC Placement",
+        "referredCompanies": [
+          {
+            "companyName": "AtkinsRéalis (Dubai / UK Infrastructure)",
+            "role": "BIM Coordinator - MEP Systems",
+            "location": "Dubai Design District, UAE",
+            "status": "Technical Round Cleared",
+            "interviewDate": "Sept 08, 2026"
+          },
+          {
+            "companyName": "WSP Middle East",
+            "role": "Senior BIM MEP Specialist",
+            "location": "Riyadh, KSA",
+            "status": "Shortlisted"
+          },
+          {
+            "companyName": "Jacobs Engineering",
+            "role": "Digital Delivery Engineer",
+            "location": "Pune / London",
+            "status": "Interview Scheduled",
+            "interviewDate": "Sept 12, 2026"
+          }
+        ]
+      },
+      "messages": [
+        {
+          "id": "msg-admin-1788286715497",
+          "sender": "admin",
+          "senderName": "PBS Academic Admin Team",
+          "timestamp": "Sep 01, 2026, 11:48 PM",
+          "subject": "🎉 Course Assigned: ISO 19650 Global BIM Project Delivery Framework Unlocked!",
+          "message": "Hello Pravin Yadav, your UPI payment of ₹6,500 (Ref: PAY-86715496) has been verified and confirmed by Admin. The complete course curriculum, 10 modular video lectures, and BIM dataset files are now unlocked in your dashboard.",
+          "isRead": false
+        },
+        {
+          "id": "msg-admin-1788271610935",
+          "sender": "admin",
+          "senderName": "PBS Academic Admin Team",
+          "timestamp": "Sep 01, 2026, 07:36 PM",
+          "subject": "dd",
+          "message": "ddd",
+          "isRead": false
+        },
+        {
+          "id": "msg-1",
+          "sender": "admin",
+          "senderName": "PBS Academic Director",
+          "timestamp": "Aug 28, 2026 10:30 AM",
+          "subject": "Capstone Stage 3 Clash Matrix Review & Placement Shortlist",
+          "message": "Congratulations Pravin! Your Navisworks clash matrix submittal scored 98/100. Our placement cell has forwarded your verified portfolio to AtkinsRéalis and WSP Middle East for BIM Coordinator positions.",
+          "isRead": true
+        },
+        {
+          "id": "msg-2",
+          "sender": "student",
+          "senderName": "Pravin Yadav",
+          "timestamp": "Aug 28, 2026 02:15 PM",
+          "subject": "Re: Capstone Stage 3 Clash Matrix Review & Placement Shortlist",
+          "message": "Thank you so much Sir! I have prepared the ISO 19650 naming convention sheet and uploaded the Microsoft OneDrive Revit central model as requested.",
+          "isRead": true
+        }
+      ]
+    }
+  ],
+  "_lastUpdated": 1788368176131,
+  "courses": [
+    {
+      "id": "c1",
+      "title": "Autodesk Revit MEP Masterclass (LOD 300 to LOD 500)",
+      "category": "Revit",
+      "level": "Advanced Masterclass",
+      "badge": "Cohort Primary Track",
+      "batchSchedule": "Saturdays & Sundays (06:00 PM - 09:30 PM IST)",
+      "batchMode": "Offline Weekend (Sat-Sun)",
+      "instructor": "Pravin Yadav (15+ Yrs Industry Exp)",
+      "totalFee": 14999,
+      "description": "Comprehensive authoring of Mechanical HVAC, Electrical power/lighting, Plumbing drainage/water supply, and Fire Protection systems with parametric families and schedule takeoffs.",
+      "thumbnail": "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=600&q=80",
+      "accentColor": "#10b981",
+      "assignedTo": "all",
+      "createdDate": "2026-09-01",
+      "isPublished": true,
+      "microsoftDriveUrl": "https://onedrive.live.com/?authkey=%21APBSMEP2026Data&id=PBS_Revit_MEP_Central_Dataset",
+      "googleDriveUrl": "https://drive.google.com/drive/folders/1BimRevitMEP_ClassroomLecture_2026",
+      "modules": [
+        {
+          "id": "mod-1",
+          "moduleCode": "MOD-01",
+          "title": "Introduction to Revit MEP & Microsoft Drive Central Models",
+          "duration": "2.5 Hours",
+          "lessons": [
+            {
+              "id": "les-1-1",
+              "title": "Revit 2026 Environment, UI & Ribbon Navigation",
+              "duration": "24 min",
+              "videoType": "microsoft-drive",
+              "videoUrl": "https://onedrive.live.com/embed?cid=PBS2026&resid=PBS2026!104&authkey=!APBSMEP2026",
+              "isCompleted": false,
+              "assignedStudentId": "all",
+              "addedBy": "Admin (Pravin Yadav)",
+              "addedDate": "2026-09-01",
+              "description": "Mastering the Project Browser, Properties palette, View Cube, and Microsoft OneDrive Central Model syncing.",
+              "cloudDriveFolderUrl": "https://onedrive.live.com/?authkey=%21APBSMEP2026Data&id=PBS_MOD01_Datasets",
+              "bimDatasetUrl": "https://onedrive.live.com/download?cid=PBS2026&resid=MOD01_Revit_Architecture_Base.rvt"
+            },
+            {
+              "id": "les-1-2",
+              "title": "Project Units, Levels, Grids & Linking Architectural Models",
+              "duration": "38 min",
+              "videoType": "google-drive",
+              "videoUrl": "https://drive.google.com/file/d/1BimRevitMEP_ClassroomLecture_2026/preview",
+              "isCompleted": false,
+              "assignedStudentId": "all",
+              "addedBy": "Admin (Pravin Yadav)",
+              "addedDate": "2026-09-01",
+              "cloudDriveFolderUrl": "https://drive.google.com/drive/folders/1BimRevitMEP_ClassroomLecture_2026"
+            },
+            {
+              "title": "qqq",
+              "duration": "35 min",
+              "videoType": "youtube",
+              "videoUrl": "https://www.youtube-nocookie.com/embed/CTUkmDfIOUM?modestbranding=1&rel=0&controls=1&showinfo=0&iv_load_policy=3&disablekb=0&playsinline=1",
+              "assignedStudentId": "all",
+              "addedBy": "PBS Admin Team",
+              "description": "qqq",
+              "id": "les-1788277144094",
+              "addedDate": "2026-09-01"
+            },
+            {
+              "title": "aaa",
+              "duration": "35 min",
+              "videoType": "youtube",
+              "videoUrl": "https://www.youtube.com/embed/CTUkmDfIOUM?rel=0&modestbranding=1&playsinline=1&enablejsapi=1",
+              "assignedStudentId": "all",
+              "addedBy": "PBS Admin Team",
+              "description": "aaa",
+              "id": "les-1788277872805",
+              "addedDate": "2026-09-01"
+            }
+          ]
+        },
+        {
+          "id": "mod-2",
+          "moduleCode": "MOD-02",
+          "title": "HVAC Ductwork & Mechanical Equipment Modeling",
+          "duration": "4.5 Hours",
+          "lessons": [
+            {
+              "id": "les-2-1",
+              "title": "Duct Sizing, Air Terminals & AHU Chilled Water Connections",
+              "duration": "45 min",
+              "videoType": "microsoft-drive",
+              "videoUrl": "https://onedrive.live.com/embed?cid=PBS2026&resid=PBS2026!105&authkey=!APBSHVAC2026",
+              "isCompleted": false,
+              "assignedStudentId": "all",
+              "addedBy": "Admin",
+              "addedDate": "2026-09-01",
+              "cloudDriveFolderUrl": "https://onedrive.live.com/?authkey=%21APBSMEP2026Data&id=PBS_HVAC_PlantRoom_Files"
+            },
+            {
+              "id": "les-2-2",
+              "title": "VAV Boxes, Dampers & Static Pressure Calculations",
+              "duration": "52 min",
+              "videoType": "pbs-secure",
+              "videoUrl": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+              "isCompleted": false,
+              "assignedStudentId": "all",
+              "addedBy": "Admin",
+              "addedDate": "2026-09-01"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "title": "Navisworks Manage & Multi-Disciplinary Clash Detection",
+      "category": "Navisworks",
+      "level": "Professional",
+      "badge": "Cohort Core Track",
+      "batchSchedule": "Tuesday & Thursday (07:30 PM - 09:30 PM IST)",
+      "batchMode": "Online Interactive Live",
+      "instructor": "Coordination Specialist Team",
+      "totalFee": 11999,
+      "description": "Master 3D spatial coordination, Clash Detective matrix rules, hard/soft clearance testing, 4D TimeLiner schedule simulation, and BCF issue reporting.",
+      "thumbnail": "https://images.unsplash.com/photo-1541888946425-d0fbb18086f6?auto=format&fit=crop&w=600&q=80",
+      "accentColor": "#0ea5e9",
+      "assignedTo": "all",
+      "createdDate": "2026-09-01",
+      "isPublished": true,
+      "microsoftDriveUrl": "https://onedrive.live.com/?authkey=%21APBSNavis2026&id=PBS_Navisworks_Federated_Models",
+      "modules": [
+        {
+          "id": "mod-n1",
+          "moduleCode": "NAV-01",
+          "title": "Model Federation (NWC/NWD) & Clash Detective Setup",
+          "duration": "3.0 Hours",
+          "lessons": [
+            {
+              "id": "les-n1-1",
+              "title": "Federating Revit Architecture, Structure & MEP in Navisworks",
+              "duration": "35 min",
+              "videoType": "microsoft-drive",
+              "videoUrl": "https://onedrive.live.com/embed?cid=PBS2026&resid=PBS2026!106&authkey=!APBSNavisLecture",
+              "isCompleted": false,
+              "assignedStudentId": "all",
+              "addedBy": "Admin",
+              "addedDate": "2026-09-01",
+              "cloudDriveFolderUrl": "https://onedrive.live.com/?authkey=%21APBSNavis2026&id=Federated_NWD_Models"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "title": "Computational BIM with Dynamo Visual Scripting & Python",
+      "category": "Dynamo",
+      "level": "Advanced Masterclass",
+      "badge": "Cohort Specialization Track",
+      "batchSchedule": "Tuesday & Thursday (08:00 PM - 10:00 PM IST)",
+      "batchMode": "Online Interactive Live",
+      "instructor": "Computational Design Lead",
+      "totalFee": 13999,
+      "description": "Automate repetitive Revit tasks, generate complex parametric geometry, extract Excel parameter schedules bidirectionally, and run Python nodes via Revit API.",
+      "thumbnail": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=600&q=80",
+      "accentColor": "#8b5cf6",
+      "assignedTo": "all",
+      "createdDate": "2026-09-01",
+      "isPublished": true,
+      "microsoftDriveUrl": "https://onedrive.live.com/?authkey=%21APBSDynamo2026&id=PBS_Dynamo_Scripts_Library",
+      "modules": []
+    },
+    {
+      "id": "c4",
+      "title": "ISO 19650 Global BIM Project Delivery Framework",
+      "category": "ISO 19650",
+      "level": "Executive",
+      "badge": "Global Certification Track",
+      "batchSchedule": "Saturday Masterclasses (10:00 AM - 01:30 PM IST)",
+      "batchMode": "Hybrid Cohort",
+      "instructor": "Global Information Manager",
+      "totalFee": 12999,
+      "description": "International BIM standard workflows: OIR, PIR, EIR, BEP, CDE states (WIP, Shared, Published, Archived), and information containers naming protocol.",
+      "thumbnail": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80",
+      "accentColor": "#f59e0b",
+      "assignedTo": "all",
+      "createdDate": "2026-09-01",
+      "isPublished": true,
+      "microsoftDriveUrl": "https://onedrive.live.com/?authkey=%21APBSISO2026&id=PBS_ISO19650_BEP_Templates",
+      "modules": []
+    }
+  ],
+  "enrollments": [
+    {
+      "id": "ENR-676541",
+      "studentId": "PBS-STU-2026-8316",
+      "studentName": "Pravin Yadav",
+      "studentEmail": "pravin.yadav@pbs.com",
+      "studentPhone": "aa",
+      "courseId": "c2",
+      "courseTitle": "Navisworks Manage & Multi-Disciplinary Clash Detection",
+      "totalFee": 11999,
+      "amountPaid": 11999,
+      "pendingBalance": 0,
+      "paymentPlan": "Full Payment",
+      "paymentMethod": "UPI",
+      "upiId": "pravinsyadavpsy99-03@oksbi",
+      "transactionId": "GOO-88676541",
+      "screenshotUrl": "Auto-verified via UPI Intent",
+      "submittedAt": "2026-09-01T18:51:16.541Z",
+      "slaDeadline": "2026-09-02T18:51:16.541Z",
+      "status": "Approved & Assigned",
+      "verifiedAt": "2026-09-01T18:51:16.541Z",
+      "verifiedBy": "UPI Automated System"
+    },
+    {
+      "id": "ENR-715496",
+      "studentId": "PBS-STU-2026-8492",
+      "studentName": "Pravin Yadav",
+      "studentEmail": "pravin.yadav@pbs.com",
+      "studentPhone": "+91 8208918726",
+      "courseId": "c4",
+      "courseTitle": "ISO 19650 Global BIM Project Delivery Framework",
+      "totalFee": 12999,
+      "amountPaid": 6500,
+      "pendingBalance": 6499,
+      "paymentPlan": "Part Payment (50%)",
+      "paymentMethod": "UPI",
+      "upiId": "pravinsyadavpsy99-03@oksbi",
+      "transactionId": "PAY-86715496",
+      "screenshotUrl": "Auto-verified via UPI Intent",
+      "submittedAt": "2026-09-01T18:18:35.496Z",
+      "slaDeadline": "2026-09-02T18:18:35.496Z",
+      "status": "Approved & Assigned",
+      "verifiedAt": "2026-09-01T18:18:35.496Z",
+      "verifiedBy": "UPI Automated System"
+    },
+    {
+      "id": "ENR-2026-091",
+      "studentId": "PBS-STU-2026-8492",
+      "studentName": "Pravin Yadav",
+      "studentEmail": "pravin.yadav@pbs.com",
+      "studentPhone": "+91 8208918726",
+      "courseId": "c1",
+      "courseTitle": "Autodesk Revit MEP Masterclass (LOD 300 to LOD 500)",
+      "totalFee": 14999,
+      "amountPaid": 14999,
+      "pendingBalance": 0,
+      "paymentPlan": "Full Payment",
+      "paymentMethod": "UPI",
+      "upiId": "pravinsyadavpsy99-03@oksbi",
+      "transactionId": "UPI/2026/0926/84920199",
+      "submittedAt": "2026-09-01T09:30:00.000Z",
+      "slaDeadline": "2026-09-02T09:30:00.000Z",
+      "status": "Approved & Assigned",
+      "verifiedAt": "2026-09-01T09:45:00.000Z",
+      "verifiedBy": "PBS Academic Director"
+    }
+  ]
+}

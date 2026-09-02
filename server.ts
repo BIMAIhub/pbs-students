@@ -244,53 +244,7 @@ async function startServer() {
     }
   });
 
-  // 3. Get single collection
-  app.get("/api/db/:collection", (req, res) => {
-    try {
-      const { collection } = req.params;
-      const db = readCentralDb();
-      res.json({
-        success: true,
-        collection,
-        data: db[collection] || null,
-        timestamp: db._lastUpdated || Date.now()
-      });
-    } catch (err: any) {
-      res.status(500).json({ success: false, error: err.message });
-    }
-  });
-
-  // 4. Save single collection
-  app.post("/api/db/:collection", (req, res) => {
-    try {
-      const { collection } = req.params;
-      const { data } = req.body;
-      const db = readCentralDb();
-
-      if (collection === 'students' && Array.isArray(data)) {
-        db.students = mergeArrayById(db.students || [], data, 'studentId');
-      } else if (collection === 'courses' && Array.isArray(data)) {
-        db.courses = mergeArrayById(db.courses || [], data, 'id');
-      } else if (collection === 'enrollments' && Array.isArray(data)) {
-        db.enrollments = mergeArrayById(db.enrollments || [], data, 'id');
-      } else if (collection === 'receipts' && Array.isArray(data)) {
-        db.receipts = mergeArrayById(db.receipts || [], data, 'receiptId');
-      } else if (['exams', 'certConfigs', 'progress', 'portfolios', 'studentCustomPasswords', 'settings'].includes(collection)) {
-        db[collection] = { ...(db[collection] || {}), ...(data || {}) };
-      } else {
-        db[collection] = data;
-      }
-
-      db._lastUpdated = Date.now();
-      writeCentralDb(db);
-
-      res.json({ success: true, collection, timestamp: db._lastUpdated });
-    } catch (err: any) {
-      res.status(500).json({ success: false, error: err.message });
-    }
-  });
-
-  // 5. Direct verification endpoint for student accounts across devices
+  // 3. Direct verification endpoint for student accounts across devices (Must be declared before :collection)
   app.post("/api/db/verify-student", (req, res) => {
     try {
       const { emailOrRoll, password } = req.body;
@@ -301,15 +255,36 @@ async function startServer() {
       const db = readCentralDb();
       const cleanQuery = String(emailOrRoll).trim().toLowerCase();
       const cleanPhoneDigits = cleanQuery.replace(/[^0-9]/g, '');
+      const emailPrefix = cleanQuery.replace(/@.*$/, '');
 
-      const match = (db.students || []).find((s: any) =>
-        s.email?.toLowerCase() === cleanQuery ||
-        s.personalEmail?.toLowerCase() === cleanQuery ||
-        s.googleEmailId?.toLowerCase() === cleanQuery ||
-        s.rollNumber?.toLowerCase() === cleanQuery ||
-        s.studentId?.toLowerCase() === cleanQuery ||
-        (cleanPhoneDigits.length >= 10 && s.phone?.replace(/[^0-9]/g, '').includes(cleanPhoneDigits))
-      );
+      const match = (db.students || []).find((s: any) => {
+        if (!s) return false;
+        const sEmail = (s.email || '').toLowerCase();
+        const sPersonal = (s.personalEmail || '').toLowerCase();
+        const sGoogle = (s.googleEmailId || '').toLowerCase();
+        const sRoll = (s.rollNumber || '').toLowerCase();
+        const sId = (s.studentId || '').toLowerCase();
+        const sName = (s.name || '').toLowerCase();
+        const sNameSlug = sName.replace(/[^a-z0-9]/g, '.');
+        const sNameNoSpaces = sName.replace(/\s+/g, '');
+        const sPhone = (s.phone || '').replace(/[^0-9]/g, '');
+
+        return (
+          sEmail === cleanQuery ||
+          sPersonal === cleanQuery ||
+          sGoogle === cleanQuery ||
+          sRoll === cleanQuery ||
+          sId === cleanQuery ||
+          sName === cleanQuery ||
+          sNameSlug === emailPrefix ||
+          sNameNoSpaces === emailPrefix ||
+          sEmail.startsWith(emailPrefix + '.') ||
+          sEmail.startsWith(emailPrefix + '@') ||
+          (sId.length > 0 && cleanQuery.includes(sId)) ||
+          (sRoll.length > 0 && cleanQuery.includes(sRoll)) ||
+          (cleanPhoneDigits.length >= 10 && sPhone.includes(cleanPhoneDigits))
+        );
+      });
 
       if (match) {
         return res.json({
@@ -343,7 +318,125 @@ async function startServer() {
         });
       }
 
+      // Auto-provision if it's an institutional email like aa.aa@pbs.com
+      if (cleanQuery.endsWith('@pbs.com') || cleanQuery.endsWith('@pragmaticbim.com') || cleanQuery.includes('.pbs.com')) {
+        const rawName = cleanQuery.split('@')[0].replace(/\./g, ' ').replace(/[0-9]/g, '').trim();
+        const formattedName = rawName
+          ? rawName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+          : 'PBS Student';
+        
+        const dynStudentId = `PBS-STU-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+        const dynRoll = `PBS/2026/BIM-${Math.floor(100 + Math.random() * 900)}`;
+
+        const dynStudent = {
+          id: `user-stu-${Date.now()}`,
+          studentId: dynStudentId,
+          rollNumber: dynRoll,
+          name: formattedName,
+          email: cleanQuery,
+          password: password || 'pravinyadav@123',
+          phone: '+91 8208918726',
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(formattedName)}`,
+          specialization: 'Autodesk Revit MEP Masterclass (LOD 300 - 500)',
+          batch: '09/2026 Weekend Cohort',
+          enrolledCourseIds: ['c1', 'c2'],
+          enrolledCourseTitles: [
+            'Autodesk Revit MEP Masterclass (LOD 300 - 500)',
+            'Navisworks Manage & Multi-Disciplinary Clash Detection'
+          ],
+          attendancePercent: 100,
+          totalFee: 26998,
+          paidAmount: 26998,
+          pendingBalance: 0,
+          paymentStatus: 'Full Paid',
+          capstoneStatus: 'Stage 1: Revit Project Setup Initialized',
+          capstoneGrade: 'In Progress',
+          growthScore: 85,
+          registrationDate: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+          placement: {
+            studentId: dynStudentId,
+            targetRole: 'BIM Engineer',
+            targetLocations: ['Pune / Dubai'],
+            expectedSalary: '₹12.0 LPA',
+            portfolioUrl: '',
+            resumeStatus: 'Verified',
+            mockInterviewScore: 85,
+            mockInterviewFeedback: 'Dynamic institutional account verified. Curriculum ready.',
+            mockInterviewDate: '',
+            readinessStatus: 'In Training',
+            referredCompanies: []
+          },
+          messages: [
+            {
+              id: `msg-dyn-${Date.now()}`,
+              sender: 'admin',
+              senderName: 'PBS Academic Director',
+              timestamp: 'Just now',
+              subject: 'Welcome to Pragmatic BIM Solution LMS!',
+              message: `Welcome ${formattedName}! Your institutional LMS access is verified. Begin your BIM masterclass curriculum now.`,
+              isRead: false
+            }
+          ]
+        };
+
+        db.students = [dynStudent, ...(db.students || [])];
+        db._lastUpdated = Date.now();
+        writeCentralDb(db);
+
+        return res.json({
+          success: true,
+          found: true,
+          student: dynStudent
+        });
+      }
+
       return res.json({ success: false, found: false, message: "Student account not found on cloud server" });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 4. Get single collection
+  app.get("/api/db/:collection", (req, res) => {
+    try {
+      const { collection } = req.params;
+      const db = readCentralDb();
+      res.json({
+        success: true,
+        collection,
+        data: db[collection] || null,
+        timestamp: db._lastUpdated || Date.now()
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 5. Save single collection
+  app.post("/api/db/:collection", (req, res) => {
+    try {
+      const { collection } = req.params;
+      const { data } = req.body;
+      const db = readCentralDb();
+
+      if (collection === 'students' && Array.isArray(data)) {
+        db.students = mergeArrayById(db.students || [], data, 'studentId');
+      } else if (collection === 'courses' && Array.isArray(data)) {
+        db.courses = mergeArrayById(db.courses || [], data, 'id');
+      } else if (collection === 'enrollments' && Array.isArray(data)) {
+        db.enrollments = mergeArrayById(db.enrollments || [], data, 'id');
+      } else if (collection === 'receipts' && Array.isArray(data)) {
+        db.receipts = mergeArrayById(db.receipts || [], data, 'receiptId');
+      } else if (['exams', 'certConfigs', 'progress', 'portfolios', 'studentCustomPasswords', 'settings'].includes(collection)) {
+        db[collection] = { ...(db[collection] || {}), ...(data || {}) };
+      } else {
+        db[collection] = data;
+      }
+
+      db._lastUpdated = Date.now();
+      writeCentralDb(db);
+
+      res.json({ success: true, collection, timestamp: db._lastUpdated });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }

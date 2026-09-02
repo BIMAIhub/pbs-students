@@ -1,16 +1,131 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 
 dotenv.config();
 
+// Ensure data persistence directory exists
+const DATA_DIR = path.join(process.cwd(), "data");
+if (!fs.existsSync(DATA_DIR)) {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  } catch (e) {
+    console.warn("Could not create data dir:", e);
+  }
+}
+
+const DB_FILE = path.join(DATA_DIR, "pbs_central_db.json");
+
+function readCentralDb(): Record<string, any> {
+  try {
+    if (fs.existsSync(DB_FILE)) {
+      const data = fs.readFileSync(DB_FILE, "utf-8");
+      return JSON.parse(data);
+    }
+  } catch (e) {
+    console.warn("Could not read central DB:", e);
+  }
+  return {};
+}
+
+function writeCentralDb(data: Record<string, any>): void {
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf-8");
+  } catch (e) {
+    console.warn("Could not write central DB:", e);
+  }
+}
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
+  app.use(express.json({ limit: "50mb" }));
+
+  // ==========================================
+  // CENTRALIZED CLOUD DATABASE API ENDPOINTS
+  // Enables cross-PC / cross-device live sync
+  // ==========================================
+
+  // 1. Get entire central sync store or specific collection
+  app.get("/api/db/sync", (req, res) => {
+    try {
+      const db = readCentralDb();
+      res.json({
+        success: true,
+        data: db,
+        lastUpdated: db._lastUpdated || Date.now()
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 2. Push update for collection (students, courses, enrollments, etc.)
+  app.post("/api/db/sync", (req, res) => {
+    try {
+      const { collection, data, fullStore } = req.body;
+      const db = readCentralDb();
+
+      if (fullStore && typeof fullStore === 'object') {
+        const merged = {
+          ...db,
+          ...fullStore,
+          _lastUpdated: Date.now()
+        };
+        writeCentralDb(merged);
+        return res.json({ success: true, timestamp: merged._lastUpdated });
+      }
+
+      if (!collection) {
+        return res.status(400).json({ success: false, error: "Collection name is required" });
+      }
+
+      db[collection] = data;
+      db._lastUpdated = Date.now();
+      writeCentralDb(db);
+
+      res.json({ success: true, timestamp: db._lastUpdated });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 3. Get single collection
+  app.get("/api/db/:collection", (req, res) => {
+    try {
+      const { collection } = req.params;
+      const db = readCentralDb();
+      res.json({
+        success: true,
+        collection,
+        data: db[collection] || null,
+        timestamp: db._lastUpdated || Date.now()
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 4. Save single collection
+  app.post("/api/db/:collection", (req, res) => {
+    try {
+      const { collection } = req.params;
+      const { data } = req.body;
+      const db = readCentralDb();
+
+      db[collection] = data;
+      db._lastUpdated = Date.now();
+      writeCentralDb(db);
+
+      res.json({ success: true, collection, timestamp: db._lastUpdated });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
 
   // Initialize Gemini API client
   const ai = new GoogleGenAI({

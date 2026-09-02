@@ -513,6 +513,20 @@ if (pbsSyncChannel && typeof window !== 'undefined') {
   };
 }
 
+// Push updates to Central Server API for cross-PC synchronization
+async function syncToServer(collection: string, data: any) {
+  if (typeof window === 'undefined') return;
+  try {
+    fetch(`/api/db/${collection}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data })
+    }).catch(() => {
+      // Non-blocking in case of offline/network issues
+    });
+  } catch {}
+}
+
 export const pbsNotifyChange = (eventType: string, data?: any) => {
   if (typeof window === 'undefined') return;
   try {
@@ -573,6 +587,7 @@ export const pbsAdminStore = {
     try {
       localStorage.setItem(STORAGE_ENROLLMENTS_KEY, JSON.stringify(requests));
       pbsNotifyChange('enrollments_updated', requests);
+      syncToServer('enrollments', requests);
     } catch (e) {
       console.warn('Could not save enrollment requests:', e);
     }
@@ -889,6 +904,7 @@ export const pbsAdminStore = {
     try {
       localStorage.setItem(STORAGE_STUDENTS_KEY, JSON.stringify(students));
       pbsNotifyChange('students_updated', students);
+      syncToServer('students', students);
     } catch (e) {
       console.warn('Could not save students to storage:', e);
     }
@@ -1099,6 +1115,7 @@ export const pbsAdminStore = {
     try {
       localStorage.setItem(STORAGE_COURSES_KEY, JSON.stringify(courses));
       pbsNotifyChange('courses_updated', courses);
+      syncToServer('courses', courses);
     } catch (e) {
       console.warn('Could not save courses to storage:', e);
     }
@@ -2283,6 +2300,90 @@ export const pbsAdminStore = {
     );
 
     return newMessage;
+  },
+
+  // ==========================================
+  // CENTRAL CLOUD DATABASE INITIALIZER & POLLER
+  // Ensures any new PC / browser instantly loads live data
+  // ==========================================
+  async syncWithCloudServer(): Promise<boolean> {
+    if (typeof window === 'undefined') return false;
+    try {
+      const res = await fetch('/api/db/sync');
+      if (!res.ok) return false;
+      const json = await res.json();
+      if (!json.success || !json.data) return false;
+
+      const { data } = json;
+      let hasUpdates = false;
+
+      // 1. Sync students
+      if (data.students && Array.isArray(data.students) && data.students.length > 0) {
+        const localStudentsStr = localStorage.getItem(STORAGE_STUDENTS_KEY);
+        const serverStudentsStr = JSON.stringify(data.students);
+        if (localStudentsStr !== serverStudentsStr) {
+          localStorage.setItem(STORAGE_STUDENTS_KEY, serverStudentsStr);
+          hasUpdates = true;
+        }
+      } else {
+        // If server is empty, seed it with current local students
+        const currentLocal = this.getStudents();
+        if (currentLocal && currentLocal.length > 0) {
+          syncToServer('students', currentLocal);
+        }
+      }
+
+      // 2. Sync courses
+      if (data.courses && Array.isArray(data.courses) && data.courses.length > 0) {
+        const localCoursesStr = localStorage.getItem(STORAGE_COURSES_KEY);
+        const serverCoursesStr = JSON.stringify(data.courses);
+        if (localCoursesStr !== serverCoursesStr) {
+          localStorage.setItem(STORAGE_COURSES_KEY, serverCoursesStr);
+          hasUpdates = true;
+        }
+      } else {
+        const currentCourses = this.getCourses();
+        if (currentCourses && currentCourses.length > 0) {
+          syncToServer('courses', currentCourses);
+        }
+      }
+
+      // 3. Sync enrollment requests
+      if (data.enrollments && Array.isArray(data.enrollments) && data.enrollments.length > 0) {
+        const localEnrStr = localStorage.getItem(STORAGE_ENROLLMENTS_KEY);
+        const serverEnrStr = JSON.stringify(data.enrollments);
+        if (localEnrStr !== serverEnrStr) {
+          localStorage.setItem(STORAGE_ENROLLMENTS_KEY, serverEnrStr);
+          hasUpdates = true;
+        }
+      } else {
+        const currentEnr = this.getEnrollmentRequests();
+        if (currentEnr && currentEnr.length > 0) {
+          syncToServer('enrollments', currentEnr);
+        }
+      }
+
+      if (hasUpdates) {
+        pbsNotifyChange('cloud_sync_completed', data);
+      }
+
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 };
+
+// Automatically initiate cloud sync upon module load in browser
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    pbsAdminStore.syncWithCloudServer();
+  }, 100);
+
+  // Periodic background check every 8 seconds for real-time multi-PC synchronization
+  setInterval(() => {
+    pbsAdminStore.syncWithCloudServer();
+  }, 8000);
+}
+
 

@@ -217,6 +217,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           {/* Controls & Quick Access */}
           <div className="flex items-center gap-3 w-full md:w-auto justify-end flex-wrap">
             
+            {/* Live Cloud Sync Button */}
+            <button
+              onClick={async () => {
+                soundFx.playClick();
+                await pbsAdminStore.syncWithCloudServer();
+                refreshData();
+              }}
+              className="px-3.5 py-1.5 rounded-xl bg-sky-600/80 hover:bg-sky-600 text-white text-xs font-bold flex items-center gap-1.5 transition-colors border border-sky-400/40 cursor-pointer shadow-2xs"
+              title="Sync student data across all devices & computers"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-sky-200" />
+              <span>Live Cloud Sync</span>
+            </button>
+
             {/* JSON Database Backup & Restore Modal Trigger */}
             <button
               onClick={() => {

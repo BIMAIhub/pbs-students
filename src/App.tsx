@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { StudentDashboard } from './components/student-dashboard/StudentDashboard';
 import { StudentLoginPortal } from './components/student-dashboard/StudentLoginPortal';
 import { AdminPortal } from './components/admin-dashboard/AdminPortal';
+import { PublicPortfolioPage } from './components/PublicPortfolioPage';
 import { CourseRegistrationModal } from './components/CourseRegistrationModal';
 import { Course, StudentRegistration, AuthUser } from './types';
 import { PRELOADED_USERS } from './data/pbsData';
@@ -14,6 +15,39 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => studentAuthUtil.isLoggedIn());
   const [activeSessionUser, setActiveSessionUser] = useState<ActiveSessionUser>(() => studentAuthUtil.getActiveUser());
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(PRELOADED_USERS[0]);
+
+  // Standalone Public Portfolio Routing State
+  const [publicPortfolioStudentId, setPublicPortfolioStudentId] = useState<string | null>(() => {
+    try {
+      const path = window.location.pathname;
+      const search = new URLSearchParams(window.location.search);
+      const hash = window.location.hash;
+
+      // 1. Path format: /portfolio/pbs-stu-2026-8492
+      if (path.startsWith('/portfolio/')) {
+        const id = path.replace('/portfolio/', '').trim();
+        if (id) return id;
+      }
+      if (path === '/portfolio') {
+        return 'PBS-STU-2026-8492';
+      }
+
+      // 2. Query param format: ?portfolio=pbs-stu-2026-8492
+      if (search.get('portfolio')) {
+        return search.get('portfolio');
+      }
+
+      // 3. Hash format: #/portfolio/pbs-stu-2026-8492
+      if (hash.includes('/portfolio/')) {
+        const id = hash.split('/portfolio/')[1]?.trim();
+        if (id) return id;
+      }
+      if (hash === '#/portfolio') {
+        return 'PBS-STU-2026-8492';
+      }
+    } catch {}
+    return null;
+  });
 
   // Modal states
   const [registerCourse, setRegisterCourse] = useState<Course | null>(null);
@@ -37,6 +71,51 @@ export default function App() {
   };
 
   useEffect(() => {
+    const handleUrlChange = () => {
+      try {
+        const path = window.location.pathname;
+        const search = new URLSearchParams(window.location.search);
+        const hash = window.location.hash;
+
+        if (path.startsWith('/portfolio/')) {
+          const id = path.replace('/portfolio/', '').trim();
+          if (id) {
+            setPublicPortfolioStudentId(id);
+            return;
+          }
+        }
+        if (path === '/portfolio') {
+          setPublicPortfolioStudentId('PBS-STU-2026-8492');
+          return;
+        }
+
+        if (search.get('portfolio')) {
+          setPublicPortfolioStudentId(search.get('portfolio'));
+          return;
+        }
+
+        if (hash.includes('/portfolio/')) {
+          const id = hash.split('/portfolio/')[1]?.trim();
+          if (id) {
+            setPublicPortfolioStudentId(id);
+            return;
+          }
+        }
+        if (hash === '#/portfolio') {
+          setPublicPortfolioStudentId('PBS-STU-2026-8492');
+          return;
+        }
+
+        // If not on portfolio URL, clear state
+        if (!path.startsWith('/portfolio') && !search.get('portfolio') && !hash.includes('/portfolio')) {
+          setPublicPortfolioStudentId(null);
+        }
+      } catch {}
+    };
+
+    window.addEventListener('popstate', handleUrlChange);
+    window.addEventListener('hashchange', handleUrlChange);
+
     const checkAuthStatus = () => {
       const isActuallyLoggedIn = studentAuthUtil.isLoggedIn();
       
@@ -48,14 +127,12 @@ export default function App() {
       }
     };
 
-    // Check on page visibility change (when tab is brought back to front)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         checkAuthStatus();
       }
     };
 
-    // Check on storage event (when localStorage is modified in another tab)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'pbs_is_logged_in_state') {
         checkAuthStatus();
@@ -65,14 +142,31 @@ export default function App() {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('storage', handleStorageChange);
     
-    // Initial explicit check on mount
     checkAuthStatus();
 
     return () => {
+      window.removeEventListener('popstate', handleUrlChange);
+      window.removeEventListener('hashchange', handleUrlChange);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, [isLoggedIn]);
+
+  // 1. If viewing a Standalone Public Portfolio URL (No login required)
+  if (publicPortfolioStudentId) {
+    return (
+      <PublicPortfolioPage
+        studentId={publicPortfolioStudentId}
+        onNavigateHome={() => {
+          // Clear query/path and return to app home
+          try {
+            window.history.pushState({}, '', '/');
+          } catch {}
+          setPublicPortfolioStudentId(null);
+        }}
+      />
+    );
+  }
 
   return (
     <AnimatePresence mode="wait">

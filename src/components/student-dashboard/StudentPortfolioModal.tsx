@@ -208,7 +208,18 @@ export const StudentPortfolioModal: React.FC<StudentPortfolioModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+            <a
+              href={portfolioUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors"
+              title="Open standalone public portfolio page in a new window"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Open Public URL</span>
+            </a>
+
             <button
               onClick={handleCopyLink}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${

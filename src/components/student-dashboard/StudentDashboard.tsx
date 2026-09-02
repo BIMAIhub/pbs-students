@@ -182,117 +182,131 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
   // Dynamically resolve student profile from database
   useEffect(() => {
-    const studentQuery = user?.email || user?.studentId || user?.rollNumber || user?.id || studentAuthUtil.getActiveUser()?.email;
-    const match = studentQuery ? pbsAdminStore.getStudentByQuery(studentQuery) : null;
+    const syncStudentData = () => {
+      const studentQuery = user?.email || user?.studentId || user?.rollNumber || user?.id || studentAuthUtil.getActiveUser()?.email;
+      const match = studentQuery ? pbsAdminStore.getStudentByQuery(studentQuery) : null;
 
-    if (match) {
-      setProfileData(prev => ({
-        ...prev,
-        studentId: match.studentId || prev.studentId,
-        rollNumber: match.rollNumber || prev.rollNumber,
-        fullName: match.name || prev.fullName,
-        email: match.email || prev.email,
-        phone: match.phone || prev.phone,
-        googleEmailId: match.googleEmailId || prev.googleEmailId,
-        avatarUrl: match.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(match.name)}`,
-        currentCompanyRole: match.specialization || prev.currentCompanyRole,
-        specializationTrack: match.specialization || prev.specializationTrack,
-        targetCareerRole: match.placement?.targetRole || prev.targetCareerRole,
-        expectedSalary: match.placement?.expectedSalary || prev.expectedSalary,
-        bio: `Enrolled BIM student in ${match.specialization || 'Revit MEP'} cohort with ${match.attendancePercent || 92}% verified attendance record.`
-      }));
-
-      if (match.growthScore) {
-        setStudentXp(match.growthScore);
-      }
-
-      // Map dynamic courses
-      const allCatalogCourses = pbsAdminStore.getCourses();
-      const matchingCatalogCourses = allCatalogCourses.filter(c => 
-        match.enrolledCourseIds?.includes(c.id) || 
-        (match.specialization && c.title.toLowerCase().includes(match.specialization.toLowerCase()))
-      );
-
-      if (matchingCatalogCourses.length > 0) {
-        const dynamicEnrolled: EnrolledCourseItem[] = matchingCatalogCourses.map((c, idx) => ({
-          id: `enr-dyn-${idx}`,
-          courseId: c.id,
-          courseTitle: c.title,
-          category: c.category || 'Revit',
-          level: 'Cohort Core Track',
-          badge: idx === 0 ? 'Primary Specialization' : 'Elective Track',
-          batchMode: match.batch || 'Offline Weekend (Sat-Sun, 4 hrs/day)',
-          batchSchedule: 'Saturdays & Sundays (06:00 PM - 09:30 PM IST)',
-          progressPercent: 0,
-          completedModules: 0,
-          totalModules: c.modules?.length || 10,
-          enrolledDate: 'Sept 2026',
-          status: 'Active',
-          instructor: 'Pravin Yadav (15+ Yrs Industry Exp)',
-          totalFee: match.totalFee ?? 14999,
-          paidAmount: match.paidAmount ?? 7500,
-          pendingBalance: match.pendingBalance ?? 7499,
-          certificateEarned: match.capstoneStatus === 'Approved & Certified',
-          image: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=600&q=80',
-          accentColor: '#10b981'
+      if (match) {
+        setProfileData(prev => ({
+          ...prev,
+          studentId: match.studentId || prev.studentId,
+          rollNumber: match.rollNumber || prev.rollNumber,
+          fullName: match.name || prev.fullName,
+          email: match.email || prev.email,
+          phone: match.phone || prev.phone,
+          googleEmailId: match.googleEmailId || prev.googleEmailId,
+          avatarUrl: match.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(match.name)}`,
+          currentCompanyRole: match.specialization || prev.currentCompanyRole,
+          specializationTrack: match.specialization || prev.specializationTrack,
+          targetCareerRole: match.placement?.targetRole || prev.targetCareerRole,
+          expectedSalary: match.placement?.expectedSalary || prev.expectedSalary,
+          bio: `Enrolled BIM student in ${match.specialization || 'Revit MEP'} cohort with ${match.attendancePercent || 92}% verified attendance record.`
         }));
-        setEnrolledCourses(dynamicEnrolled);
-        setActiveCourseId(matchingCatalogCourses[0].id);
-      } else {
-        setEnrolledCourses(prev => prev.map((c, i) => i === 0 ? {
-          ...c,
-          courseTitle: match.specialization || c.courseTitle,
-          totalFee: match.totalFee ?? c.totalFee,
-          paidAmount: match.paidAmount ?? c.paidAmount,
-          pendingBalance: match.pendingBalance ?? c.pendingBalance,
-          progressPercent: 0,
-          completedModules: 0,
-          certificateEarned: false,
-          status: 'Active'
-        } : {
-          ...c,
-          progressPercent: 0,
-          completedModules: 0,
-          certificateEarned: false,
-          status: 'Active'
-        }));
-      }
 
-      // Generate dynamic fee receipt if none exist
-      setFeeReceipts(prev => {
-        if (prev.length > 0) return prev;
-        if (match.paidAmount > 0) {
-          return [
-            {
-              receiptId: `PBS-REC-${(match.studentId || '2026').replace('PBS-STU-', '')}-01`,
-              invoiceNumber: `INV/PBS/2026-27/0${(match.rollNumber || '8492').slice(-3)}`,
-              courseId: match.enrolledCourseIds?.[0] || 'revit-mep-pro',
-              courseTitle: match.specialization || 'Autodesk Revit MEP Masterclass (LOD 300 - 500)',
-              amount: match.paidAmount || 0,
-              paymentMethod: 'Instant NetBanking / UPI Verified',
-              transactionId: `UPI/PBS/${(match.rollNumber || '8492').replace(/[^a-zA-Z0-9]/g, '')}/TXN99`,
-              date: 'Aug 2026',
-              paymentType: (match.pendingBalance ?? 0) === 0 ? 'Full Payment' : 'Installment #1',
-              status: 'Paid',
-              taxGst: Math.round((match.paidAmount || 0) * 0.18),
-              downloadUrl: '#'
-            }
-          ];
+        if (match.growthScore) {
+          setStudentXp(match.growthScore);
         }
-        return prev;
-      });
-    } else if (user?.name) {
-      setProfileData(prev => ({
-        ...prev,
-        fullName: user.name,
-        email: user.email || prev.email,
-        studentId: user.studentId || prev.studentId,
-        rollNumber: user.rollNumber || prev.rollNumber,
-        phone: user.phone || prev.phone,
-        googleEmailId: user.googleEmailId || prev.googleEmailId,
-        avatarUrl: user.avatar || prev.avatarUrl
-      }));
-    }
+
+        // Map dynamic courses
+        const allCatalogCourses = pbsAdminStore.getCourses();
+        const matchingCatalogCourses = allCatalogCourses.filter(c => 
+          match.enrolledCourseIds?.includes(c.id) || 
+          (match.specialization && c.title.toLowerCase().includes(match.specialization.toLowerCase()))
+        );
+
+        if (matchingCatalogCourses.length > 0) {
+          const dynamicEnrolled: EnrolledCourseItem[] = matchingCatalogCourses.map((c, idx) => ({
+            id: `enr-dyn-${idx}`,
+            courseId: c.id,
+            courseTitle: c.title,
+            category: c.category || 'Revit',
+            level: 'Cohort Core Track',
+            badge: idx === 0 ? 'Primary Specialization' : 'Elective Track',
+            batchMode: match.batch || 'Offline Weekend (Sat-Sun, 4 hrs/day)',
+            batchSchedule: 'Saturdays & Sundays (06:00 PM - 09:30 PM IST)',
+            progressPercent: 0,
+            completedModules: 0,
+            totalModules: c.modules?.length || 10,
+            enrolledDate: 'Sept 2026',
+            status: 'Active',
+            instructor: 'Pravin Yadav (15+ Yrs Industry Exp)',
+            totalFee: match.totalFee ?? 14999,
+            paidAmount: match.paidAmount ?? 7500,
+            pendingBalance: match.pendingBalance ?? 7499,
+            certificateEarned: match.capstoneStatus === 'Approved & Certified',
+            image: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=600&q=80',
+            accentColor: '#10b981'
+          }));
+          setEnrolledCourses(dynamicEnrolled);
+          setActiveCourseId(matchingCatalogCourses[0].id);
+        } else {
+          setEnrolledCourses(prev => prev.map((c, i) => i === 0 ? {
+            ...c,
+            courseTitle: match.specialization || c.courseTitle,
+            totalFee: match.totalFee ?? c.totalFee,
+            paidAmount: match.paidAmount ?? c.paidAmount,
+            pendingBalance: match.pendingBalance ?? c.pendingBalance,
+            progressPercent: 0,
+            completedModules: 0,
+            certificateEarned: false,
+            status: 'Active'
+          } : {
+            ...c,
+            progressPercent: 0,
+            completedModules: 0,
+            certificateEarned: false,
+            status: 'Active'
+          }));
+        }
+
+        // Generate dynamic fee receipt if none exist
+        setFeeReceipts(prev => {
+          if (prev.length > 0) return prev;
+          if (match.paidAmount > 0) {
+            return [
+              {
+                receiptId: `PBS-REC-${(match.studentId || '2026').replace('PBS-STU-', '')}-01`,
+                invoiceNumber: `INV/PBS/2026-27/0${(match.rollNumber || '8492').slice(-3)}`,
+                courseId: match.enrolledCourseIds?.[0] || 'revit-mep-pro',
+                courseTitle: match.specialization || 'Autodesk Revit MEP Masterclass (LOD 300 - 500)',
+                amount: match.paidAmount || 0,
+                paymentMethod: 'Instant NetBanking / UPI Verified',
+                transactionId: `UPI/PBS/${(match.rollNumber || '8492').replace(/[^a-zA-Z0-9]/g, '')}/TXN99`,
+                date: 'Aug 2026',
+                paymentType: (match.pendingBalance ?? 0) === 0 ? 'Full Payment' : 'Installment #1',
+                status: 'Paid',
+                taxGst: Math.round((match.paidAmount || 0) * 0.18),
+                downloadUrl: '#'
+              }
+            ];
+          }
+          return prev;
+        });
+      } else if (user?.name) {
+        setProfileData(prev => ({
+          ...prev,
+          fullName: user.name,
+          email: user.email || prev.email,
+          studentId: user.studentId || prev.studentId,
+          rollNumber: user.rollNumber || prev.rollNumber,
+          phone: user.phone || prev.phone,
+          googleEmailId: user.googleEmailId || prev.googleEmailId,
+          avatarUrl: user.avatar || prev.avatarUrl
+        }));
+      }
+    };
+
+    syncStudentData();
+
+    window.addEventListener('pbs_store_updated', syncStudentData);
+    window.addEventListener('storage', syncStudentData);
+    document.addEventListener('visibilitychange', syncStudentData);
+
+    return () => {
+      window.removeEventListener('pbs_store_updated', syncStudentData);
+      window.removeEventListener('storage', syncStudentData);
+      document.removeEventListener('visibilitychange', syncStudentData);
+    };
   }, [user]);
 
   useEffect(() => {

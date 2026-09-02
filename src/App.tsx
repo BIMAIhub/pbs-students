@@ -134,13 +134,20 @@ export default function App() {
     };
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'pbs_is_logged_in_state') {
+      if (e.key === 'pbs_is_logged_in_state' || e.key === 'pbs_active_session_user') {
+        checkAuthStatus();
+      }
+    };
+
+    const handlePbsStoreEvent = (e: any) => {
+      if (e?.detail?.eventType === 'auth_changed') {
         checkAuthStatus();
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('pbs_store_updated', handlePbsStoreEvent);
     
     checkAuthStatus();
 
@@ -149,6 +156,7 @@ export default function App() {
       window.removeEventListener('hashchange', handleUrlChange);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('pbs_store_updated', handlePbsStoreEvent);
     };
   }, [isLoggedIn]);
 

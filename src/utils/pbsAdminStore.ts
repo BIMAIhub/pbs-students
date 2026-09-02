@@ -500,6 +500,32 @@ const STORAGE_STUDENTS_KEY = 'pbs_admin_student_roster';
 const STORAGE_COURSES_KEY = 'pbs_admin_courses_library';
 const STORAGE_ENROLLMENTS_KEY = 'pbs_admin_enrollment_requests';
 
+// Cross-tab and live component sync channel
+const pbsSyncChannel = typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined'
+  ? new BroadcastChannel('pbs_live_lms_sync_bus')
+  : null;
+
+if (pbsSyncChannel && typeof window !== 'undefined') {
+  pbsSyncChannel.onmessage = (event) => {
+    try {
+      window.dispatchEvent(new CustomEvent('pbs_store_updated', { detail: event.data }));
+    } catch {}
+  };
+}
+
+export const pbsNotifyChange = (eventType: string, data?: any) => {
+  if (typeof window === 'undefined') return;
+  try {
+    window.dispatchEvent(new CustomEvent('pbs_store_updated', { detail: { eventType, data, timestamp: Date.now() } }));
+  } catch {}
+
+  if (pbsSyncChannel) {
+    try {
+      pbsSyncChannel.postMessage({ eventType, data, timestamp: Date.now() });
+    } catch {}
+  }
+};
+
 const INITIAL_ENROLLMENT_REQUESTS: EnrollmentRequest[] = [
   {
     id: 'ENR-2026-091',
@@ -546,6 +572,7 @@ export const pbsAdminStore = {
   saveEnrollmentRequests(requests: EnrollmentRequest[]): void {
     try {
       localStorage.setItem(STORAGE_ENROLLMENTS_KEY, JSON.stringify(requests));
+      pbsNotifyChange('enrollments_updated', requests);
     } catch (e) {
       console.warn('Could not save enrollment requests:', e);
     }
@@ -861,6 +888,7 @@ export const pbsAdminStore = {
   saveStudents(students: ManagedStudent[]): void {
     try {
       localStorage.setItem(STORAGE_STUDENTS_KEY, JSON.stringify(students));
+      pbsNotifyChange('students_updated', students);
     } catch (e) {
       console.warn('Could not save students to storage:', e);
     }
@@ -1070,6 +1098,7 @@ export const pbsAdminStore = {
   saveCourses(courses: AdminCourse[]): void {
     try {
       localStorage.setItem(STORAGE_COURSES_KEY, JSON.stringify(courses));
+      pbsNotifyChange('courses_updated', courses);
     } catch (e) {
       console.warn('Could not save courses to storage:', e);
     }
@@ -1879,6 +1908,7 @@ export const pbsAdminStore = {
     const key = `pbs_progress_${studentId || 'PBS-STU-2026-8492'}_${courseId}`;
     try {
       localStorage.setItem(key, JSON.stringify(updated));
+      pbsNotifyChange('progress_updated', { studentId, courseId, updated });
     } catch (e) {
       console.warn('Failed to save student course progress:', e);
     }
@@ -2089,6 +2119,7 @@ export const pbsAdminStore = {
     try {
       localStorage.setItem(`pbs_portfolio_${cleanId}`, JSON.stringify(profile));
       this.logStudentActivity(cleanId, 'portfolio_updated', 'Updated Student Portfolio details & public showcase');
+      pbsNotifyChange('portfolio_updated', { studentId: cleanId, profile });
     } catch (e) {
       console.warn('Failed to save student portfolio:', e);
     }

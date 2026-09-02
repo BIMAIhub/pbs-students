@@ -123,6 +123,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   useEffect(() => {
     refreshData();
+
+    const handleSync = () => {
+      refreshData();
+    };
+
+    window.addEventListener('pbs_store_updated', handleSync);
+    window.addEventListener('storage', handleSync);
+    document.addEventListener('visibilitychange', handleSync);
+
+    return () => {
+      window.removeEventListener('pbs_store_updated', handleSync);
+      window.removeEventListener('storage', handleSync);
+      document.removeEventListener('visibilitychange', handleSync);
+    };
   }, []);
 
   // Filter students based on search and criteria

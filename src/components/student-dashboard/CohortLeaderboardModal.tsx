@@ -1,108 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Trophy, 
-  Medal, 
   Crown, 
-  Star, 
-  Sparkles, 
-  TrendingUp, 
-  Award, 
-  CheckCircle2, 
+  Search,
+  Sparkles,
+  Zap,
   Flame,
-  Search
+  Clock,
+  CheckCircle2
 } from 'lucide-react';
+import { pbsAdminStore, LeaderboardStudentData } from '../../utils/pbsAdminStore';
+import { soundFx } from '../../utils/soundEffects';
 
 interface CohortLeaderboardModalProps {
   onClose: () => void;
+  currentStudentId?: string;
 }
 
-interface LeaderboardStudent {
-  rank: number;
-  name: string;
-  avatar: string;
-  credits: number;
-  tasksCompleted: number;
-  attendancePercent: number;
-  streakDays: number;
-  badge: string;
-  isCurrentUser?: boolean;
-}
-
-export const CohortLeaderboardModal: React.FC<CohortLeaderboardModalProps> = ({ onClose }) => {
+export const CohortLeaderboardModal: React.FC<CohortLeaderboardModalProps> = ({ 
+  onClose,
+  currentStudentId = 'PBS-STU-2026-8492'
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [cohortStudents, setCohortStudents] = useState<LeaderboardStudentData[]>([]);
 
-  const cohortStudents: LeaderboardStudent[] = [
-    {
-      rank: 1,
-      name: 'Pravin Yadav',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-      credits: 650,
-      tasksCompleted: 87,
-      attendancePercent: 100,
-      streakDays: 45,
-      badge: 'Cohort Topper 🌟',
-      isCurrentUser: true,
-    },
-    {
-      rank: 2,
-      name: 'Aarav Sharma',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80',
-      credits: 635,
-      tasksCompleted: 86,
-      attendancePercent: 98,
-      streakDays: 40,
-      badge: 'BIM Star ⚡',
-    },
-    {
-      rank: 3,
-      name: 'Sneha Patel',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
-      credits: 620,
-      tasksCompleted: 85,
-      attendancePercent: 96,
-      streakDays: 38,
-      badge: 'Navisworks Guru 🏗️',
-    },
-    {
-      rank: 4,
-      name: 'Rohan Deshmukh',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80',
-      credits: 610,
-      tasksCompleted: 84,
-      attendancePercent: 95,
-      streakDays: 35,
-      badge: 'Dynamo Master 💻',
-    },
-    {
-      rank: 5,
-      name: 'Ananya Roy',
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80',
-      credits: 595,
-      tasksCompleted: 82,
-      attendancePercent: 94,
-      streakDays: 30,
-      badge: 'LOD 400 Pro 📐',
-    },
-    {
-      rank: 6,
-      name: 'Karthik Nair',
-      avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=150&q=80',
-      credits: 580,
-      tasksCompleted: 80,
-      attendancePercent: 92,
-      streakDays: 28,
-      badge: 'Revit Specialist 🏢',
-    }
-  ];
+  useEffect(() => {
+    const liveRankings = pbsAdminStore.getLeaderboardData(currentStudentId);
+    setCohortStudents(liveRankings);
+  }, [currentStudentId]);
+
+  const currentUser = cohortStudents.find(s => s.isCurrentUser) || cohortStudents[0];
 
   const filtered = cohortStudents.filter(s => 
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    s.badge.toLowerCase().includes(searchTerm.toLowerCase())
+    s.badge.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.rollNumber.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
       <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl space-y-6 max-h-[90vh] flex flex-col border border-slate-100">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-4">
@@ -111,7 +48,10 @@ export const CohortLeaderboardModal: React.FC<CohortLeaderboardModalProps> = ({ 
               <Trophy className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-slate-900">Cohort Performance Leaderboard</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xl font-bold text-slate-900">Cohort Performance Leaderboard</h3>
+                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Live Store Sync</span>
+              </div>
               <p className="text-xs text-slate-500">Real-time cumulative evaluation rankings for BIM Cohort 2026</p>
             </div>
           </div>
@@ -124,47 +64,51 @@ export const CohortLeaderboardModal: React.FC<CohortLeaderboardModalProps> = ({ 
         </div>
 
         {/* Current User Highlight Banner */}
-        <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-emerald-800 text-white rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-md">
-          <div className="flex items-center gap-3.5">
-            <div className="relative">
-              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-amber-400 shadow-md">
-                <img 
-                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" 
-                  alt="Pravin Yadav" 
-                  className="w-full h-full object-cover" 
-                />
+        {currentUser && (
+          <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-emerald-800 text-white rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-md">
+            <div className="flex items-center gap-3.5">
+              <div className="relative">
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-amber-400 shadow-md">
+                  <img 
+                    src={currentUser.avatar} 
+                    alt={currentUser.name} 
+                    className="w-full h-full object-cover" 
+                  />
+                </div>
+                <div className="absolute -top-1 -right-1 bg-amber-400 text-slate-900 rounded-full p-0.5 shadow">
+                  <Crown className="w-3.5 h-3.5 fill-current" />
+                </div>
               </div>
-              <div className="absolute -top-1 -right-1 bg-amber-400 text-slate-900 rounded-full p-0.5 shadow">
-                <Crown className="w-3.5 h-3.5 fill-current" />
+
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-bold text-white text-base">{currentUser.name}</h4>
+                  <span className="text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/40 px-2 py-0.5 rounded-full font-bold">
+                    Rank #{currentUser.rank} (You)
+                  </span>
+                </div>
+                <p className="text-xs text-emerald-200">
+                  {currentUser.credits} Live Credits • {currentUser.attendancePercent}% Attendance • {currentUser.tasksCompleted} Tasks Verified
+                </p>
               </div>
             </div>
 
-            <div>
-              <div className="flex items-center gap-2">
-                <h4 className="font-bold text-white text-base">Pravin Yadav</h4>
-                <span className="text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/40 px-2 py-0.5 rounded-full font-bold">
-                  Rank #1 (You)
-                </span>
-              </div>
-              <p className="text-xs text-emerald-200">650 Credits Earned • 100% Attendance • 87/87 Tasks</p>
+            <div className="text-right hidden sm:block">
+              <div className="text-2xl font-black text-amber-400">#{currentUser.rank}</div>
+              <div className="text-[10px] text-emerald-300 font-semibold uppercase tracking-wider">{currentUser.badge}</div>
             </div>
           </div>
-
-          <div className="text-right hidden sm:block">
-            <div className="text-2xl font-black text-amber-400">#1</div>
-            <div className="text-[10px] text-emerald-300 font-semibold uppercase tracking-wider">Cohort Topper</div>
-          </div>
-        </div>
+        )}
 
         {/* Search */}
         <div className="relative">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search cohort peers..."
+            placeholder="Search cohort peers by name, roll number, or badge..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
 
@@ -172,7 +116,7 @@ export const CohortLeaderboardModal: React.FC<CohortLeaderboardModalProps> = ({ 
         <div className="flex-1 overflow-y-auto divide-y divide-slate-100 border border-slate-200 rounded-2xl">
           {filtered.map((student) => (
             <div
-              key={student.rank}
+              key={student.studentId || student.rank}
               className={`p-3.5 sm:px-5 flex items-center justify-between gap-3 transition-colors ${
                 student.isCurrentUser ? 'bg-emerald-50/70 font-semibold' : 'hover:bg-slate-50'
               }`}
@@ -180,7 +124,7 @@ export const CohortLeaderboardModal: React.FC<CohortLeaderboardModalProps> = ({ 
               {/* Rank & Profile */}
               <div className="flex items-center gap-3.5 min-w-0">
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
-                  student.rank === 1 ? 'bg-amber-400 text-slate-900' :
+                  student.rank === 1 ? 'bg-amber-400 text-slate-900 shadow-sm' :
                   student.rank === 2 ? 'bg-slate-200 text-slate-700' :
                   student.rank === 3 ? 'bg-amber-700 text-amber-100' : 'bg-slate-100 text-slate-500'
                 }`}>
@@ -212,9 +156,13 @@ export const CohortLeaderboardModal: React.FC<CohortLeaderboardModalProps> = ({ 
         </div>
 
         {/* Footer */}
-        <div className="pt-2 flex justify-end">
+        <div className="pt-2 flex items-center justify-between">
+          <span className="text-xs text-slate-400">Showing real synchronized cohort ranking data</span>
           <button
-            onClick={onClose}
+            onClick={() => {
+              soundFx.playClick();
+              onClose();
+            }}
             className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold cursor-pointer transition-colors"
           >
             Close Leaderboard

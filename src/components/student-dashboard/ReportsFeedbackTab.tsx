@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle2, 
   Eye, 
@@ -21,9 +21,18 @@ import {
 } from 'lucide-react';
 import { REVIEWED_TASKS_DATA, MENTORSHIP_EVALUATIONS_DATA } from './dashboardData';
 import { ReviewedTask, MentorshipEvaluation } from './types';
+import { pbsAdminStore } from '../../utils/pbsAdminStore';
 import jsPDF from 'jspdf';
 
-export const ReportsFeedbackTab: React.FC = () => {
+interface ReportsFeedbackTabProps {
+  studentId?: string;
+  studentName?: string;
+}
+
+export const ReportsFeedbackTab: React.FC<ReportsFeedbackTabProps> = ({
+  studentId = 'PBS-STU-2026-8492',
+  studentName = 'Pravin Yadav'
+}) => {
   const [activeFeedbackSection, setActiveFeedbackSection] = useState<'tasks' | 'mentorship' | 'student_submission'>('tasks');
   const [activeFilterTab, setActiveFilterTab] = useState<'reviewed' | 'under_review' | 'resubmission'>('reviewed');
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,6 +45,16 @@ export const ReportsFeedbackTab: React.FC = () => {
   const [feedbackCategory, setFeedbackCategory] = useState('Curriculum & BIM Datasets');
   const [studentComment, setStudentComment] = useState('');
   const [feedbackSuccess, setFeedbackSuccess] = useState(false);
+  const [studentMessages, setStudentMessages] = useState<any[]>([]);
+
+  // Load message logs from store
+  useEffect(() => {
+    const student = pbsAdminStore.getStudentByQuery(studentId);
+    if (student?.messages) {
+      setStudentMessages(student.messages);
+    }
+  }, [studentId, feedbackSuccess]);
+
 
   const itemsPerPage = 10;
 
@@ -117,6 +136,14 @@ export const ReportsFeedbackTab: React.FC = () => {
       alert('Please enter your feedback comments before submitting.');
       return;
     }
+    
+    // Send to store
+    pbsAdminStore.sendMessageFromStudent(
+      studentId,
+      `[${feedbackCategory}] To ${selectedInstructor} (${submittedRating}/5 Stars)`,
+      studentComment.trim()
+    );
+
     setFeedbackSuccess(true);
     setStudentComment('');
     setTimeout(() => setFeedbackSuccess(false), 4000);
@@ -568,9 +595,50 @@ export const ReportsFeedbackTab: React.FC = () => {
               className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm hover:shadow transition-all inline-flex items-center gap-2 cursor-pointer"
             >
               <Send className="w-4 h-4" />
-              <span>Submit Academic Feedback</span>
+              <span>Submit Academic Feedback & Message</span>
             </button>
           </form>
+
+          {/* Real-time Message History Thread */}
+          {studentMessages.length > 0 && (
+            <div className="mt-8 pt-6 border-t border-slate-100 space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-emerald-600" />
+                  Your Direct Communication Log with Admin & Faculty
+                </h4>
+                <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                  {studentMessages.length} Messages
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {studentMessages.map((msg: any) => (
+                  <div 
+                    key={msg.id} 
+                    className={`p-4 rounded-2xl border text-xs space-y-2 ${
+                      msg.sender === 'admin' 
+                        ? 'bg-emerald-50/60 border-emerald-200 text-emerald-950' 
+                        : 'bg-white border-slate-200 text-slate-800'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] uppercase ${
+                          msg.sender === 'admin' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-white'
+                        }`}>
+                          {msg.sender === 'admin' ? 'Admin / Mentor' : 'You (Student)'}
+                        </span>
+                        <span className="font-bold text-slate-900">{msg.subject}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400">{msg.date}</span>
+                    </div>
+                    <p className="text-slate-700 leading-relaxed pl-1">{msg.message}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

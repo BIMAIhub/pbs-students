@@ -24,6 +24,7 @@ import { motion } from 'motion/react';
 import { soundFx } from '../../utils/soundEffects';
 import { AnimatedCounter } from '../AnimatedCounter';
 import { ScrollReveal } from '../ScrollReveal';
+import { pbsAdminStore } from '../../utils/pbsAdminStore';
 
 interface CourseOverviewTabProps {
   onOpenCohortLeaderboard: () => void;
@@ -33,6 +34,8 @@ interface CourseOverviewTabProps {
   onOpenFaq: () => void;
   onOpenPlacementPolicy: () => void;
   onOpenCertificationPolicy: () => void;
+  onOpenPortfolio?: () => void;
+  onOpenMcqExam?: () => void;
 }
 
 export const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({
@@ -43,6 +46,8 @@ export const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({
   onOpenFaq,
   onOpenPlacementPolicy,
   onOpenCertificationPolicy,
+  onOpenPortfolio,
+  onOpenMcqExam,
 }) => {
   return (
     <div id="course-overview-container" className="space-y-8 pb-12">
@@ -265,6 +270,150 @@ export const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({
           </div>
         </div>
       </motion.div>
+
+      {/* Interactive Feature Cards: Student Portfolio Showcase & MCQ Certification */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        {/* Card A: Shareable Student BIM Portfolio */}
+        <div className="bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-950 rounded-3xl p-6 text-white shadow-lg border border-indigo-500/30 flex flex-col justify-between relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16" />
+          
+          <div className="space-y-4 relative z-10">
+            <div className="flex items-center justify-between">
+              <span className="px-3 py-1 bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 rounded-full text-[10px] font-black uppercase tracking-wider">
+                Recruiter Showcase
+              </span>
+              <Sparkles className="w-5 h-5 text-indigo-400 animate-pulse" />
+            </div>
+
+            <div>
+              <h3 className="text-xl font-black tracking-tight text-white">
+                Personal BIM Portfolio Showcase
+              </h3>
+              <p className="text-xs text-indigo-200/80 mt-1.5 leading-relaxed">
+                Publish your verified BIM models, Dynamo scripts, Capstone project, and certificates to a public showcase link accessible to MNC recruiters worldwide.
+              </p>
+            </div>
+
+            <div className="p-3 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 text-xs space-y-1">
+              <div className="flex justify-between text-indigo-200">
+                <span>Public Showcase URL:</span>
+                <span className="font-mono text-indigo-300 font-bold">pbs.edu/p/pbs-stu-8492</span>
+              </div>
+              <div className="flex justify-between text-slate-300">
+                <span>Access Control:</span>
+                <span className="text-emerald-400 font-semibold">Public Link (Customizable by You)</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-6 flex items-center gap-3 relative z-10">
+            <button
+              onClick={() => {
+                soundFx.playClick();
+                if (onOpenPortfolio) onOpenPortfolio();
+              }}
+              className="flex-1 py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Open & Share My Portfolio</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Card B: Final MCQ Exam & Certificate Unlocker */}
+        {(() => {
+          const studentId = 'PBS-STU-2026-8492';
+          const defaultCourseId = 'c1';
+          const progress = pbsAdminStore.getStudentCourseProgress(studentId, defaultCourseId);
+          const eligibility = pbsAdminStore.checkCourseEligibilityForMcq(studentId, defaultCourseId);
+          const examConfig = pbsAdminStore.getCourseMcq(defaultCourseId);
+
+          return (
+            <div className="bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-950 rounded-3xl p-6 text-white shadow-lg border border-emerald-500/30 flex flex-col justify-between relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16" />
+              
+              <div className="space-y-4 relative z-10">
+                <div className="flex items-center justify-between">
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                    progress.isCertified
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                      : eligibility.isEligible
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                      : 'bg-slate-700/60 text-slate-300 border-slate-600'
+                  }`}>
+                    {progress.isCertified
+                      ? '🏆 Certified Graduate'
+                      : eligibility.isEligible
+                      ? '🎯 MCQ Exam Unlocked'
+                      : '🔒 Complete Modules to Unlock'}
+                  </span>
+                  <Award className="w-5 h-5 text-emerald-400" />
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-black tracking-tight text-white">
+                    Final MCQ Certification Exam
+                  </h3>
+                  <p className="text-xs text-emerald-200/80 mt-1.5 leading-relaxed">
+                    {progress.isCertified
+                      ? 'You have passed the final assessment and unlocked your official blockchain-verified Certificate of Mastery.'
+                      : eligibility.isEligible
+                      ? `All syllabus modules completed! Take the ${examConfig.questions.length}-question assessment to unlock your official ISO 19650 Certificate.`
+                      : `Complete all course video lessons (${eligibility.completedCount}/${eligibility.totalCount} completed) to unlock the final certification exam.`}
+                  </p>
+                </div>
+
+                <div className="p-3 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 text-xs space-y-1.5">
+                  <div className="flex justify-between text-emerald-200">
+                    <span>Course Modules:</span>
+                    <span className="font-bold text-white">
+                      {eligibility.completedCount} / {eligibility.totalCount} Lessons ({eligibility.progressPercent}%)
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-slate-300">
+                    <span>Passing Benchmark:</span>
+                    <span className="text-amber-400 font-semibold">{examConfig.passingScorePercent || 70}% Passing Criteria</span>
+                  </div>
+                  {progress.mcqAttempted && (
+                    <div className="flex justify-between text-emerald-300 font-bold pt-1 border-t border-white/10">
+                      <span>Last Score:</span>
+                      <span>{progress.mcqScore} / {progress.mcqTotal} ({progress.mcqPassed ? 'PASSED ✅' : 'FAILED ❌'})</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-6 flex items-center gap-3 relative z-10 flex-wrap">
+                <button
+                  onClick={() => {
+                    soundFx.playClick();
+                    if (onOpenMcqExam) onOpenMcqExam();
+                  }}
+                  className={`flex-1 min-w-40 py-3 px-4 font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                    eligibility.isEligible
+                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                      : 'bg-amber-600 hover:bg-amber-500 text-white'
+                  }`}
+                >
+                  <Award className="w-4 h-4" />
+                  <span>{progress.isCertified ? 'Retake / Review Exam' : eligibility.isEligible ? 'Launch MCQ Certification Exam' : 'Check MCQ Exam Status'}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    soundFx.playClick();
+                    onOpenCertificate();
+                  }}
+                  className="py-3 px-4 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition-all cursor-pointer"
+                >
+                  View Certificate
+                </button>
+              </div>
+            </div>
+          );
+        })()}
+
+      </div>
 
       {/* Resources & Studio Video Preview Section */}
       <motion.div 

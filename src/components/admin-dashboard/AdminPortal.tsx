@@ -65,6 +65,9 @@ import { AdminPaymentHistoryModal } from './AdminPaymentHistoryModal';
 import { AdminStudentGrowthModal } from './AdminStudentGrowthModal';
 import { AdminMessageStudentModal } from './AdminMessageStudentModal';
 import { AdminDatabaseBackupModal } from './AdminDatabaseBackupModal';
+import { AdminCertificateCustomizerModal } from './AdminCertificateCustomizerModal';
+import { AdminStudentActivityModal } from './AdminStudentActivityModal';
+import { StudentPortfolioModal } from '../student-dashboard/StudentPortfolioModal';
 
 interface AdminPortalProps {
   onLogout: () => void;
@@ -102,6 +105,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [selectedStudentForHistory, setSelectedStudentForHistory] = useState<ManagedStudent | null>(null);
   const [selectedStudentForGrowth, setSelectedStudentForGrowth] = useState<ManagedStudent | null>(null);
   const [selectedStudentForMessage, setSelectedStudentForMessage] = useState<ManagedStudent | null>(null);
+  const [selectedStudentForActivity, setSelectedStudentForActivity] = useState<ManagedStudent | null>(null);
+  const [selectedStudentForPortfolio, setSelectedStudentForPortfolio] = useState<ManagedStudent | null>(null);
+  const [selectedCourseForCert, setSelectedCourseForCert] = useState<AdminCourse | null>(null);
 
   const [exportNotice, setExportNotice] = useState<string | null>(null);
 
@@ -489,7 +495,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                             const url = URL.createObjectURL(blob);
                             const link = document.createElement('a');
                             link.href = url;
-                            link.download = `PBS_Student_Dossier_${s.name.replace(/\s+/g, '_')}_${s.studentId}.json`;
+                            link.download = `PBS_Student_Dossier_${(s.name || 'Student').replace(/\s+/g, '_')}_${s.studentId}.json`;
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
@@ -503,6 +509,30 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       >
                         <Download className="w-3.5 h-3.5 text-teal-600" />
                         <span>JSON Dossier</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          soundFx.playClick();
+                          setSelectedStudentForActivity(s);
+                        }}
+                        className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                        title="View live activity telemetry, logins, study time, downloads"
+                      >
+                        <Clock className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Live Activity Audit</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          soundFx.playClick();
+                          setSelectedStudentForPortfolio(s);
+                        }}
+                        className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                        title="View public student BIM portfolio showcase"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>Public Portfolio</span>
                       </button>
 
                       <button
@@ -723,6 +753,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
               <div className="flex items-center gap-2 flex-wrap">
                 <button
+                  onClick={() => {
+                    soundFx.playClick();
+                    if (courses.length > 0) {
+                      setSelectedCourseForCert(courses[0]);
+                    }
+                  }}
+                  className="px-4 py-2 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md shadow-emerald-700/20 cursor-pointer"
+                >
+                  <Award className="w-4 h-4 text-amber-300" />
+                  <span>MCQ Exam Studio & Question Bank</span>
+                </button>
+
+                <button
                   onClick={() => setShowAiCourseCreatorModal(true)}
                   className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md shadow-indigo-600/30 cursor-pointer"
                 >
@@ -743,7 +786,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     setCourseToEdit(null);
                     setShowAddCourseModal(true);
                   }}
-                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-emerald-700/20 cursor-pointer"
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   <span>+ Add New Course</span>
@@ -853,17 +896,32 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     </div>
 
                     {/* Footer Actions */}
-                    <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <div className="p-4 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
                       <span className="text-slate-500">Created: {c.createdDate}</span>
-                      <button
-                        onClick={() => {
-                          setCourseToEdit(c);
-                          setShowAddCourseModal(true);
-                        }}
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition-colors cursor-pointer shadow-xs"
-                      >
-                        Modify Course
-                      </button>
+                      
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            soundFx.playClick();
+                            setSelectedCourseForCert(c);
+                          }}
+                          className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg font-bold transition-colors cursor-pointer shadow-2xs flex items-center gap-1"
+                          title="Customize certificate theme, AI titles, and mandatory MCQ exam"
+                        >
+                          <Award className="w-3.5 h-3.5 text-amber-600" />
+                          <span>Certificate & MCQ Control</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setCourseToEdit(c);
+                            setShowAddCourseModal(true);
+                          }}
+                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition-colors cursor-pointer shadow-xs"
+                        >
+                          Modify Course
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -1477,6 +1535,31 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           student={selectedStudentForMessage}
           onClose={() => setSelectedStudentForMessage(null)}
           onMessageSent={refreshData}
+        />
+      )}
+
+      {selectedStudentForActivity && (
+        <AdminStudentActivityModal
+          student={selectedStudentForActivity}
+          onClose={() => setSelectedStudentForActivity(null)}
+        />
+      )}
+
+      {selectedStudentForPortfolio && (
+        <StudentPortfolioModal
+          studentId={selectedStudentForPortfolio.studentId}
+          studentName={selectedStudentForPortfolio.name}
+          mode="view"
+          onClose={() => setSelectedStudentForPortfolio(null)}
+        />
+      )}
+
+      {selectedCourseForCert && (
+        <AdminCertificateCustomizerModal
+          courseId={selectedCourseForCert.id}
+          courseTitle={selectedCourseForCert.title}
+          onClose={() => setSelectedCourseForCert(null)}
+          onSaved={refreshData}
         />
       )}
 

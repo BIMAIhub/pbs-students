@@ -59,6 +59,126 @@ export interface StudentMessageItem {
   replyToId?: string;
 }
 
+export interface StudentActivityLog {
+  id: string;
+  studentId: string;
+  studentName: string;
+  actionType: 'login' | 'video_watched' | 'module_completed' | 'asset_downloaded' | 'task_submitted' | 'mcq_attempted' | 'certificate_unlocked' | 'portfolio_updated';
+  details: string;
+  timestamp: string;
+  metadata?: {
+    courseId?: string;
+    courseTitle?: string;
+    lessonTitle?: string;
+    assetName?: string;
+    durationMinutes?: number;
+    score?: number;
+    totalQuestions?: number;
+    deviceInfo?: string;
+    ipAddress?: string;
+  };
+}
+
+export interface McqQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correctOptionIndex: number;
+  explanation: string;
+}
+
+export interface CourseMcqExam {
+  courseId: string;
+  title: string;
+  description: string;
+  passingScorePercent: number;
+  timeLimitMinutes: number;
+  questions: McqQuestion[];
+}
+
+export interface CourseCertificateConfig {
+  courseId: string;
+  theme: 'emerald' | 'gold' | 'cyber-blue' | 'ruby' | 'academic';
+  borderStyle: 'classic-double' | 'modern-minimal' | 'ornate-gold' | 'tech-geometric';
+  certificateTitle: string;
+  subtitle: string;
+  signatureName1: string;
+  signatureTitle1: string;
+  signatureName2: string;
+  signatureTitle2: string;
+  showQrCode: boolean;
+  showAccreditations: boolean;
+  institutionName: string;
+  accreditationText: string;
+  aiPromptUsed?: string;
+}
+
+export interface StudentCourseProgress {
+  studentId: string;
+  courseId: string;
+  completedLessonIds: string[];
+  totalActiveTimeMinutes: number;
+  lastStudiedAt: string;
+  taskSubmitted: boolean;
+  taskSubmissionDetails?: {
+    taskId: string;
+    taskName: string;
+    submittedAt: string;
+    score?: number;
+    feedback?: string;
+  };
+  mcqAttempted: boolean;
+  mcqPassed: boolean;
+  mcqScore?: number;
+  mcqTotal?: number;
+  mcqCompletedAt?: string;
+  isCertified: boolean;
+  certificateId?: string;
+  certificateIssuedDate?: string;
+}
+
+export interface StudentPortfolioProfile {
+  studentId: string;
+  isPublic: boolean;
+  headline: string;
+  bio: string;
+  skills: { name: string; level: number; category: string }[];
+  featuredProjects: {
+    id: string;
+    title: string;
+    category: string;
+    description: string;
+    imageUrl?: string;
+    projectUrl?: string;
+    lodLevel: string;
+    softwareUsed: string[];
+  }[];
+  socialLinks: {
+    linkedin?: string;
+    github?: string;
+    portfolio?: string;
+    email?: string;
+    phone?: string;
+    location?: string;
+  };
+}
+
+export interface LeaderboardStudentData {
+  rank: number;
+  studentId: string;
+  name: string;
+  avatar: string;
+  rollNumber: string;
+  specialization: string;
+  credits: number;
+  tasksCompleted: number;
+  attendancePercent: number;
+  streakDays: number;
+  activeStudyMinutes: number;
+  badge: string;
+  isCurrentUser?: boolean;
+}
+
 export interface ManagedStudent {
   id: string;
   studentId: string;
@@ -937,6 +1057,14 @@ export const pbsAdminStore = {
   },
 
   /**
+   * Get course by ID or course code
+   */
+  getCourseById(courseId: string): AdminCourse | undefined {
+    const list = this.getCourses();
+    return list.find(c => c.id === courseId || c.courseCode === courseId);
+  },
+
+  /**
    * Save courses library
    */
   saveCourses(courses: AdminCourse[]): void {
@@ -1247,5 +1375,883 @@ export const pbsAdminStore = {
         message: `JSON Parsing error: ${err.message || 'Malformed JSON file'}`
       };
     }
+  },
+
+  // ==========================================
+  // STUDENT ACTIVITY & TELEMETRY AUDIT TRAIL
+  // ==========================================
+  getActivityLogs(filter?: { studentId?: string; actionType?: string }): StudentActivityLog[] {
+    try {
+      const stored = localStorage.getItem('pbs_student_activity_logs');
+      let logs: StudentActivityLog[] = stored ? JSON.parse(stored) : [];
+      if (!logs || logs.length === 0) {
+        logs = [
+          {
+            id: 'act-1',
+            studentId: 'PBS-STU-2026-8492',
+            studentName: 'Pravin Yadav',
+            actionType: 'login',
+            details: 'Logged into PBS LMS Student Portal (BIM Cohort 2026)',
+            timestamp: 'Today, 09:30 AM',
+            metadata: { deviceInfo: 'Chrome macOS / Windows 11', ipAddress: '103.21.144.92' }
+          },
+          {
+            id: 'act-2',
+            studentId: 'PBS-STU-2026-8492',
+            studentName: 'Pravin Yadav',
+            actionType: 'video_watched',
+            details: 'Watched: Module 01 - Revit 2026 Environment, UI & Ribbon Navigation (24 min)',
+            timestamp: 'Today, 10:15 AM',
+            metadata: { courseId: 'c1', courseTitle: 'Autodesk Revit MEP Masterclass', durationMinutes: 24 }
+          },
+          {
+            id: 'act-3',
+            studentId: 'PBS-STU-2026-8492',
+            studentName: 'Pravin Yadav',
+            actionType: 'asset_downloaded',
+            details: 'Downloaded Dataset: MOD01_Revit_Architecture_Base.rvt (48.5 MB)',
+            timestamp: 'Today, 10:45 AM',
+            metadata: { courseId: 'c1', assetName: 'MOD01_Revit_Architecture_Base.rvt' }
+          }
+        ];
+        this.saveActivityLogs(logs);
+      }
+
+      if (filter?.studentId && filter.studentId !== 'all') {
+        logs = logs.filter(l => l.studentId === filter.studentId);
+      }
+      if (filter?.actionType && filter.actionType !== 'all') {
+        logs = logs.filter(l => l.actionType === filter.actionType);
+      }
+      return logs.sort((a, b) => (b.timestamp > a.timestamp ? 1 : -1));
+    } catch {
+      return [];
+    }
+  },
+
+  saveActivityLogs(logs: StudentActivityLog[]): void {
+    try {
+      localStorage.setItem('pbs_student_activity_logs', JSON.stringify(logs));
+    } catch (e) {
+      console.warn('Failed to save activity logs to localStorage:', e);
+    }
+  },
+
+  logStudentActivity(
+    studentId: string,
+    actionType: StudentActivityLog['actionType'],
+    details: string,
+    metadata?: StudentActivityLog['metadata']
+  ): StudentActivityLog {
+    const student = this.getStudentByQuery(studentId);
+    const studentName = student ? student.name : 'Pravin Yadav';
+    const newLog: StudentActivityLog = {
+      id: `act-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      studentId: student?.studentId || studentId || 'PBS-STU-2026-8492',
+      studentName,
+      actionType,
+      details,
+      timestamp: new Date().toLocaleString('en-US', {
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }),
+      metadata
+    };
+
+    const current = this.getActivityLogs();
+    current.unshift(newLog);
+    // Keep last 300 logs
+    const capped = current.slice(0, 300);
+    this.saveActivityLogs(capped);
+    return newLog;
+  },
+
+  // ==========================================
+  // COURSE FINAL MCQ EXAM SYSTEM
+  // ==========================================
+  getCourseMcq(courseId: string): CourseMcqExam {
+    try {
+      const stored = localStorage.getItem(`pbs_course_mcq_${courseId}`);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch {}
+
+    const defaultExams: Record<string, CourseMcqExam> = {
+      c1: {
+        courseId: 'c1',
+        title: 'Autodesk Revit MEP Masterclass Certification Examination',
+        description: 'Comprehensive 10-Question assessment evaluating LOD 300-500 mechanical duct sizing, hydraulic pipe slopes, electrical load schedules, and parametric family creation.',
+        passingScorePercent: 70,
+        timeLimitMinutes: 15,
+        questions: [
+          {
+            id: 'q1',
+            question: 'In Autodesk Revit MEP, what is the primary function of a "System Inspector"?',
+            options: [
+              'To check geometric clashes with architectural columns',
+              'To inspect flow direction, velocity, and static pressure drop along duct or pipe networks',
+              'To render photorealistic 3D MEP views',
+              'To purge unreferenced family instances'
+            ],
+            correctOptionIndex: 1,
+            explanation: 'The System Inspector in Revit allows MEP engineers to inspect flow, velocity, pressure loss, and critical path sizing across interconnected duct and piping systems.'
+          },
+          {
+            id: 'q2',
+            question: 'What level of development (LOD) is required for fabrication-ready MEP models with manufacturing hangers and manufacturer part numbers?',
+            options: ['LOD 200', 'LOD 300', 'LOD 400', 'LOD 500'],
+            correctOptionIndex: 2,
+            explanation: 'LOD 400 models represent fabrication and assembly level details, including exact vendor part geometry, spool sheets, and structural hanger supports.'
+          },
+          {
+            id: 'q3',
+            question: 'Which Revit parameter type allows parameter data to appear in schedules and can be shared across multiple family files and projects?',
+            options: ['Project Parameter', 'Family Parameter', 'Shared Parameter', 'Global Parameter'],
+            correctOptionIndex: 2,
+            explanation: 'Shared Parameters are stored in an external .txt definition file and can be scheduled, tagged, and used across multiple separate families and project files.'
+          },
+          {
+            id: 'q4',
+            question: 'When configuring sanitary drainage pipe slopes in Revit, what is the standard recommended minimum slope for 100mm (4") diameter waste pipes?',
+            options: ['1:100 (1%)', '1:50 (2%)', '1:200 (0.5%)', '1:25 (4%)'],
+            correctOptionIndex: 1,
+            explanation: 'Standard plumbing codes (IPC/BS EN 12056) dictate a 1:50 (2% or 1/4" per foot) minimum hydraulic gradient for 100mm waste piping to ensure self-cleansing velocity.'
+          },
+          {
+            id: 'q5',
+            question: 'In electrical panel schedules, what setting determines the continuous and non-continuous demand factor calculation?',
+            options: ['Demand Factor Load Classification', 'Voltage Definition Matrix', 'Wire Temperature Rating', 'Circuit Breaker Trip Ampacity'],
+            correctOptionIndex: 0,
+            explanation: 'Demand Factors tied to Load Classifications dictate how raw connected electrical loads (VA) are factored into calculated max demand kVA.'
+          },
+          {
+            id: 'q6',
+            question: 'Which tool in Revit is utilized to automatically resize ductwork based on equal friction or static regain methods?',
+            options: ['Duct / Pipe Sizing Tool', 'Worksharing Monitor', 'Interference Check', 'Space and Zone Analysis'],
+            correctOptionIndex: 0,
+            explanation: 'Revit’s built-in Duct/Pipe Sizing tool computes exact duct cross-sectional dimensions based on chosen criteria like Equal Friction (Pa/m) or Maximum Velocity.'
+          },
+          {
+            id: 'q7',
+            question: 'How do you prevent Revit MEP elements in linked models from showing up in conflicting graphic styles?',
+            options: [
+              'Use Visibility/Graphic Overrides (VV/VG) -> Revit Links tab set to Custom or By Linked View',
+              'Delete the linked model geometry',
+              'Convert elements to IFC format',
+              'Group all MEP fixtures into an in-place family'
+            ],
+            correctOptionIndex: 0,
+            explanation: 'In VG Overrides, setting the Revit Link to "Custom" allows overriding model categories, filters, and worksets specifically for linked architectural/structural files.'
+          },
+          {
+            id: 'q8',
+            question: 'What is the purpose of placing "MEP Spaces" rather than standard Architectural Rooms in a Revit MEP project?',
+            options: [
+              'Spaces hold heating/cooling thermal calculations, airflow requirements, and illuminance levels',
+              'Spaces are only for interior design colors',
+              'Rooms cannot have 3D boundaries',
+              'Spaces automatically create structural footings'
+            ],
+            correctOptionIndex: 0,
+            explanation: 'MEP Spaces are specialized MEP containers that store CFM airflow requirements, sensible/latent heat gains, lux levels, and occupancy loads.'
+          },
+          {
+            id: 'q9',
+            question: 'In Revit parametric family creation, which reference plane setting ensures that elements snap accurately to duct connectors?',
+            options: ['IsReference = Strong Reference / Not a Reference', 'Connector Element Domain & System Type definition', 'View Range Cut Plane', 'Model In-Place Extrusion'],
+            correctOptionIndex: 1,
+            explanation: 'Connector elements embedded in families define the system type (Supply Air, Return Air, Hydronic Supply), flow direction, and connection sizing.'
+          },
+          {
+            id: 'q10',
+            question: 'Which BIM coordination export format is industry standard for open-BIM exchange without exporting proprietary native Revit geometry?',
+            options: ['DWG 2D', 'IFC 2x3 / IFC 4 (Industry Foundation Classes)', 'STL', 'OBJ'],
+            correctOptionIndex: 1,
+            explanation: 'IFC (ISO 16739) is the international standard open BIM schema allowing lossless multi-disciplinary coordination between Autodesk, Bentley, Graphisoft, and Solibri.'
+          }
+        ]
+      },
+      c2: {
+        courseId: 'c2',
+        title: 'Navisworks Manage & Multi-Disciplinary Clash Detection Exam',
+        description: 'Covers Clash Detective hard/clearance rules, TimeLiner 4D scheduling, Animator, and BCF report coordination workflows.',
+        passingScorePercent: 70,
+        timeLimitMinutes: 15,
+        questions: [
+          {
+            id: 'q1',
+            question: 'In Autodesk Navisworks Clash Detective, what does a "Hard Clash" with a tolerance of 0.025m indicate?',
+            options: [
+              'Clashes will only be flagged if elements intersect by more than 25 millimeters',
+              'All elements closer than 25m will be grouped',
+              'Soft insulation buffer is tested',
+              'Duplicate items within 25mm are deleted'
+            ],
+            correctOptionIndex: 0,
+            explanation: 'Tolerance in Clash Detective filters out minor negligible intersections; any physical intersection exceeding 25mm is flagged as an active clash.'
+          },
+          {
+            id: 'q2',
+            question: 'Which file format in Navisworks contains the native cached model geometry and allows faster reload times?',
+            options: ['.NWC (Cache File)', '.NWD (Published Document)', '.NWF (Federated Project File)', '.XML'],
+            correctOptionIndex: 0,
+            explanation: '.NWC is the automatically generated Navisworks Cache file containing pre-processed tessellated geometry.'
+          },
+          {
+            id: 'q3',
+            question: 'What is the open standard XML format for exchanging clash coordination viewpoints and comments between Navisworks and authoring tools like Revit?',
+            options: ['BCF (BIM Collaboration Format)', 'COBie', 'DXF', 'STEP'],
+            correctOptionIndex: 0,
+            explanation: 'BCF (BIM Collaboration Format) enables seamless issue tracking with exact camera viewpoints and GUIDs across AEC tools.'
+          },
+          {
+            id: 'q4',
+            question: 'In Navisworks TimeLiner, how do you link 4D construction sequences with external planning software like Primavera P6 or MS Project?',
+            options: ['Data Sources tab -> Add Primavera / CSV link', 'Export to PDF', 'Render in Raytrace', 'Convert to DWG'],
+            correctOptionIndex: 0,
+            explanation: 'TimeLiner provides direct ODBC/CSV synchronization with Primavera P6 and Microsoft Project Gantt schedules.'
+          },
+          {
+            id: 'q5',
+            question: 'What clash test type should be selected to detect if high-voltage cable trays are too close to uninsulated chilled water pipes without physical contact?',
+            options: ['Clearance Clash', 'Hard Clash', 'Duplicate Clash', 'Conservative Clash'],
+            correctOptionIndex: 0,
+            explanation: 'Clearance clash tests enforce a designated spatial buffer zone between systems.'
+          }
+        ]
+      },
+      c3: {
+        courseId: 'c3',
+        title: 'Computational BIM with Dynamo Visual Scripting Exam',
+        description: 'Covers list management, lacing algorithms, Revit API element binding, and parametric geometric automation.',
+        passingScorePercent: 70,
+        timeLimitMinutes: 15,
+        questions: [
+          {
+            id: 'q1',
+            question: 'What does "Cross Product Lacing" in a Dynamo node do when supplied with List A (3 items) and List B (4 items)?',
+            options: [
+              'Executes the node operation for all 12 combinations of items from both lists',
+              'Executes only 3 shortest items',
+              'Executes 4 longest items',
+              'Produces an error'
+            ],
+            correctOptionIndex: 0,
+            explanation: 'Cross Product lacing evaluates every possible pairing between list items (3 x 4 = 12 total operations).'
+          },
+          {
+            id: 'q2',
+            question: 'Which node in Dynamo is used to retrieve all instances of a particular category in the active Revit document?',
+            options: ['All Elements of Category', 'Element.GetParameterValueByName', 'List.FilterByBoolMask', 'Point.ByCoordinates'],
+            correctOptionIndex: 0,
+            explanation: '"All Elements of Category" paired with "Categories" collector node grabs all Revit objects matching that category.'
+          },
+          {
+            id: 'q3',
+            question: 'Which node allows filtering a list of elements based on a true/false condition?',
+            options: ['List.FilterByBoolMask', 'List.Chop', 'Math.Round', 'String.Contains'],
+            correctOptionIndex: 0,
+            explanation: 'List.FilterByBoolMask partitions an input list into "in" (true) and "out" (false) buckets based on a boolean mask.'
+          }
+        ]
+      },
+      c4: {
+        courseId: 'c4',
+        title: 'ISO 19650 Global BIM Project Delivery Framework Exam',
+        description: 'Covers CDE state transitions, EIR, BEP, MIDP/TIDP responsibility matrices, and National Annex naming conventions.',
+        passingScorePercent: 70,
+        timeLimitMinutes: 15,
+        questions: [
+          {
+            id: 'q1',
+            question: 'Under ISO 19650-2, what are the four standardized Common Data Environment (CDE) information container states?',
+            options: [
+              'WIP (Work In Progress), Shared, Published, Archived',
+              'Draft, Final, Approved, Deleted',
+              'Concept, Schematic, Construction, Handover',
+              'Internal, External, Client, Government'
+            ],
+            correctOptionIndex: 0,
+            explanation: 'ISO 19650-1 & 2 defines the 4 immutable CDE states: Work In Progress (WIP), Shared, Published, and Archived.'
+          },
+          {
+            id: 'q2',
+            question: 'What document is authored by the Appointing Party (Client) to establish their information requirements prior to tender?',
+            options: ['EIR (Exchange Information Requirements)', 'BEP (BIM Execution Plan)', 'TIDP', 'COBie Sheet'],
+            correctOptionIndex: 0,
+            explanation: 'The EIR specifies the technical, management, and commercial information requirements requested by the client.'
+          },
+          {
+            id: 'q3',
+            question: 'In the ISO 19650 container naming standard (e.g. PBS-ZZ-XX-M3-M-0001), what does the "M3" field represent?',
+            options: ['Type of information (3D Model / Drawing / Schedule)', 'Originator code', 'Revision number', 'Status code'],
+            correctOptionIndex: 0,
+            explanation: 'M3 represents 3D Model spatial coordinate information container type in the ISO 19650 UK/National Annex.'
+          }
+        ]
+      }
+    };
+
+    const exam = defaultExams[courseId] || {
+      courseId,
+      title: `${courseId.toUpperCase()} Comprehensive Certification Exam`,
+      description: 'Standard 10-Question Masterclass Certification Exam for Pragmatic BIM Solution Academy.',
+      passingScorePercent: 70,
+      timeLimitMinutes: 15,
+      questions: defaultExams['c1'].questions
+    };
+
+    return exam;
+  },
+
+  saveCourseMcq(courseId: string, exam: CourseMcqExam): void {
+    try {
+      localStorage.setItem(`pbs_course_mcq_${courseId}`, JSON.stringify(exam));
+    } catch (e) {
+      console.warn('Failed to save MCQ exam:', e);
+    }
+  },
+
+  // ==========================================
+  // COURSE CERTIFICATE CONFIGURATION (ADMIN THEMES)
+  // ==========================================
+  getCourseCertificateConfig(courseId: string): CourseCertificateConfig {
+    try {
+      const stored = localStorage.getItem(`pbs_cert_config_${courseId}`);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch {}
+
+    const defaultConfigs: Record<string, CourseCertificateConfig> = {
+      c1: {
+        courseId: 'c1',
+        theme: 'emerald',
+        borderStyle: 'classic-double',
+        certificateTitle: 'Professional Certificate of BIM Specialization',
+        subtitle: 'Autodesk Revit MEP Masterclass (LOD 300 to LOD 500)',
+        signatureName1: 'Pravin Yadav',
+        signatureTitle1: 'Founder & Principal BIM Specialist',
+        signatureName2: 'Dr. K. S. Raman',
+        signatureTitle2: 'Dean of Digital AEC Engineering',
+        showQrCode: true,
+        showAccreditations: true,
+        institutionName: 'PRAGMATIC BIM SOLUTION ACADEMY',
+        accreditationText: 'ISO 19650 & Autodesk Certified BIM Curriculum Standards'
+      },
+      c2: {
+        courseId: 'c2',
+        theme: 'gold',
+        borderStyle: 'ornate-gold',
+        certificateTitle: 'Master Certificate in BIM Coordination',
+        subtitle: 'Navisworks Manage 4D/5D & Multi-Disciplinary Clash Detection',
+        signatureName1: 'Pravin Yadav',
+        signatureTitle1: 'Director of Virtual Design & Construction',
+        signatureName2: 'Er. Rajesh Kulkarni',
+        signatureTitle2: 'Chief Technical Officer (AEC)',
+        showQrCode: true,
+        showAccreditations: true,
+        institutionName: 'PRAGMATIC BIM SOLUTION ACADEMY',
+        accreditationText: 'Accredited by Global BIM Managers Council'
+      },
+      c3: {
+        courseId: 'c3',
+        theme: 'cyber-blue',
+        borderStyle: 'tech-geometric',
+        certificateTitle: 'Computational BIM Automation Master',
+        subtitle: 'Dynamo Visual Scripting & Revit API Automation',
+        signatureName1: 'Pravin Yadav',
+        signatureTitle1: 'Lead Computational BIM Architect',
+        signatureName2: 'Dr. Sarah Jenkins',
+        signatureTitle2: 'Head of AEC AI Research',
+        showQrCode: true,
+        showAccreditations: true,
+        institutionName: 'PRAGMATIC BIM SOLUTION ACADEMY',
+        accreditationText: 'Recognized by International Computational Design Alliance'
+      },
+      c4: {
+        courseId: 'c4',
+        theme: 'academic',
+        borderStyle: 'classic-double',
+        certificateTitle: 'ISO 19650 Global BIM Project Delivery Specialist',
+        subtitle: 'Information Management & Common Data Environment (CDE) Governance',
+        signatureName1: 'Pravin Yadav',
+        signatureTitle1: 'ISO 19650 Lead Auditor & Director',
+        signatureName2: 'Prof. M. Al-Hassan',
+        signatureTitle2: 'Chair of Global BIM Information Standards',
+        showQrCode: true,
+        showAccreditations: true,
+        institutionName: 'PRAGMATIC BIM SOLUTION ACADEMY',
+        accreditationText: 'Compliant with ISO 19650-1, ISO 19650-2 & BSI Standards'
+      }
+    };
+
+    return defaultConfigs[courseId] || {
+      courseId,
+      theme: 'emerald',
+      borderStyle: 'classic-double',
+      certificateTitle: 'Certificate of Excellence & Completion',
+      subtitle: 'Professional BIM Masterclass Program',
+      signatureName1: 'Pravin Yadav',
+      signatureTitle1: 'Academy Director & Principal Specialist',
+      signatureName2: 'Dr. K. S. Raman',
+      signatureTitle2: 'Academic Dean',
+      showQrCode: true,
+      showAccreditations: true,
+      institutionName: 'PRAGMATIC BIM SOLUTION ACADEMY',
+      accreditationText: 'Global ISO 19650 AEC Professional Credential'
+    };
+  },
+
+  saveCourseCertificateConfig(courseId: string, config: CourseCertificateConfig): void {
+    try {
+      localStorage.setItem(`pbs_cert_config_${courseId}`, JSON.stringify(config));
+    } catch (e) {
+      console.warn('Failed to save certificate config:', e);
+    }
+  },
+
+  // ==========================================
+  // STUDENT COURSE PROGRESSION (MODULES + TASKS + MCQ + CERTIFICATE)
+  // ==========================================
+  getStudentCourseProgress(studentId: string, courseId: string): StudentCourseProgress {
+    const key = `pbs_progress_${studentId || 'PBS-STU-2026-8492'}_${courseId}`;
+    try {
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch {}
+
+    const defaultProgress: StudentCourseProgress = {
+      studentId: studentId || 'PBS-STU-2026-8492',
+      courseId,
+      completedLessonIds: ['les-1-1'],
+      totalActiveTimeMinutes: 45,
+      lastStudiedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+      taskSubmitted: false,
+      mcqAttempted: false,
+      mcqPassed: false,
+      isCertified: false
+    };
+    return defaultProgress;
+  },
+
+  updateStudentCourseProgress(
+    studentId: string,
+    courseId: string,
+    updates: Partial<StudentCourseProgress>
+  ): StudentCourseProgress {
+    const current = this.getStudentCourseProgress(studentId, courseId);
+    const updated: StudentCourseProgress = {
+      ...current,
+      ...updates,
+      lastStudiedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+    };
+
+    // Check if course is newly fully certified (completed all lessons + task submitted + MCQ passed)
+    const course = this.getCourseById(courseId);
+    const totalLessons = course?.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 10;
+    const isLessonsCompleted = updated.completedLessonIds.length >= Math.max(1, Math.min(totalLessons, 2));
+
+    if (isLessonsCompleted && updated.taskSubmitted && updated.mcqPassed && !updated.isCertified) {
+      updated.isCertified = true;
+      updated.certificateId = `PBS-CERT-${Date.now().toString().slice(-6)}-${courseId.toUpperCase()}`;
+      updated.certificateIssuedDate = new Date().toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
+
+      // Log activity
+      this.logStudentActivity(
+        studentId,
+        'certificate_unlocked',
+        `Unlocked Official Certificate for: ${course?.title || courseId} (ID: ${updated.certificateId})`,
+        { courseId, courseTitle: course?.title, score: updated.mcqScore }
+      );
+    }
+
+    const key = `pbs_progress_${studentId || 'PBS-STU-2026-8492'}_${courseId}`;
+    try {
+      localStorage.setItem(key, JSON.stringify(updated));
+    } catch (e) {
+      console.warn('Failed to save student course progress:', e);
+    }
+    return updated;
+  },
+
+  recordStudentActiveTime(studentId: string, courseId: string, minutesAdded: number): void {
+    const current = this.getStudentCourseProgress(studentId, courseId);
+    this.updateStudentCourseProgress(studentId, courseId, {
+      totalActiveTimeMinutes: (current.totalActiveTimeMinutes || 0) + minutesAdded
+    });
+  },
+
+  recordStudentTaskSubmission(studentId: string, courseId: string, taskDetails: any): void {
+    const current = this.getStudentCourseProgress(studentId, courseId);
+    this.updateStudentCourseProgress(studentId, courseId, {
+      taskSubmitted: true,
+      taskSubmissionDetails: {
+        taskId: taskDetails.taskId || 'TSK-88',
+        taskName: taskDetails.taskName || 'Practical Capstone Task Submission',
+        submittedAt: new Date().toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
+        score: taskDetails.score || 98,
+        feedback: 'Preflight Clash Scan Passed. 0 Clashes detected. LOD 400 parameters compliant.'
+      }
+    });
+
+    this.logStudentActivity(
+      studentId,
+      'task_submitted',
+      `Submitted Capstone Task: ${taskDetails.taskName || 'Practical Assignment'} (Score: ${taskDetails.score || 98}/100)`,
+      { courseId, score: taskDetails.score || 98 }
+    );
+  },
+
+  recordStudentMcqResult(studentId: string, courseId: string, score: number, total: number, passed: boolean): void {
+    const current = this.getStudentCourseProgress(studentId, courseId);
+    this.updateStudentCourseProgress(studentId, courseId, {
+      mcqAttempted: true,
+      mcqPassed: passed,
+      mcqScore: score,
+      mcqTotal: total,
+      mcqCompletedAt: new Date().toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+    });
+
+    const course = this.getCourseById(courseId);
+    this.logStudentActivity(
+      studentId,
+      'mcq_attempted',
+      `${passed ? 'PASSED' : 'ATTEMPTED'} Final MCQ Certification Exam for ${course?.title || courseId}: Scored ${score}/${total} (${Math.round((score/total)*100)}%)`,
+      { courseId, score, totalQuestions: total }
+    );
+  },
+
+  /**
+   * Check if student has completed all course modules and is ready for the MCQ test
+   */
+  checkCourseEligibilityForMcq(studentId: string, courseId: string): {
+    isEligible: boolean;
+    completedCount: number;
+    totalCount: number;
+    progressPercent: number;
+    remainingLessons: string[];
+  } {
+    const course = this.getCourseById(courseId);
+    const progress = this.getStudentCourseProgress(studentId, courseId);
+    
+    // Gather all lesson identifiers / titles
+    const allLessonKeys: string[] = [];
+    if (course && course.modules) {
+      course.modules.forEach(m => {
+        if (m.lessons) {
+          m.lessons.forEach(l => {
+            allLessonKeys.push(l.title || l.id || 'lesson');
+          });
+        }
+      });
+    }
+
+    const totalCount = allLessonKeys.length > 0 ? allLessonKeys.length : (course?.modulesCount || 6);
+    const completedSet = new Set(progress.completedLessonIds || []);
+    const completedCount = allLessonKeys.filter(k => completedSet.has(k)).length;
+    
+    // Also consider completed if completedLessonIds length is at least totalCount
+    const effectiveCompleted = Math.max(completedCount, progress.completedLessonIds?.length || 0);
+    const isEligible = effectiveCompleted >= totalCount || (effectiveCompleted >= 1 && totalCount <= 1);
+    const progressPercent = Math.min(100, Math.round((effectiveCompleted / Math.max(1, totalCount)) * 100));
+
+    const remainingLessons = allLessonKeys.filter(k => !completedSet.has(k));
+
+    return {
+      isEligible,
+      completedCount: Math.min(totalCount, effectiveCompleted),
+      totalCount,
+      progressPercent,
+      remainingLessons
+    };
+  },
+
+  /**
+   * Mark all modules / lessons completed for a course (unlocks MCQ Exam)
+   */
+  completeAllCourseModules(studentId: string, courseId: string): StudentCourseProgress {
+    const course = this.getCourseById(courseId);
+    const allLessonKeys: string[] = [];
+    if (course && course.modules) {
+      course.modules.forEach(m => {
+        if (m.lessons) {
+          m.lessons.forEach(l => {
+            allLessonKeys.push(l.title || l.id || 'lesson');
+          });
+        }
+      });
+    }
+
+    const completedLessonIds = allLessonKeys.length > 0 
+      ? allLessonKeys 
+      : ['les-1-1', 'les-1-2', 'les-2-1', 'les-2-2', 'les-3-1', 'les-4-1', 'les-5-1', 'les-6-1'];
+
+    const updated = this.updateStudentCourseProgress(studentId, courseId, {
+      completedLessonIds,
+      taskSubmitted: true
+    });
+
+    this.logStudentActivity(
+      studentId,
+      'module_completed',
+      `Completed all syllabus modules for ${course?.title || courseId}. MCQ Certification Exam unlocked!`,
+      { courseId, modulesCompleted: completedLessonIds.length }
+    );
+
+    return updated;
+  },
+
+  // ==========================================
+  // PUBLIC STUDENT PORTFOLIO PROFILE
+  // ==========================================
+  getStudentPortfolio(studentId: string): StudentPortfolioProfile {
+    const cleanId = studentId || 'PBS-STU-2026-8492';
+    try {
+      const stored = localStorage.getItem(`pbs_portfolio_${cleanId}`);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch {}
+
+    const student = this.getStudentByQuery(cleanId);
+
+    const defaultProfile: StudentPortfolioProfile = {
+      studentId: cleanId,
+      isPublic: true,
+      headline: 'Senior BIM Coordinator & MEP Digital Delivery Specialist',
+      bio: 'BIM Engineer specializing in LOD 300 to LOD 500 mechanical, electrical, and plumbing infrastructure modeling, multi-disciplinary clash resolution in Navisworks Manage, automated workflows via Dynamo visual scripting, and ISO 19650 compliant Information Management.',
+      skills: [
+        { name: 'Autodesk Revit MEP (LOD 300-500)', level: 98, category: 'Authoring' },
+        { name: 'Navisworks Manage & 4D TimeLiner', level: 95, category: 'Coordination' },
+        { name: 'Dynamo Visual Scripting & Python', level: 90, category: 'Automation' },
+        { name: 'ISO 19650 CDE & BEP Information Delivery', level: 94, category: 'Standards' },
+        { name: 'BIM 360 / Autodesk Construction Cloud', level: 92, category: 'Collaboration' },
+        { name: 'AutoCAD & Civil 3D Utilities', level: 88, category: 'Drafting' }
+      ],
+      featuredProjects: [
+        {
+          id: 'proj-1',
+          title: 'NEOM Commercial Tower - Chilled Water Plant Room LOD 400',
+          category: 'Mechanical HVAC / Plant Room',
+          description: 'Authored complete 4,500 TR central chiller plant room with primary-secondary pumps, expansion tanks, and parametric valve manifolds with 0 clash tolerance.',
+          lodLevel: 'LOD 400 (Fabrication Ready)',
+          softwareUsed: ['Revit 2026', 'Navisworks Manage', 'Dynamo'],
+          imageUrl: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80',
+          projectUrl: 'https://github.com/pravinyadav-bim/neom-plant-room-bim'
+        },
+        {
+          id: 'proj-2',
+          title: 'Dubai Metro Station Expansion - Multi-Disciplinary Coordination',
+          category: 'Transit Infrastructure',
+          description: 'Federated architectural, structural, and MEP models in Navisworks. Resolved 1,420 clashes across HVAC ductwork and post-tensioned structural beams using BCF workflows.',
+          lodLevel: 'LOD 350 (Coordination)',
+          softwareUsed: ['Navisworks Manage', 'Revit', 'BIM Track'],
+          imageUrl: 'https://images.unsplash.com/photo-1541888946425-d0fbb18086f6?auto=format&fit=crop&w=800&q=80',
+          projectUrl: 'https://github.com/pravinyadav-bim/dubai-metro-clash-matrix'
+        },
+        {
+          id: 'proj-3',
+          title: 'Automated MEP Conduit & Tagging Dynamo Script Suite',
+          category: 'Computational BIM Automation',
+          description: 'Custom visual programming script automatically sizing cable trays based on circuit ampacity and auto-placing multi-category tags across 200+ floor plans.',
+          lodLevel: 'Automation Tool',
+          softwareUsed: ['Dynamo', 'Python', 'Revit API'],
+          imageUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80',
+          projectUrl: 'https://github.com/pravinyadav-bim/dynamo-mep-toolkit'
+        }
+      ],
+      socialLinks: {
+        linkedin: 'https://linkedin.com/in/pravinyadav-bim',
+        github: 'https://github.com/pravinyadav-bim',
+        portfolio: 'https://pravinyadav-bim.portfolio.site',
+        email: student?.email || 'pravin.yadav@pbs.com',
+        phone: student?.phone || '+91 8208918726',
+        location: 'Pune / Bangalore & Dubai UAE'
+      }
+    };
+
+    return defaultProfile;
+  },
+
+  saveStudentPortfolio(studentId: string, profile: StudentPortfolioProfile): void {
+    const cleanId = studentId || 'PBS-STU-2026-8492';
+    try {
+      localStorage.setItem(`pbs_portfolio_${cleanId}`, JSON.stringify(profile));
+      this.logStudentActivity(cleanId, 'portfolio_updated', 'Updated Student Portfolio details & public showcase');
+    } catch (e) {
+      console.warn('Failed to save student portfolio:', e);
+    }
+  },
+
+  // ==========================================
+  // DYNAMIC COHORT LEADERBOARD (REAL STORE DATA)
+  // ==========================================
+  getLeaderboardData(currentStudentId?: string): LeaderboardStudentData[] {
+    const students = this.getStudents();
+    const cleanCurrentId = currentStudentId || 'PBS-STU-2026-8492';
+
+    const ranked: LeaderboardStudentData[] = students.map((s) => {
+      // Calculate dynamic credits & tasks
+      const c1Progress = this.getStudentCourseProgress(s.studentId, 'c1');
+      const isCurrent = s.studentId === cleanCurrentId || s.email?.toLowerCase() === 'pravin.yadav@pbs.com';
+      
+      const tasksCompleted = isCurrent ? 87 : Math.max(12, Math.floor((s.growthScore || 50) * 0.8));
+      const activeStudyMinutes = (c1Progress.totalActiveTimeMinutes || 45) + (s.growthScore || 15) * 12;
+      
+      // Exact calculation of credits
+      const credits = Math.round(
+        (s.growthScore || 20) * 4 +
+        tasksCompleted * 5 +
+        Math.floor(activeStudyMinutes / 15)
+      );
+
+      let badge = 'BIM Scholar 📐';
+      if (credits >= 600) badge = 'Cohort Topper 🌟';
+      else if (credits >= 500) badge = 'BIM Specialist ⚡';
+      else if (credits >= 400) badge = 'Navisworks Guru 🏗️';
+      else if (credits >= 300) badge = 'Dynamo Master 💻';
+
+      return {
+        rank: 1,
+        studentId: s.studentId,
+        name: s.name,
+        avatar: s.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+        rollNumber: s.rollNumber,
+        specialization: s.specialization || 'BIM Masterclass',
+        credits,
+        tasksCompleted,
+        attendancePercent: s.attendancePercent || 100,
+        streakDays: Math.min(45, Math.max(7, Math.floor(credits / 15))),
+        activeStudyMinutes,
+        badge,
+        isCurrentUser: isCurrent
+      };
+    });
+
+    // If there is only 1 student in store (Pravin), add a few peer cohort classmates for rich comparison
+    if (ranked.length < 5) {
+      const samplePeers: LeaderboardStudentData[] = [
+        {
+          rank: 2,
+          studentId: 'PBS-STU-2026-1024',
+          name: 'Aarav Sharma',
+          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80',
+          rollNumber: 'PBS/2026/BIM-012',
+          specialization: 'Navisworks & Clash Matrix Pro',
+          credits: 615,
+          tasksCompleted: 82,
+          attendancePercent: 98,
+          streakDays: 38,
+          activeStudyMinutes: 720,
+          badge: 'BIM Star ⚡',
+          isCurrentUser: false
+        },
+        {
+          rank: 3,
+          studentId: 'PBS-STU-2026-3091',
+          name: 'Sneha Patel',
+          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+          rollNumber: 'PBS/2026/BIM-034',
+          specialization: 'Revit Architecture & MEP LOD 400',
+          credits: 590,
+          tasksCompleted: 79,
+          attendancePercent: 96,
+          streakDays: 34,
+          activeStudyMinutes: 680,
+          badge: 'Navisworks Guru 🏗️',
+          isCurrentUser: false
+        },
+        {
+          rank: 4,
+          studentId: 'PBS-STU-2026-4421',
+          name: 'Rohan Deshmukh',
+          avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80',
+          rollNumber: 'PBS/2026/BIM-058',
+          specialization: 'Computational Dynamo Automation',
+          credits: 575,
+          tasksCompleted: 76,
+          attendancePercent: 95,
+          streakDays: 30,
+          activeStudyMinutes: 640,
+          badge: 'Dynamo Master 💻',
+          isCurrentUser: false
+        },
+        {
+          rank: 5,
+          studentId: 'PBS-STU-2026-5590',
+          name: 'Ananya Roy',
+          avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80',
+          rollNumber: 'PBS/2026/BIM-072',
+          specialization: 'ISO 19650 Information Management',
+          credits: 550,
+          tasksCompleted: 73,
+          attendancePercent: 94,
+          streakDays: 28,
+          activeStudyMinutes: 610,
+          badge: 'ISO 19650 Lead 📐',
+          isCurrentUser: false
+        }
+      ];
+      ranked.push(...samplePeers);
+    }
+
+    // Sort descending by credits
+    ranked.sort((a, b) => b.credits - a.credits);
+
+    // Assign 1-indexed ranks
+    ranked.forEach((item, index) => {
+      item.rank = index + 1;
+    });
+
+    return ranked;
+  },
+
+  // ==========================================
+  // TWO-WAY MESSAGING FROM STUDENT TO ADMIN
+  // ==========================================
+  sendMessageFromStudent(studentId: string, subject: string, message: string): StudentMessageItem {
+    const student = this.getStudentByQuery(studentId);
+    const newMessage: StudentMessageItem = {
+      id: `msg-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      sender: 'student',
+      senderName: student?.name || 'Pravin Yadav',
+      timestamp: new Date().toLocaleString('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }),
+      subject,
+      message,
+      isRead: false
+    };
+
+    if (student) {
+      const messages = student.messages || [];
+      messages.unshift(newMessage);
+      this.updateStudent(student.studentId, { messages });
+    }
+
+    this.logStudentActivity(
+      studentId,
+      'portfolio_updated',
+      `Sent Message to Admin: "${subject}"`
+    );
+
+    return newMessage;
   }
 };
+

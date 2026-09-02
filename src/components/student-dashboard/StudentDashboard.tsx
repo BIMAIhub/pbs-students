@@ -62,6 +62,8 @@ import { TaskSubmissionModal } from './TaskSubmissionModal';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import { StudentExcelRegistryModal } from './StudentExcelRegistryModal';
 import { CourseUpiEnrollModal } from './CourseUpiEnrollModal';
+import { StudentPortfolioModal } from './StudentPortfolioModal';
+import { CourseMcqModal } from './CourseMcqModal';
 import { LiveSession, StudentProfileData, EnrolledCourseItem, FeeReceiptItem, DownloadableAsset } from './types';
 import { 
   STUDENT_PROFILE_DEFAULT, 
@@ -134,6 +136,15 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const [showAiCopilotDrawer, setShowAiCopilotDrawer] = useState(false);
   const [showTaskSubmissionModal, setShowTaskSubmissionModal] = useState(false);
 
+  // Portfolio & MCQ Assessment Modals
+  const [showPortfolioModal, setShowPortfolioModal] = useState(false);
+  const [portfolioModalMode, setPortfolioModalMode] = useState<'view' | 'edit'>('edit');
+  const [showCourseMcqModal, setShowCourseMcqModal] = useState(false);
+  const [selectedCourseForMcq, setSelectedCourseForMcq] = useState<{ id: string; title: string }>({
+    id: 'c1',
+    title: 'Advanced BIM Coordination & Clash Detection with Navisworks & Revit'
+  });
+
   const [showClassroomModal, setShowClassroomModal] = useState(false);
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
   const [showCareerGoalModal, setShowCareerGoalModal] = useState(false);
@@ -151,6 +162,24 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   // Live session countdown timer (hours, mins, secs)
   const [countdown, setCountdown] = useState({ hours: 2, minutes: 14, seconds: 45 });
 
+  // Session activity logger and active time tracker
+  useEffect(() => {
+    const sId = profileData.studentId || 'PBS-STU-2026-8492';
+    // Log LMS Login Event
+    pbsAdminStore.logStudentActivity(
+      sId, 
+      'login', 
+      `Student ${profileData.fullName || 'Pravin Yadav'} logged into LMS Session.`
+    );
+
+    // Track study minutes incrementally
+    const interval = setInterval(() => {
+      pbsAdminStore.recordStudentActiveTime(sId, activeCourseId, 1);
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [profileData.studentId, activeCourseId]);
+
   // Dynamically resolve student profile from database
   useEffect(() => {
     const studentQuery = user?.email || user?.studentId || user?.rollNumber || user?.id || studentAuthUtil.getActiveUser()?.email;
@@ -164,6 +193,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         fullName: match.name || prev.fullName,
         email: match.email || prev.email,
         phone: match.phone || prev.phone,
+        googleEmailId: match.googleEmailId || prev.googleEmailId,
         avatarUrl: match.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(match.name)}`,
         currentCompanyRole: match.specialization || prev.currentCompanyRole,
         specializationTrack: match.specialization || prev.specializationTrack,
@@ -259,6 +289,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         studentId: user.studentId || prev.studentId,
         rollNumber: user.rollNumber || prev.rollNumber,
         phone: user.phone || prev.phone,
+        googleEmailId: user.googleEmailId || prev.googleEmailId,
         avatarUrl: user.avatar || prev.avatarUrl
       }));
     }
@@ -286,7 +317,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `PBS_Student_Academic_Dossier_${profileData.fullName.replace(/\s+/g, '_')}_${profileData.studentId}.json`;
+    link.download = `PBS_Student_Academic_Dossier_${(profileData.fullName || 'Student').replace(/\s+/g, '_')}_${profileData.studentId || 'ID'}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -495,19 +526,21 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             {/* Center / Right: Interactive Quick Studio Tools */}
             <div className="flex items-center gap-2 sm:gap-3">
               
-              {/* 3D BIM Model Inspector Trigger */}
+              {/* Shareable BIM Portfolio Trigger */}
               <button
-                id="btn-open-3d-model-viewer"
+                id="btn-open-portfolio"
                 onClick={() => {
                   soundFx.playClick();
-                  setShow3dModelModal(true);
+                  setPortfolioModalMode('edit');
+                  setShowPortfolioModal(true);
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all cursor-pointer shadow-md hover:shadow-lg hover:scale-102"
-                title="Open 3D BIM Model & Clash Inspector"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all cursor-pointer shadow-md hover:scale-102"
+                title="Manage and Share your verified Public BIM Portfolio URL"
               >
-                <Box className="w-3.5 h-3.5 text-cyan-400" />
-                <span className="hidden sm:inline">3D BIM Model</span>
+                <Sparkles className="w-3.5 h-3.5 text-indigo-200" />
+                <span className="hidden sm:inline">My Portfolio</span>
               </button>
+
 
               {/* BIM AI Co-Pilot Trigger */}
               <button
@@ -609,6 +642,19 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                       </div>
 
                       <div className="py-1">
+                        {/* Shareable Public BIM Portfolio */}
+                        <button
+                          onClick={() => {
+                            setShowUserDropdown(false);
+                            setPortfolioModalMode('edit');
+                            setShowPortfolioModal(true);
+                          }}
+                          className="w-full px-5 py-2 text-left text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2.5 cursor-pointer font-semibold"
+                        >
+                          <Sparkles className="w-4 h-4 text-indigo-600" />
+                          <span>My Public BIM Portfolio (Share Link)</span>
+                        </button>
+
                         {/* Change Password Modal Trigger */}
                         <button
                           onClick={() => {
@@ -769,6 +815,17 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                 onOpenFaq={() => setPolicyModalType('faq')}
                 onOpenPlacementPolicy={() => setPolicyModalType('placement')}
                 onOpenCertificationPolicy={() => setPolicyModalType('certification')}
+                onOpenPortfolio={() => {
+                  setPortfolioModalMode('edit');
+                  setShowPortfolioModal(true);
+                }}
+                onOpenMcqExam={() => {
+                  setSelectedCourseForMcq({
+                    id: activeCourseId || 'c1',
+                    title: enrolledCourses.find(c => c.courseId === activeCourseId)?.courseTitle || 'Advanced BIM Coordination & Clash Detection'
+                  });
+                  setShowCourseMcqModal(true);
+                }}
               />
             )}
 
@@ -954,6 +1011,14 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           onClose={() => setShowClassroomModal(false)} 
           initialCourseId={activeCourseId}
           studentProfile={profileData}
+          onOpenMcqExam={() => {
+            setShowClassroomModal(false);
+            setSelectedCourseForMcq({
+              id: activeCourseId || 'c1',
+              title: enrolledCourses.find(c => c.courseId === activeCourseId)?.courseTitle || 'Advanced BIM Coordination & Clash Detection'
+            });
+            setShowCourseMcqModal(true);
+          }}
         />
       )}
 
@@ -972,7 +1037,56 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
       {showCertificateModal && (
         <CertificateGeneratorModal 
           userName={userName}
-          onClose={() => setShowCertificateModal(false)} 
+          onClose={() => setShowCertificateModal(false)}
+          courseId={activeCourseId || 'c1'}
+          studentId={profileData.studentId}
+          onOpenMcqExam={() => {
+            setShowCertificateModal(false);
+            setSelectedCourseForMcq({
+              id: activeCourseId || 'c1',
+              title: enrolledCourses.find(c => c.courseId === activeCourseId)?.courseTitle || 'Advanced BIM Coordination & Clash Detection'
+            });
+            setShowCourseMcqModal(true);
+          }}
+          onOpenTaskModal={() => {
+            setShowCertificateModal(false);
+            setShowTaskSubmissionModal(true);
+          }}
+        />
+      )}
+
+      {/* Shareable Student BIM Portfolio Modal */}
+      {showPortfolioModal && (
+        <StudentPortfolioModal
+          studentId={profileData.studentId || 'PBS-STU-2026-8492'}
+          studentName={profileData.fullName || 'Pravin Yadav'}
+          mode={portfolioModalMode}
+          onClose={() => setShowPortfolioModal(false)}
+        />
+      )}
+
+      {/* Course MCQ Final Certification Exam Modal */}
+      {showCourseMcqModal && (
+        <CourseMcqModal
+          courseId={selectedCourseForMcq.id}
+          courseTitle={selectedCourseForMcq.title}
+          studentId={profileData.studentId || 'PBS-STU-2026-8492'}
+          studentName={profileData.fullName || 'Pravin Yadav'}
+          onClose={() => setShowCourseMcqModal(false)}
+          onOpenCertificate={() => {
+            setShowCourseMcqModal(false);
+            setShowCertificateModal(true);
+          }}
+          onOpenClassroom={() => {
+            setShowCourseMcqModal(false);
+            setShowClassroomModal(true);
+          }}
+          onExamPassed={(_score) => {
+            soundFx.playSuccess();
+            setNotificationAlert('Congratulations! You passed the MCQ Exam. Your official certificate is now unlocked!');
+            setTimeout(() => setNotificationAlert(null), 6000);
+            setShowCertificateModal(true);
+          }}
         />
       )}
 

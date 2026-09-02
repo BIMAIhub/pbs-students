@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tv, ExternalLink, ShieldAlert, X } from 'lucide-react';
+import { Tv, ShieldAlert, X } from 'lucide-react';
 import { soundFx } from '../../utils/soundEffects';
 
 interface YoutubeSignInModalProps {
@@ -14,14 +14,6 @@ export const YoutubeSignInModal: React.FC<YoutubeSignInModalProps> = ({
   registeredEmail
 }) => {
   if (!isOpen) return null;
-
-  const handleSignInClick = () => {
-    soundFx.playClick();
-    // Redirect to YouTube in a new tab with the login intent
-    const loginUrl = 'https://accounts.google.com/ServiceLogin?service=youtube&continue=https://www.youtube.com/signin';
-    window.open(loginUrl, '_blank');
-    onClose();
-  };
 
   return (
     <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -62,26 +54,18 @@ export const YoutubeSignInModal: React.FC<YoutubeSignInModalProps> = ({
             </div>
           )}
           <p className="text-[11px] text-slate-500 pt-1">
-            You must use this exact email address. Using any other account will result in a "Video Unavailable" error.
+            You must use this exact email address to view the private YouTube streams.
           </p>
         </div>
-
-        <button
-          onClick={handleSignInClick}
-          className="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl shadow-lg shadow-red-900/20 transition-all active:scale-95 flex items-center justify-center gap-2"
-        >
-          <span>Authenticate via Google</span>
-          <ExternalLink className="w-4 h-4" />
-        </button>
         
         <button
           onClick={() => {
             soundFx.playClick();
             onClose();
           }}
-          className="w-full py-2.5 bg-transparent text-slate-400 hover:text-white text-xs font-bold transition-colors cursor-pointer"
+          className="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-colors cursor-pointer"
         >
-          I am already signed in
+          Close
         </button>
       </div>
     </div>

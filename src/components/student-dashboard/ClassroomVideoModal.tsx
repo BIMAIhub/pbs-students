@@ -28,7 +28,8 @@ import {
   RotateCw,
   MonitorPlay,
   Tv,
-  HelpCircle
+  HelpCircle,
+  Award
 } from 'lucide-react';
 import { COURSE_MODULES_DATA } from './dashboardData';
 import { pbsAdminStore, AdminCourse, VideoLesson } from '../../utils/pbsAdminStore';
@@ -39,12 +40,14 @@ interface ClassroomVideoModalProps {
   onClose: () => void;
   initialCourseId?: string;
   studentProfile?: any;
+  onOpenMcqExam?: () => void;
 }
 
 export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({ 
   onClose,
   initialCourseId,
-  studentProfile
+  studentProfile,
+  onOpenMcqExam
 }) => {
   const [activeTab, setActiveTab] = useState<'content' | 'forum'>('content');
   const [expandedModuleId, setExpandedModuleId] = useState<string>('mod-0');
@@ -80,7 +83,7 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({
   const [isCompleted, setIsCompleted] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showIssueModal, setShowIssueModal] = useState(false);
-  const [showYoutubeAlert, setShowYoutubeAlert] = useState(true);
+  const [showYoutubeAlert, setShowYoutubeAlert] = useState(false);
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
   const [simProgress, setSimProgress] = useState(15);
   const [simTimeSeconds, setSimTimeSeconds] = useState(180);
@@ -121,11 +124,20 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({
     const nextCompleted = !isCompleted;
     setIsCompleted(nextCompleted);
     const activeId = currentLesson.lessonTitle;
+    let nextIds: string[];
     if (nextCompleted) {
-      setCompletedLessonIds(prev => prev.includes(activeId) ? prev : [...prev, activeId]);
+      nextIds = completedLessonIds.includes(activeId) ? completedLessonIds : [...completedLessonIds, activeId];
     } else {
-      setCompletedLessonIds(prev => prev.filter(id => id !== activeId));
+      nextIds = completedLessonIds.filter(id => id !== activeId);
     }
+    setCompletedLessonIds(nextIds);
+
+    // Sync with pbsAdminStore
+    const studentId = studentProfile?.studentId || 'PBS-STU-2026-8492';
+    const cId = currentCourse?.id || initialCourseId || 'c1';
+    pbsAdminStore.updateStudentCourseProgress(studentId, cId, {
+      completedLessonIds: nextIds
+    });
   };
   const [issueSubmitted, setIssueSubmitted] = useState(false);
   const [issueText, setIssueText] = useState('');
@@ -768,6 +780,57 @@ export const ClassroomVideoModal: React.FC<ClassroomVideoModalProps> = ({
                     );
                   })
                 )}
+
+                {/* Final MCQ Certification Exam Gate Card */}
+                {(() => {
+                  const studentId = studentProfile?.studentId || 'PBS-STU-2026-8492';
+                  const cId = currentCourse?.id || initialCourseId || 'c1';
+                  const eligibility = pbsAdminStore.checkCourseEligibilityForMcq(studentId, cId);
+                  const progress = pbsAdminStore.getStudentCourseProgress(studentId, cId);
+
+                  return (
+                    <div className="p-3.5 bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-900 border border-emerald-500/40 rounded-2xl text-white space-y-2.5 mt-4">
+                      <div className="flex items-center justify-between">
+                        <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                          eligibility.isEligible ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-amber-300'
+                        }`}>
+                          {eligibility.isEligible ? 'Assessment Unlocked' : 'Locked Requirement'}
+                        </span>
+                        <Award className="w-4 h-4 text-amber-400" />
+                      </div>
+
+                      <div>
+                        <h5 className="text-xs font-black text-white">
+                          Course MCQ Certification Exam
+                        </h5>
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          {eligibility.isEligible
+                            ? 'All modules completed! Ready to take your final assessment.'
+                            : `Finish remaining modules (${eligibility.completedCount}/${eligibility.totalCount} done) to unlock the exam.`}
+                        </p>
+                      </div>
+
+                      {onOpenMcqExam && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            soundFx.playClick();
+                            onClose();
+                            onOpenMcqExam();
+                          }}
+                          className={`w-full py-2 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer ${
+                            eligibility.isEligible
+                              ? 'bg-emerald-600 hover:bg-emerald-500 text-white animate-pulse'
+                              : 'bg-amber-600 hover:bg-amber-500 text-white'
+                          }`}
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>{eligibility.isEligible ? 'Launch Final MCQ Exam 🎯' : 'Check Exam Eligibility'}</span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </>
           ) : (

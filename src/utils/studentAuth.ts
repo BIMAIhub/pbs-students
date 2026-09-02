@@ -28,6 +28,13 @@ export interface StudentAuthRecord {
 
 export type UserRole = 'student' | 'admin';
 
+export interface AuthResult {
+  success: boolean;
+  role?: UserRole;
+  user?: ActiveSessionUser;
+  message: string;
+}
+
 export interface ActiveSessionUser {
   id: string;
   name: string;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Download, 
@@ -7,15 +7,14 @@ import {
   ShieldCheck, 
   Check, 
   Copy, 
-  ExternalLink,
-  Sparkles,
-  Search,
-  CheckCircle2,
-  Calendar,
-  Lock,
-  UserCheck
+  Search, 
+  CheckCircle2, 
+  RefreshCw,
+  Lock, 
+  UserCheck 
 } from 'lucide-react';
 import { studentAuthUtil } from '../../utils/studentAuth';
+import { pbsAdminStore, ManagedStudent } from '../../utils/pbsAdminStore';
 import { soundFx } from '../../utils/soundEffects';
 
 interface StudentExcelRegistryModalProps {
@@ -29,21 +28,69 @@ export const StudentExcelRegistryModal: React.FC<StudentExcelRegistryModalProps>
 }) => {
   const [copiedToast, setCopiedToast] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [students, setStudents] = useState<ManagedStudent[]>(() => pbsAdminStore.getStudents());
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  useEffect(() => {
+    const refresh = () => {
+      setStudents(pbsAdminStore.getStudents());
+    };
+
+    refresh();
+    window.addEventListener('pbs_store_updated', refresh);
+    window.addEventListener('storage', refresh);
+    window.addEventListener('focus', refresh);
+
+    return () => {
+      window.removeEventListener('pbs_store_updated', refresh);
+      window.removeEventListener('storage', refresh);
+      window.removeEventListener('focus', refresh);
+    };
+  }, []);
 
   if (!isOpen) return null;
 
-  const record = studentAuthUtil.getStudentRecord();
+  const handleSyncNow = async () => {
+    soundFx.playClick();
+    setIsSyncing(true);
+    await pbsAdminStore.syncWithCloudServer(true);
+    setStudents(pbsAdminStore.getStudents());
+    setIsSyncing(false);
+  };
 
   const handleDownload = () => {
     soundFx.playClick();
-    studentAuthUtil.exportToExcelCSV();
+    const csvContent = pbsAdminStore.exportStudentsToCSV();
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `PBS_Institutional_Student_Master_Registry_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
     setDownloadSuccess(true);
     setTimeout(() => setDownloadSuccess(false), 3500);
   };
 
   const handleCopy = () => {
     soundFx.playClick();
-    const tsvData = `Student ID\tRoll No\tName\tEmail\tPassword Status\tSpecialization\tBatch\tAttendance\tCapstone\tTotal Fee\tPaid\tPending\n${record.studentId}\t${record.rollNumber}\t${record.fullName}\t${record.institutionalEmail}\t${record.defaultPasswordHint}\t${record.specializationTrack}\t${record.batchMonthYear}\t${record.attendancePercent}%\t${record.capstoneStatus}\t₹${record.totalFee}\t₹${record.paidFee}\t₹${record.pendingFee}`;
+    const headers = ['Student ID', 'Roll No', 'Name', 'Email', 'Personal Email', 'Phone', 'Specialization', 'Paid', 'Pending', 'Attendance'];
+    const rows = students.map(s => [
+      s.studentId,
+      s.rollNumber,
+      s.name,
+      s.email,
+      s.personalEmail || s.email,
+      s.phone,
+      s.specialization,
+      `₹${s.paidAmount || 0}`,
+      `₹${s.pendingBalance || 0}`,
+      `${s.attendancePercent || 100}%`
+    ]);
+    const tsvData = [headers.join('\t'), ...rows.map(r => r.join('\t'))].join('\n');
     
     navigator.clipboard.writeText(tsvData).then(() => {
       setCopiedToast(true);
@@ -51,9 +98,22 @@ export const StudentExcelRegistryModal: React.FC<StudentExcelRegistryModalProps>
     });
   };
 
+  const filteredStudents = students.filter(s => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      s.name?.toLowerCase().includes(q) ||
+      s.email?.toLowerCase().includes(q) ||
+      s.studentId?.toLowerCase().includes(q) ||
+      s.rollNumber?.toLowerCase().includes(q) ||
+      s.specialization?.toLowerCase().includes(q) ||
+      s.phone?.includes(q)
+    );
+  });
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-white rounded-3xl max-w-4xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
+      <div className="bg-white rounded-3xl max-w-5xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
         
         {/* Header */}
         <div className="px-6 py-5 bg-gradient-to-r from-slate-900 to-emerald-950 text-white flex items-center justify-between">
@@ -63,12 +123,12 @@ export const StudentExcelRegistryModal: React.FC<StudentExcelRegistryModalProps>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-extrabold tracking-tight">PBS Student Master Excel Registry</h3>
+                <h3 className="text-base font-extrabold tracking-tight">PBS Central Student Excel Registry</h3>
                 <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-500/30">
-                  Excel & CSV Sync
+                  Live Cloud Database Sync
                 </span>
               </div>
-              <p className="text-xs text-slate-300">Centralized academic database records for student authentication, fees, and ISO 19650 tracking</p>
+              <p className="text-xs text-slate-300">Synchronized master student roster across all connected PCs and devices</p>
             </div>
           </div>
           <button
@@ -81,21 +141,39 @@ export const StudentExcelRegistryModal: React.FC<StudentExcelRegistryModalProps>
 
         {/* Action & Info Bar */}
         <div className="px-6 py-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs text-slate-600">
-            <span className="font-bold text-slate-900">1 Student Record Loaded</span>
-            <span>•</span>
-            <span className="text-emerald-700 font-semibold flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Synchronized with Local Storage & Browser Cache
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search student, email, ID..."
+                className="pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 w-56 text-slate-800"
+              />
+            </div>
+            <span className="text-xs font-bold text-slate-700">
+              {filteredStudents.length} of {students.length} Students Loaded
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
+              onClick={handleSyncNow}
+              disabled={isSyncing}
+              className="px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-white text-slate-700 text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-2xs disabled:opacity-50"
+              title="Force sync with live cloud server"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span>{isSyncing ? 'Syncing...' : 'Sync Cloud'}</span>
+            </button>
+
+            <button
               onClick={handleCopy}
               className="px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-white text-slate-700 text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-2xs"
             >
               {copiedToast ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
-              <span>{copiedToast ? 'Copied to Clipboard' : 'Copy Table Data'}</span>
+              <span>{copiedToast ? 'Copied TSV' : 'Copy Table'}</span>
             </button>
 
             <button
@@ -109,118 +187,83 @@ export const StudentExcelRegistryModal: React.FC<StudentExcelRegistryModalProps>
         </div>
 
         {/* Table Content Area */}
-        <div className="p-6 overflow-y-auto space-y-6 flex-1">
+        <div className="p-6 overflow-y-auto space-y-4 flex-1">
           
           {downloadSuccess && (
             <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2 font-bold animate-fadeIn">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Excel file downloaded successfully! Open in Microsoft Excel, Google Sheets, or Apple Numbers.</span>
+              <span>Full student roster CSV downloaded! Ready for Microsoft Excel, Google Sheets, or Apple Numbers.</span>
             </div>
           )}
 
-          {/* Excel Spreadsheet Table Simulation */}
+          {/* Excel Spreadsheet Table */}
           <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
             <div className="bg-slate-100 px-4 py-2 text-[11px] font-bold text-slate-700 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Table className="w-4 h-4 text-emerald-700" />
-                <span>SHEET 1: PBS_STUDENT_ENROLLMENT_REGISTRY</span>
+                <span>SHEET 1: PBS_STUDENT_CENTRAL_REGISTRY ({filteredStudents.length} Records)</span>
               </div>
-              <span className="font-mono text-[10px] text-slate-500">FORMAT: ISO-19650-LMS-2026.1</span>
+              <span className="font-mono text-[10px] text-slate-500">AUTONOMOUS SYNC • ISO 19650 LMS</span>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-bold">
-                    <th className="py-2.5 px-3 border-r border-slate-200">Attribute</th>
-                    <th className="py-2.5 px-4">Student Database Record</th>
-                    <th className="py-2.5 px-3 border-l border-slate-200">Data Type / Notes</th>
+                    <th className="py-2.5 px-3 border-r border-slate-200">Student ID</th>
+                    <th className="py-2.5 px-3 border-r border-slate-200">Roll No</th>
+                    <th className="py-2.5 px-4 border-r border-slate-200">Student Name</th>
+                    <th className="py-2.5 px-4 border-r border-slate-200">Institutional Email</th>
+                    <th className="py-2.5 px-3 border-r border-slate-200">Phone</th>
+                    <th className="py-2.5 px-4 border-r border-slate-200">Specialization</th>
+                    <th className="py-2.5 px-3 border-r border-slate-200">Fees Paid</th>
+                    <th className="py-2.5 px-3">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-800 font-medium">
-                  <tr className="hover:bg-slate-50">
-                    <td className="py-2.5 px-3 font-semibold text-slate-500 border-r border-slate-100 bg-slate-50/40">Student Name</td>
-                    <td className="py-2.5 px-4 font-bold text-slate-900">{record.fullName}</td>
-                    <td className="py-2.5 px-3 text-[11px] text-slate-400 border-l border-slate-100">Primary Student Profile</td>
-                  </tr>
-
-                  <tr className="hover:bg-slate-50 bg-emerald-50/30">
-                    <td className="py-2.5 px-3 font-semibold text-slate-500 border-r border-slate-100 bg-slate-50/40">Institutional Email</td>
-                    <td className="py-2.5 px-4 font-mono font-bold text-emerald-800">{record.institutionalEmail}</td>
-                    <td className="py-2.5 px-3 text-[11px] text-emerald-600 font-semibold border-l border-slate-100">Official PBS Portal Login</td>
-                  </tr>
-
-                  <tr className="hover:bg-slate-50">
-                    <td className="py-2.5 px-3 font-semibold text-slate-500 border-r border-slate-100 bg-slate-50/40">Student ID / Roll No</td>
-                    <td className="py-2.5 px-4 font-mono text-slate-900">{record.studentId} • {record.rollNumber}</td>
-                    <td className="py-2.5 px-3 text-[11px] text-slate-400 border-l border-slate-100">Auto-generated Serial</td>
-                  </tr>
-
-                  <tr className="hover:bg-slate-50 bg-slate-50/60">
-                    <td className="py-2.5 px-3 font-semibold text-slate-500 border-r border-slate-100 bg-slate-50/40">Password Security</td>
-                    <td className="py-2.5 px-4">
-                      <span className="inline-flex items-center gap-1 font-mono font-bold text-xs bg-slate-200 px-2 py-0.5 rounded text-slate-800">
-                        <Lock className="w-3 h-3 text-slate-600" />
-                        {record.defaultPasswordHint}
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3 text-[11px] text-slate-500 border-l border-slate-100">
-                      Last Updated: {record.lastPasswordChanged}
-                    </td>
-                  </tr>
-
-                  <tr className="hover:bg-slate-50">
-                    <td className="py-2.5 px-3 font-semibold text-slate-500 border-r border-slate-100 bg-slate-50/40">Specialization Track</td>
-                    <td className="py-2.5 px-4 font-semibold text-slate-900">{record.specializationTrack}</td>
-                    <td className="py-2.5 px-3 text-[11px] text-slate-400 border-l border-slate-100">Cohort 2026 Core Track</td>
-                  </tr>
-
-                  <tr className="hover:bg-slate-50">
-                    <td className="py-2.5 px-3 font-semibold text-slate-500 border-r border-slate-100 bg-slate-50/40">Batch Month/Year</td>
-                    <td className="py-2.5 px-4">{record.batchMonthYear}</td>
-                    <td className="py-2.5 px-3 text-[11px] text-slate-400 border-l border-slate-100">0926 Format Identifier</td>
-                  </tr>
-
-                  <tr className="hover:bg-slate-50">
-                    <td className="py-2.5 px-3 font-semibold text-slate-500 border-r border-slate-100 bg-slate-50/40">Attendance Rate</td>
-                    <td className="py-2.5 px-4 font-bold text-emerald-700">{record.attendancePercent}% (Classroom Verified)</td>
-                    <td className="py-2.5 px-3 text-[11px] text-slate-400 border-l border-slate-100">Eligible for Certification</td>
-                  </tr>
-
-                  <tr className="hover:bg-slate-50">
-                    <td className="py-2.5 px-3 font-semibold text-slate-500 border-r border-slate-100 bg-slate-50/40">Capstone Status</td>
-                    <td className="py-2.5 px-4">{record.capstoneStatus}</td>
-                    <td className="py-2.5 px-3 text-[11px] text-slate-400 border-l border-slate-100">Grade: Excellent (98/100)</td>
-                  </tr>
-
-                  <tr className="hover:bg-slate-50">
-                    <td className="py-2.5 px-3 font-semibold text-slate-500 border-r border-slate-100 bg-slate-50/40">Financial Ledger</td>
-                    <td className="py-2.5 px-4">
-                      Total: <span className="font-bold">₹{(record.totalFee || 0).toLocaleString('en-IN')}</span> | 
-                      Paid: <span className="font-bold text-emerald-700">₹{(record.paidFee || 0).toLocaleString('en-IN')}</span> | 
-                      Pending: <span className="font-bold text-amber-700">₹{(record.pendingFee || 0).toLocaleString('en-IN')}</span>
-                    </td>
-                    <td className="py-2.5 px-3 text-[11px] text-emerald-600 font-semibold border-l border-slate-100">GST Invoice #PBS-INV-2026-849</td>
-                  </tr>
-
-                  <tr className="hover:bg-slate-50 bg-emerald-50/20">
-                    <td className="py-2.5 px-3 font-semibold text-slate-500 border-r border-slate-100 bg-slate-50/40">ISO 19650 Code</td>
-                    <td className="py-2.5 px-4 font-mono font-bold text-emerald-800">{record.iso19650Code}</td>
-                    <td className="py-2.5 px-3 text-[11px] text-slate-400 border-l border-slate-100">Global Verification Hash</td>
-                  </tr>
+                  {filteredStudents.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-slate-500">
+                        No students matching "{searchQuery}"
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredStudents.map((s, idx) => (
+                      <tr key={s.studentId || idx} className="hover:bg-slate-50 transition-colors">
+                        <td className="py-2.5 px-3 font-mono font-bold text-slate-900 border-r border-slate-100 bg-slate-50/40">{s.studentId}</td>
+                        <td className="py-2.5 px-3 font-mono text-slate-700 border-r border-slate-100">{s.rollNumber}</td>
+                        <td className="py-2.5 px-4 font-bold text-slate-900 border-r border-slate-100 flex items-center gap-2">
+                          <img src={s.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(s.name)}`} alt={s.name} className="w-6 h-6 rounded-full object-cover border border-slate-200" />
+                          <span>{s.name}</span>
+                        </td>
+                        <td className="py-2.5 px-4 font-mono text-emerald-800 font-semibold border-r border-slate-100">{s.email}</td>
+                        <td className="py-2.5 px-3 text-slate-600 font-mono border-r border-slate-100">{s.phone}</td>
+                        <td className="py-2.5 px-4 text-slate-700 font-medium border-r border-slate-100 max-w-xs truncate" title={s.specialization}>{s.specialization}</td>
+                        <td className="py-2.5 px-3 font-semibold text-emerald-700 border-r border-slate-100">₹{(s.paidAmount || 0).toLocaleString('en-IN')}</td>
+                        <td className="py-2.5 px-3">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            s.paymentStatus === 'Full Paid' ? 'bg-emerald-100 text-emerald-800' :
+                            s.paymentStatus === 'Part Paid' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'
+                          }`}>
+                            {s.paymentStatus || 'Active'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
 
           {/* Access Instructions */}
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
             <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Institutional Database Integration Info</span>
+              <span>Real-Time Cloud Synchronization</span>
             </h4>
             <p className="text-xs text-slate-600 leading-relaxed">
-              This Excel registry record is automatically updated whenever the student completes assignments, makes fee payments, or changes their login password. Clicking <strong>"Download Excel (.CSV)"</strong> provides the full spreadsheet file for academic audits, placement record submissions, or accounting verification.
+              This master registry reflects the real-time database state across all browsers and devices. Any student added or updated in the Admin Suite is synchronized via the central server.
             </p>
           </div>
 
@@ -229,7 +272,7 @@ export const StudentExcelRegistryModal: React.FC<StudentExcelRegistryModalProps>
         {/* Footer */}
         <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
           <div className="text-[11px] text-slate-500">
-            Export format: RFC 4180 Standard CSV (Microsoft Excel Compatible)
+            Export standard: RFC 4180 CSV • UTF-8 with BOM
           </div>
           <button
             onClick={onClose}

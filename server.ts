@@ -19,15 +19,68 @@ if (!fs.existsSync(DATA_DIR)) {
 
 const DB_FILE = path.join(DATA_DIR, "pbs_central_db.json");
 
-// Default initial state to guarantee rich data on startup
+// Default initial state to guarantee rich data on startup across all devices
 const DEFAULT_INITIAL_STUDENTS = [
+  {
+    id: 'user-student-sandip',
+    studentId: 'PBS-STU-2026-5773',
+    rollNumber: 'PBS/2026/BIM-931',
+    name: 'Sandip Chavan',
+    email: 'sandip.chavan.0926@pbs.com',
+    personalEmail: 'sandip.chavan@gmail.com',
+    googleEmailId: 'sandip.chavan.dar99@gmail.com',
+    password: 'sandipchavan@123',
+    phone: '+91 9890173618',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
+    specialization: 'Autodesk Revit MEP Masterclass (LOD 300 - 500)',
+    batch: '09/2026 (Sept 2026 Weekend Batch)',
+    enrolledCourseIds: ['c1'],
+    enrolledCourseTitles: [
+      'Autodesk Revit MEP Masterclass (LOD 300 - 500)'
+    ],
+    attendancePercent: 100,
+    totalFee: 14999,
+    paidAmount: 14999,
+    pendingBalance: 0,
+    paymentStatus: 'Full Paid',
+    capstoneStatus: 'Stage 1: Revit Project Setup Initialized',
+    capstoneGrade: 'In Progress',
+    growthScore: 85,
+    registrationDate: 'Sep 01, 2026',
+    placement: {
+      studentId: 'PBS-STU-2026-5773',
+      targetRole: 'BIM Engineer',
+      targetLocations: ['Pune / Dubai'],
+      expectedSalary: '₹12.0 LPA',
+      portfolioUrl: '',
+      resumeStatus: 'Under Review',
+      mockInterviewScore: 80,
+      mockInterviewFeedback: 'Initial enrollment complete. Capstone pending.',
+      mockInterviewDate: '',
+      readinessStatus: 'In Training',
+      referredCompanies: []
+    },
+    messages: [
+      {
+        id: 'msg-welcome-sandip',
+        sender: 'admin',
+        senderName: 'PBS Academic Director',
+        timestamp: 'Just now',
+        subject: 'Welcome to Pragmatic BIM Solution Academy!',
+        message: 'Welcome Sandip Chavan! Your institutional account has been provisioned. Access your live masterclasses, Microsoft Drive & Google Drive video lectures under Enrolled Courses.',
+        isRead: false
+      }
+    ]
+  },
   {
     id: 'user-student-pravin',
     studentId: 'PBS-STU-2026-8492',
     rollNumber: 'PBS/2026/BIM-084',
     name: 'Pravin Yadav',
-    email: 'pravin.yadav@pbs.com',
-    password: 'pravinyadav@123',
+    email: 'pravin.yadav.0926@pbs.com',
+    personalEmail: 'pravinsyadavpsy99@gmail.com',
+    googleEmailId: 'pravin.yadav.dar99@gmail.com',
+    password: 'pravinyadav@1234',
     phone: '+91 8208918726',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
     specialization: 'Autodesk Revit MEP Masterclass (LOD 300 - 500)',
@@ -39,15 +92,15 @@ const DEFAULT_INITIAL_STUDENTS = [
       'Computational BIM with Dynamo Visual Scripting',
       'ISO 19650 Global BIM Project Delivery Framework'
     ],
-    attendancePercent: 100,
-    totalFee: 41997,
-    paidAmount: 34498,
-    pendingBalance: 7499,
-    paymentStatus: 'Part Paid',
-    capstoneStatus: 'Stage 0: Strategic Definition in Progress',
-    capstoneGrade: 'In Progress (Module 1 Active)',
-    growthScore: 15,
-    registrationDate: 'Sept 01, 2026',
+    attendancePercent: 96.4,
+    totalFee: 54996,
+    paidAmount: 54996,
+    pendingBalance: 0,
+    paymentStatus: 'Full Paid',
+    capstoneStatus: 'Stage 3: Navisworks Clash Matrix Submitted',
+    capstoneGrade: 'B+ Certified (75-84%)',
+    growthScore: 94,
+    registrationDate: 'Aug 10, 2026',
     placement: {
       studentId: 'PBS-STU-2026-8492',
       targetRole: 'Senior BIM Coordinator / Digital Delivery Lead',
@@ -56,15 +109,16 @@ const DEFAULT_INITIAL_STUDENTS = [
       portfolioUrl: 'https://pravinyadav-bim.portfolio.site',
       resumeStatus: 'Verified',
       mockInterviewScore: 96,
-      mockInterviewFeedback: 'Strong background and enthusiasm for ISO 19650 BEP workflows and MEP engineering. Starting Module 1 of the cohort.',
-      mockInterviewDate: 'Sept 01, 2026',
-      readinessStatus: 'In Training',
+      mockInterviewFeedback: 'Exceptional grasp of ISO 19650 BEP workflows, Navisworks clash tolerance, and MEP family parametric creation. Recommended for top-tier MNC referrals.',
+      mockInterviewDate: 'Aug 24, 2026',
+      readinessStatus: 'Ready for MNC Placement',
       referredCompanies: [
         {
           companyName: 'AtkinsRéalis (Dubai / UK Infrastructure)',
           role: 'BIM Coordinator - MEP Systems',
           location: 'Dubai Design District, UAE',
-          status: 'Shortlisted'
+          status: 'Technical Round Cleared',
+          interviewDate: 'Sept 08, 2026'
         },
         {
           companyName: 'WSP Middle East',
@@ -76,7 +130,8 @@ const DEFAULT_INITIAL_STUDENTS = [
           companyName: 'Jacobs Engineering',
           role: 'Digital Delivery Engineer',
           location: 'Pune / London',
-          status: 'Shortlisted'
+          status: 'Interview Scheduled',
+          interviewDate: 'Sept 12, 2026'
         }
       ]
     },

@@ -41,7 +41,7 @@ export const CheckEnrollmentModal: React.FC<CheckEnrollmentModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     const query = searchQuery.trim().toLowerCase();
     if (!query) return;
@@ -49,63 +49,101 @@ export const CheckEnrollmentModal: React.FC<CheckEnrollmentModalProps> = ({
     setIsSearching(true);
     soundFx.playClick();
 
-    setTimeout(() => {
+    const cleanDigits = query.replace(/[^0-9]/g, '');
+    const queryNoSpaces = query.replace(/\s+/g, '');
+    const queryEmailPrefix = query.includes('@') ? query.split('@')[0] : query;
+
+    // 1. Check in official local student roster
+    const allStudents = pbsAdminStore.getStudents();
+    const match = allStudents.find(s => {
+      const sEmail = (s.email || '').toLowerCase();
+      const sPersonal = (s.personalEmail || '').toLowerCase();
+      const sGoogle = (s.googleEmailId || '').toLowerCase();
+      const sRoll = (s.rollNumber || '').toLowerCase();
+      const sId = (s.studentId || '').toLowerCase();
+      const sName = (s.name || '').toLowerCase();
+      const sNameNoSpaces = sName.replace(/\s+/g, '');
+      const sPhone = (s.phone || '').replace(/[^0-9]/g, '');
+      const sEmailPrefix = sEmail.includes('@') ? sEmail.split('@')[0] : sEmail;
+
+      return (
+        sEmail === query ||
+        sPersonal === query ||
+        sGoogle === query ||
+        sRoll === query ||
+        sId === query ||
+        sName === query ||
+        sNameNoSpaces === queryNoSpaces ||
+        sEmailPrefix === queryEmailPrefix ||
+        sEmailPrefix === query ||
+        (queryEmailPrefix.length >= 3 && sEmailPrefix.startsWith(queryEmailPrefix)) ||
+        (cleanDigits.length >= 10 && sPhone.includes(cleanDigits))
+      );
+    });
+
+    if (match) {
       setIsSearching(false);
-      const allStudents = pbsAdminStore.getStudents();
-      const cleanDigits = query.replace(/[^0-9]/g, '');
-
-      // 1. Check in official student roster
-      const match = allStudents.find(s => {
-        const sEmail = (s.email || '').toLowerCase();
-        const sRoll = (s.rollNumber || '').toLowerCase();
-        const sId = (s.studentId || '').toLowerCase();
-        const sName = (s.name || '').toLowerCase();
-        const sPhone = (s.phone || '').replace(/[^0-9]/g, '');
-
-        return (
-          sEmail === query ||
-          sRoll === query ||
-          sId === query ||
-          sName === query ||
-          (cleanDigits.length >= 10 && sPhone.includes(cleanDigits))
-        );
-      });
-
-      if (match) {
-        soundFx.playSuccess();
-        setSearchResult({
-          status: 'found',
-          student: match
-        });
-        return;
-      }
-
-      // 2. Check in pending/approved enrollment requests
-      try {
-        const storedReqs = localStorage.getItem('pbs_admin_enrollment_requests');
-        if (storedReqs) {
-          const reqs = JSON.parse(storedReqs);
-          const reqMatch = reqs.find((r: any) => 
-            r.studentEmail?.toLowerCase() === query ||
-            r.studentId?.toLowerCase() === query ||
-            (cleanDigits.length >= 10 && r.studentPhone?.replace(/[^0-9]/g, '').includes(cleanDigits))
-          );
-          if (reqMatch) {
-            setSearchResult({
-              status: 'found',
-              enrollmentReq: reqMatch
-            });
-            return;
-          }
-        }
-      } catch {}
-
-      soundFx.playClick();
+      soundFx.playSuccess();
       setSearchResult({
-        status: 'not_found',
-        message: `No active student enrollment found for "${searchQuery}". Please check the spelling or submit an admission application.`
+        status: 'found',
+        student: match
       });
-    }, 400);
+      return;
+    }
+
+    // 2. Check in pending/approved enrollment requests locally
+    try {
+      const storedReqs = localStorage.getItem('pbs_admin_enrollment_requests');
+      if (storedReqs) {
+        const reqs = JSON.parse(storedReqs);
+        const reqMatch = reqs.find((r: any) => 
+          r.studentEmail?.toLowerCase() === query ||
+          r.studentId?.toLowerCase() === query ||
+          r.studentName?.toLowerCase() === query ||
+          (cleanDigits.length >= 10 && r.studentPhone?.replace(/[^0-9]/g, '').includes(cleanDigits))
+        );
+        if (reqMatch) {
+          setIsSearching(false);
+          soundFx.playSuccess();
+          setSearchResult({
+            status: 'found',
+            enrollmentReq: reqMatch
+          });
+          return;
+        }
+      }
+    } catch {}
+
+    // 3. Check live cloud server API
+    try {
+      const res = await fetch('/api/db/verify-student', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emailOrRoll: searchQuery })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.found && data.student) {
+          setIsSearching(false);
+          soundFx.playSuccess();
+          setSearchResult({
+            status: 'found',
+            student: data.student
+          });
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Cloud search fallback error:', err);
+    }
+
+    setIsSearching(false);
+    soundFx.playClick();
+    setSearchResult({
+      status: 'not_found',
+      message: `No active student enrollment found for "${searchQuery}". Please check the spelling or submit an admission application.`
+    });
   };
 
   return (

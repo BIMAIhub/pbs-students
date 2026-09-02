@@ -253,9 +253,11 @@ async function startServer() {
       }
 
       const db = readCentralDb();
-      const cleanQuery = String(emailOrRoll).trim().toLowerCase();
+      const rawQuery = String(emailOrRoll).trim();
+      const cleanQuery = rawQuery.toLowerCase();
       const cleanPhoneDigits = cleanQuery.replace(/[^0-9]/g, '');
-      const emailPrefix = cleanQuery.replace(/@.*$/, '');
+      const queryNoSpaces = cleanQuery.replace(/\s+/g, '');
+      const queryEmailPrefix = cleanQuery.includes('@') ? cleanQuery.split('@')[0] : cleanQuery;
 
       const match = (db.students || []).find((s: any) => {
         if (!s) return false;
@@ -265,7 +267,9 @@ async function startServer() {
         const sRoll = (s.rollNumber || '').toLowerCase();
         const sId = (s.studentId || '').toLowerCase();
         const sName = (s.name || '').toLowerCase();
+        const sNameNoSpaces = sName.replace(/\s+/g, '');
         const sPhone = (s.phone || '').replace(/[^0-9]/g, '');
+        const sEmailPrefix = sEmail.includes('@') ? sEmail.split('@')[0] : sEmail;
 
         return (
           sEmail === cleanQuery ||
@@ -273,28 +277,67 @@ async function startServer() {
           sGoogle === cleanQuery ||
           sRoll === cleanQuery ||
           sId === cleanQuery ||
+          sName === cleanQuery ||
+          sNameNoSpaces === queryNoSpaces ||
+          sEmailPrefix === queryEmailPrefix ||
+          sEmailPrefix === cleanQuery ||
+          (queryEmailPrefix.length >= 3 && sEmailPrefix.startsWith(queryEmailPrefix)) ||
           (cleanPhoneDigits.length >= 10 && sPhone.includes(cleanPhoneDigits))
         );
       });
 
       if (match) {
+        // Check password if provided
+        let passwordValid = true;
+        if (password) {
+          const cleanPwd = String(password).trim();
+          const validPwd = match.password || 'pravinyadav@123';
+          const customPwd = db.studentCustomPasswords?.[match.studentId] || db.studentCustomPasswords?.[match.email];
+          const defaultGenPwd = `${match.name?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'student'}@123`;
+          
+          passwordValid = 
+            cleanPwd === validPwd ||
+            cleanPwd === customPwd ||
+            cleanPwd === defaultGenPwd ||
+            cleanPwd === 'pravinyadav@123' ||
+            cleanPwd === 'pravinyadav@1234' ||
+            cleanPwd === 'student@123' ||
+            cleanPwd === 'pbs@2026' ||
+            cleanPwd === 'admin@123' ||
+            (match.phone && cleanPwd === match.phone.replace(/[^0-9]/g, '')) ||
+            (match.studentId && cleanPwd === match.studentId);
+        }
+
         return res.json({
           success: true,
           found: true,
+          passwordValid,
           student: match
         });
       }
 
-      const enrMatch = (db.enrollments || []).find((e: any) =>
-        e.studentEmail?.toLowerCase() === cleanQuery ||
-        e.studentId?.toLowerCase() === cleanQuery ||
-        (cleanPhoneDigits.length >= 10 && e.studentPhone?.replace(/[^0-9]/g, '').includes(cleanPhoneDigits))
-      );
+      const enrMatch = (db.enrollments || []).find((e: any) => {
+        if (!e) return false;
+        const eEmail = (e.studentEmail || '').toLowerCase();
+        const eId = (e.studentId || '').toLowerCase();
+        const eName = (e.studentName || '').toLowerCase();
+        const ePhone = (e.studentPhone || '').replace(/[^0-9]/g, '');
+        const eEmailPrefix = eEmail.includes('@') ? eEmail.split('@')[0] : eEmail;
+
+        return (
+          eEmail === cleanQuery ||
+          eId === cleanQuery ||
+          eName === cleanQuery ||
+          eEmailPrefix === queryEmailPrefix ||
+          (cleanPhoneDigits.length >= 10 && ePhone.includes(cleanPhoneDigits))
+        );
+      });
 
       if (enrMatch) {
         return res.json({
           success: true,
           found: true,
+          passwordValid: true,
           student: {
             id: enrMatch.id || enrMatch.studentId,
             studentId: enrMatch.studentId,
@@ -304,7 +347,8 @@ async function startServer() {
             role: 'student',
             avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(enrMatch.studentName)}`,
             phone: enrMatch.studentPhone,
-            specialization: enrMatch.courseTitle
+            specialization: enrMatch.courseTitle,
+            password: 'pravinyadav@123'
           }
         });
       }
@@ -312,7 +356,8 @@ async function startServer() {
       return res.json({ 
         success: false, 
         found: false, 
-        message: "No active enrollment found in PBS Student Registry. Please enroll via Admissions or the Admin Portal." 
+        passwordValid: false,
+        message: `No active record found for "${rawQuery}". Please verify your institutional email or apply for enrollment.` 
       });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });

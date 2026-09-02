@@ -57,6 +57,8 @@ export const AdminAddStudentModal: React.FC<AdminAddStudentModalProps> = ({
         rollNumber,
         name: fullName.trim(),
         email: generatedEmail,
+        personalEmail: personalEmail.trim() || undefined,
+        googleEmailId: personalEmail.trim() || undefined,
         password: generatedPassword,
         phone: phone.trim() || '+91 9800000000',
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
@@ -100,6 +102,7 @@ export const AdminAddStudentModal: React.FC<AdminAddStudentModalProps> = ({
       };
 
       pbsAdminStore.addStudent(newStudent);
+      pbsAdminStore.syncWithCloudServer(true);
       soundFx.playSuccess();
       setIsSaving(false);
       setSavedSuccess(true);

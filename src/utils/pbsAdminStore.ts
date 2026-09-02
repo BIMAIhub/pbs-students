@@ -185,6 +185,7 @@ export interface ManagedStudent {
   rollNumber: string;
   name: string;
   email: string;
+  personalEmail?: string;
   googleEmailId?: string;
   password?: string;
   phone: string;
@@ -514,29 +515,38 @@ if (pbsSyncChannel && typeof window !== 'undefined') {
 }
 
 // Push updates to Central Server API for cross-PC synchronization
-export async function syncToServer(collection: string, data: any) {
-  if (typeof window === 'undefined') return;
+export async function syncToServer(collection: string, data: any): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
   try {
-    fetch(`/api/db/${collection}`, {
+    const res = await fetch(`/api/db/${collection}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ data })
-    }).catch(() => {
-      // Non-blocking in case of offline/network issues
     });
-  } catch {}
+    if (res.ok) {
+      pbsNotifyChange(`${collection}_synced_cloud`, data);
+      return true;
+    }
+  } catch (err) {
+    console.warn(`Sync to server for ${collection} failed:`, err);
+  }
+  return false;
 }
 
-export async function syncAllToServer(fullPayload?: Record<string, any>) {
-  if (typeof window === 'undefined') return;
+export async function syncAllToServer(fullPayload?: Record<string, any>): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
   try {
     const payload = fullPayload || exportAllLocalStoreData();
-    fetch('/api/db/sync-all', {
+    const res = await fetch('/api/db/sync-all', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fullStore: payload })
-    }).catch(() => {});
-  } catch {}
+    });
+    return res.ok;
+  } catch (err) {
+    console.warn('Sync all to server failed:', err);
+  }
+  return false;
 }
 
 // Helper to collect all local store data for complete cloud sync

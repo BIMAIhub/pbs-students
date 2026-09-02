@@ -53,11 +53,49 @@ export const StudentLoginPortal: React.FC<StudentLoginPortalProps> = ({
   const [showEnrolledDirectory, setShowEnrolledDirectory] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [enrolledStudents, setEnrolledStudents] = useState<ManagedStudent[]>([]);
+  const [isSyncingLive, setIsSyncingLive] = useState(false);
 
-  useEffect(() => {
+  const refreshEnrolledList = () => {
     const students = pbsAdminStore.getStudents();
     setEnrolledStudents(students);
+  };
+
+  useEffect(() => {
+    refreshEnrolledList();
+
+    // Trigger immediate cloud sync on mount
+    setIsSyncingLive(true);
+    pbsAdminStore.syncWithCloudServer(true).then(() => {
+      refreshEnrolledList();
+      setIsSyncingLive(false);
+    });
+
+    const handleSync = () => {
+      refreshEnrolledList();
+    };
+
+    window.addEventListener('pbs_store_updated', handleSync);
+    window.addEventListener('storage', handleSync);
+    window.addEventListener('focus', handleSync);
+    document.addEventListener('visibilitychange', handleSync);
+
+    return () => {
+      window.removeEventListener('pbs_store_updated', handleSync);
+      window.removeEventListener('storage', handleSync);
+      window.removeEventListener('focus', handleSync);
+      document.removeEventListener('visibilitychange', handleSync);
+    };
   }, []);
+
+  const handleManualSync = async () => {
+    setIsSyncingLive(true);
+    soundFx.playClick();
+    await pbsAdminStore.syncWithCloudServer(true);
+    refreshEnrolledList();
+    setIsSyncingLive(false);
+    setToastMsg('Synchronized with Central Student Database');
+    setTimeout(() => setToastMsg(null), 3000);
+  };
 
   const handleSwitchToStudent = () => {
     soundFx.playClick();

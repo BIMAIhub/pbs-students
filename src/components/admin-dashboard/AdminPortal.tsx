@@ -111,6 +111,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   const [exportNotice, setExportNotice] = useState<string | null>(null);
 
+  const [isSyncingCloud, setIsSyncingCloud] = useState(false);
+  const [syncStatusTime, setSyncStatusTime] = useState<string>(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+
   // Sync state from store
   const refreshData = () => {
     const freshStudents = pbsAdminStore.getStudents();
@@ -119,6 +122,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setStudents(freshStudents);
     setCourses(freshCourses);
     setEnrollmentRequests(freshEnrollments);
+    setSyncStatusTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
   };
 
   useEffect(() => {
@@ -221,14 +225,23 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <button
               onClick={async () => {
                 soundFx.playClick();
-                await pbsAdminStore.syncWithCloudServer();
-                refreshData();
+                setIsSyncingCloud(true);
+                try {
+                  await pbsAdminStore.syncWithCloudServer(true);
+                  refreshData();
+                  setExportNotice('Live Cloud Sync: All student data & course files are updated across all devices.');
+                  setTimeout(() => setExportNotice(null), 3500);
+                } finally {
+                  setIsSyncingCloud(false);
+                }
               }}
-              className="px-3.5 py-1.5 rounded-xl bg-sky-600/80 hover:bg-sky-600 text-white text-xs font-bold flex items-center gap-1.5 transition-colors border border-sky-400/40 cursor-pointer shadow-2xs"
-              title="Sync student data across all devices & computers"
+              disabled={isSyncingCloud}
+              className="px-3.5 py-1.5 rounded-xl bg-sky-600/80 hover:bg-sky-600 text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-sky-400/40 cursor-pointer shadow-2xs active:scale-95 disabled:opacity-75"
+              title={`Last cloud sync: ${syncStatusTime}. Click to force sync immediately across all PCs.`}
             >
-              <RefreshCw className="w-3.5 h-3.5 text-sky-200" />
-              <span>Live Cloud Sync</span>
+              <RefreshCw className={`w-3.5 h-3.5 text-sky-200 ${isSyncingCloud ? 'animate-spin' : ''}`} />
+              <span>{isSyncingCloud ? 'Syncing Cloud...' : 'Live Cloud Sync'}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" title="Cloud Server Active"></span>
             </button>
 
             {/* JSON Database Backup & Restore Modal Trigger */}

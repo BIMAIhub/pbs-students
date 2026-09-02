@@ -514,7 +514,7 @@ if (pbsSyncChannel && typeof window !== 'undefined') {
 }
 
 // Push updates to Central Server API for cross-PC synchronization
-async function syncToServer(collection: string, data: any) {
+export async function syncToServer(collection: string, data: any) {
   if (typeof window === 'undefined') return;
   try {
     fetch(`/api/db/${collection}`, {
@@ -525,6 +525,91 @@ async function syncToServer(collection: string, data: any) {
       // Non-blocking in case of offline/network issues
     });
   } catch {}
+}
+
+export async function syncAllToServer(fullPayload?: Record<string, any>) {
+  if (typeof window === 'undefined') return;
+  try {
+    const payload = fullPayload || exportAllLocalStoreData();
+    fetch('/api/db/sync-all', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fullStore: payload })
+    }).catch(() => {});
+  } catch {}
+}
+
+// Helper to collect all local store data for complete cloud sync
+function exportAllLocalStoreData(): Record<string, any> {
+  if (typeof window === 'undefined') return {};
+  
+  let students: any[] = [];
+  try {
+    const st = localStorage.getItem(STORAGE_STUDENTS_KEY);
+    if (st) students = JSON.parse(st);
+  } catch {}
+
+  let courses: any[] = [];
+  try {
+    const cr = localStorage.getItem(STORAGE_COURSES_KEY);
+    if (cr) courses = JSON.parse(cr);
+  } catch {}
+
+  let enrollments: any[] = [];
+  try {
+    const en = localStorage.getItem(STORAGE_ENROLLMENTS_KEY);
+    if (en) enrollments = JSON.parse(en);
+  } catch {}
+
+  let receipts: any[] = [];
+  try {
+    const rc = localStorage.getItem('pbs_student_receipts');
+    if (rc) receipts = JSON.parse(rc);
+  } catch {}
+
+  let activityLogs: any[] = [];
+  try {
+    const lg = localStorage.getItem('pbs_student_activity_logs');
+    if (lg) activityLogs = JSON.parse(lg);
+  } catch {}
+
+  // Collect exams, certConfigs, progress, portfolios from localStorage keys
+  const exams: Record<string, any> = {};
+  const certConfigs: Record<string, any> = {};
+  const progress: Record<string, any> = {};
+  const portfolios: Record<string, any> = {};
+
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+      if (key.startsWith('pbs_course_mcq_')) {
+        const cId = key.replace('pbs_course_mcq_', '');
+        try { exams[cId] = JSON.parse(localStorage.getItem(key) || ''); } catch {}
+      } else if (key.startsWith('pbs_cert_config_')) {
+        const cId = key.replace('pbs_cert_config_', '');
+        try { certConfigs[cId] = JSON.parse(localStorage.getItem(key) || ''); } catch {}
+      } else if (key.startsWith('pbs_progress_')) {
+        const pKey = key.replace('pbs_progress_', '');
+        try { progress[pKey] = JSON.parse(localStorage.getItem(key) || ''); } catch {}
+      } else if (key.startsWith('pbs_portfolio_')) {
+        const sId = key.replace('pbs_portfolio_', '');
+        try { portfolios[sId] = JSON.parse(localStorage.getItem(key) || ''); } catch {}
+      }
+    }
+  } catch {}
+
+  return {
+    students,
+    courses,
+    enrollments,
+    receipts,
+    activityLogs,
+    exams,
+    certConfigs,
+    progress,
+    portfolios
+  };
 }
 
 export const pbsNotifyChange = (eventType: string, data?: any) => {
@@ -2306,13 +2391,35 @@ export const pbsAdminStore = {
   // CENTRAL CLOUD DATABASE INITIALIZER & POLLER
   // Ensures any new PC / browser instantly loads live data
   // ==========================================
-  async syncWithCloudServer(): Promise<boolean> {
+  _syncStatus: {
+    isOnline: true,
+    isSyncing: false,
+    lastSyncedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    syncCount: 0,
+    error: null as string | null
+  },
+
+  getSyncStatus() {
+    return { ...this._syncStatus };
+  },
+
+  async syncWithCloudServer(force: boolean = false): Promise<boolean> {
     if (typeof window === 'undefined') return false;
+    this._syncStatus.isSyncing = true;
     try {
-      const res = await fetch('/api/db/sync');
-      if (!res.ok) return false;
+      const res = await fetch('/api/db/sync-all');
+      if (!res.ok) {
+        this._syncStatus.isOnline = false;
+        this._syncStatus.isSyncing = false;
+        this._syncStatus.error = `HTTP ${res.status}`;
+        return false;
+      }
+
       const json = await res.json();
-      if (!json.success || !json.data) return false;
+      if (!json.success || !json.data) {
+        this._syncStatus.isSyncing = false;
+        return false;
+      }
 
       const { data } = json;
       let hasUpdates = false;
@@ -2326,7 +2433,6 @@ export const pbsAdminStore = {
           hasUpdates = true;
         }
       } else {
-        // If server is empty, seed it with current local students
         const currentLocal = this.getStudents();
         if (currentLocal && currentLocal.length > 0) {
           syncToServer('students', currentLocal);
@@ -2363,12 +2469,77 @@ export const pbsAdminStore = {
         }
       }
 
-      if (hasUpdates) {
+      // 4. Sync receipts
+      if (data.receipts && Array.isArray(data.receipts) && data.receipts.length > 0) {
+        const localReceiptsStr = localStorage.getItem('pbs_student_receipts');
+        const serverReceiptsStr = JSON.stringify(data.receipts);
+        if (localReceiptsStr !== serverReceiptsStr) {
+          localStorage.setItem('pbs_student_receipts', serverReceiptsStr);
+          hasUpdates = true;
+        }
+      }
+
+      // 5. Sync activity logs
+      if (data.activityLogs && Array.isArray(data.activityLogs) && data.activityLogs.length > 0) {
+        const localLogsStr = localStorage.getItem('pbs_student_activity_logs');
+        const serverLogsStr = JSON.stringify(data.activityLogs);
+        if (localLogsStr !== serverLogsStr) {
+          localStorage.setItem('pbs_student_activity_logs', serverLogsStr);
+          hasUpdates = true;
+        }
+      }
+
+      // 6. Sync exams
+      if (data.exams && typeof data.exams === 'object') {
+        Object.entries(data.exams).forEach(([courseId, exam]) => {
+          if (exam) {
+            localStorage.setItem(`pbs_course_mcq_${courseId}`, JSON.stringify(exam));
+          }
+        });
+      }
+
+      // 7. Sync cert configs
+      if (data.certConfigs && typeof data.certConfigs === 'object') {
+        Object.entries(data.certConfigs).forEach(([courseId, cfg]) => {
+          if (cfg) {
+            localStorage.setItem(`pbs_cert_config_${courseId}`, JSON.stringify(cfg));
+          }
+        });
+      }
+
+      // 8. Sync progress
+      if (data.progress && typeof data.progress === 'object') {
+        Object.entries(data.progress).forEach(([pKey, prog]) => {
+          if (prog) {
+            localStorage.setItem(`pbs_progress_${pKey}`, JSON.stringify(prog));
+          }
+        });
+      }
+
+      // 9. Sync portfolios
+      if (data.portfolios && typeof data.portfolios === 'object') {
+        Object.entries(data.portfolios).forEach(([sId, port]) => {
+          if (port) {
+            localStorage.setItem(`pbs_portfolio_${sId}`, JSON.stringify(port));
+          }
+        });
+      }
+
+      this._syncStatus.isOnline = true;
+      this._syncStatus.isSyncing = false;
+      this._syncStatus.lastSyncedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      this._syncStatus.syncCount += 1;
+      this._syncStatus.error = null;
+
+      if (hasUpdates || force) {
         pbsNotifyChange('cloud_sync_completed', data);
       }
 
       return true;
-    } catch (e) {
+    } catch (e: any) {
+      this._syncStatus.isOnline = false;
+      this._syncStatus.isSyncing = false;
+      this._syncStatus.error = e?.message || 'Sync network error';
       return false;
     }
   }
@@ -2376,14 +2547,26 @@ export const pbsAdminStore = {
 
 // Automatically initiate cloud sync upon module load in browser
 if (typeof window !== 'undefined') {
+  // Sync immediately
   setTimeout(() => {
-    pbsAdminStore.syncWithCloudServer();
-  }, 100);
+    pbsAdminStore.syncWithCloudServer(true);
+  }, 50);
 
-  // Periodic background check every 8 seconds for real-time multi-PC synchronization
+  // Background polling every 4 seconds for instant cross-device updates
   setInterval(() => {
-    pbsAdminStore.syncWithCloudServer();
-  }, 8000);
+    pbsAdminStore.syncWithCloudServer(false);
+  }, 4000);
+
+  // Sync when window gains focus or tab becomes visible
+  window.addEventListener('focus', () => {
+    pbsAdminStore.syncWithCloudServer(true);
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      pbsAdminStore.syncWithCloudServer(true);
+    }
+  });
 }
 
 

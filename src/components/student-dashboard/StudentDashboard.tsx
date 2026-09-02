@@ -108,8 +108,15 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     return FEE_RECEIPTS_DATA;
   });
 
+  const isInitialReceiptMount = useRef(true);
   useEffect(() => {
-    localStorage.setItem('pbs_student_receipts', JSON.stringify(feeReceipts));
+    if (isInitialReceiptMount.current) {
+      isInitialReceiptMount.current = false;
+      return;
+    }
+    try {
+      localStorage.setItem('pbs_student_receipts', JSON.stringify(feeReceipts));
+    } catch {}
   }, [feeReceipts]);
   const [downloadableAssets, setDownloadableAssets] = useState<DownloadableAsset[]>(DOWNLOADABLE_ASSETS_DATA);
   const [activeCourseId, setActiveCourseId] = useState<string>('revit-mep-pro');
@@ -259,29 +266,33 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           }));
         }
 
-        // Generate dynamic fee receipt if none exist
-        setFeeReceipts(prev => {
-          if (prev.length > 0) return prev;
-          if (match.paidAmount > 0) {
-            return [
-              {
-                receiptId: `PBS-REC-${(match.studentId || '2026').replace('PBS-STU-', '')}-01`,
-                invoiceNumber: `INV/PBS/2026-27/0${(match.rollNumber || '8492').slice(-3)}`,
-                courseId: match.enrolledCourseIds?.[0] || 'revit-mep-pro',
-                courseTitle: match.specialization || 'Autodesk Revit MEP Masterclass (LOD 300 - 500)',
-                amount: match.paidAmount || 0,
-                paymentMethod: 'Instant NetBanking / UPI Verified',
-                transactionId: `UPI/PBS/${(match.rollNumber || '8492').replace(/[^a-zA-Z0-9]/g, '')}/TXN99`,
-                date: 'Aug 2026',
-                paymentType: (match.pendingBalance ?? 0) === 0 ? 'Full Payment' : 'Installment #1',
-                status: 'Paid',
-                taxGst: Math.round((match.paidAmount || 0) * 0.18),
-                downloadUrl: '#'
-              }
-            ];
+        // Reload receipts from storage or generate dynamic fee receipt
+        try {
+          const storedReceipts = localStorage.getItem('pbs_student_receipts');
+          if (storedReceipts) {
+            const parsedReceipts = JSON.parse(storedReceipts);
+            if (Array.isArray(parsedReceipts) && parsedReceipts.length > 0) {
+              setFeeReceipts(parsedReceipts);
+            } else if (match.paidAmount > 0) {
+              setFeeReceipts([
+                {
+                  receiptId: `PBS-REC-${(match.studentId || '2026').replace('PBS-STU-', '')}-01`,
+                  invoiceNumber: `INV/PBS/2026-27/0${(match.rollNumber || '8492').slice(-3)}`,
+                  courseId: match.enrolledCourseIds?.[0] || 'revit-mep-pro',
+                  courseTitle: match.specialization || 'Autodesk Revit MEP Masterclass (LOD 300 - 500)',
+                  amount: match.paidAmount || 0,
+                  paymentMethod: 'Instant NetBanking / UPI Verified',
+                  transactionId: `UPI/PBS/${(match.rollNumber || '8492').replace(/[^a-zA-Z0-9]/g, '')}/TXN99`,
+                  date: 'Aug 2026',
+                  paymentType: (match.pendingBalance ?? 0) === 0 ? 'Full Payment' : 'Installment #1',
+                  status: 'Paid',
+                  taxGst: Math.round((match.paidAmount || 0) * 0.18),
+                  downloadUrl: '#'
+                }
+              ]);
+            }
           }
-          return prev;
-        });
+        } catch {}
       } else if (user?.name) {
         setProfileData(prev => ({
           ...prev,

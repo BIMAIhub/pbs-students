@@ -55,7 +55,7 @@ export const StudentLoginPortal: React.FC<StudentLoginPortalProps> = ({
     setErrorMsg(null);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
@@ -66,9 +66,9 @@ export const StudentLoginPortal: React.FC<StudentLoginPortalProps> = ({
 
     setIsLoggingIn(true);
 
-    setTimeout(() => {
+    try {
+      const res = await studentAuthUtil.verifyCredentialsAsync(emailInput, passwordInput);
       setIsLoggingIn(false);
-      const res = studentAuthUtil.verifyCredentials(emailInput, passwordInput);
 
       if (res.success && res.user) {
         soundFx.playSuccess();
@@ -78,7 +78,10 @@ export const StudentLoginPortal: React.FC<StudentLoginPortalProps> = ({
         soundFx.playClick();
         setErrorMsg(res.message);
       }
-    }, 500);
+    } catch (err: any) {
+      setIsLoggingIn(false);
+      setErrorMsg(err.message || 'Login verification failed');
+    }
   };
 
   return (

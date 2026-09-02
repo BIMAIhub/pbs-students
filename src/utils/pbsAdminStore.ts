@@ -254,6 +254,63 @@ export interface AdminCourse {
   googleDriveUrl?: string;
 }
 
+// Intelligent Student list merger to avoid any loss across tabs, devices, or cloud sync
+export function mergeStudentsList(base: ManagedStudent[] = [], incoming: ManagedStudent[] = []): ManagedStudent[] {
+  const result: ManagedStudent[] = [...(Array.isArray(base) ? base : [])];
+  
+  if (!Array.isArray(incoming) || incoming.length === 0) {
+    return result;
+  }
+
+  for (const inc of incoming) {
+    if (!inc) continue;
+    const incId = (inc.studentId || inc.id || '').toLowerCase().trim();
+    const incEmail = (inc.email || '').toLowerCase().trim();
+    const incPersonalEmail = (inc.personalEmail || '').toLowerCase().trim();
+    const incGoogleEmail = (inc.googleEmailId || '').toLowerCase().trim();
+    const incRoll = (inc.rollNumber || '').toLowerCase().trim();
+    const incName = (inc.name || '').toLowerCase().trim();
+    const incPhone = (inc.phone || '').replace(/[^0-9]/g, '');
+    
+    const existingIndex = result.findIndex(b => {
+      if (!b) return false;
+      const bId = (b.studentId || b.id || '').toLowerCase().trim();
+      const bEmail = (b.email || '').toLowerCase().trim();
+      const bPersonalEmail = (b.personalEmail || '').toLowerCase().trim();
+      const bGoogleEmail = (b.googleEmailId || '').toLowerCase().trim();
+      const bRoll = (b.rollNumber || '').toLowerCase().trim();
+      const bName = (b.name || '').toLowerCase().trim();
+      const bPhone = (b.phone || '').replace(/[^0-9]/g, '');
+      
+      return (
+        (incId && bId && incId === bId) ||
+        (incRoll && bRoll && incRoll === bRoll) ||
+        (incEmail && bEmail && incEmail === bEmail) ||
+        (incPersonalEmail && bPersonalEmail && incPersonalEmail === bPersonalEmail) ||
+        (incGoogleEmail && bGoogleEmail && incGoogleEmail === bGoogleEmail) ||
+        (incPhone && bPhone && incPhone.length >= 10 && bPhone === incPhone) ||
+        (incName && bName && incName === bName && (incRoll === bRoll || incEmail === bEmail))
+      );
+    });
+
+    if (existingIndex >= 0) {
+      const existing = result[existingIndex];
+      result[existingIndex] = {
+        ...existing,
+        ...inc,
+        enrolledCourseIds: (inc.enrolledCourseIds && inc.enrolledCourseIds.length > 0) ? inc.enrolledCourseIds : existing.enrolledCourseIds,
+        enrolledCourseTitles: (inc.enrolledCourseTitles && inc.enrolledCourseTitles.length > 0) ? inc.enrolledCourseTitles : existing.enrolledCourseTitles,
+        messages: (inc.messages && inc.messages.length > 0) ? inc.messages : existing.messages,
+        placement: inc.placement ? { ...(existing.placement || {}), ...inc.placement } : existing.placement
+      };
+    } else {
+      result.unshift(inc);
+    }
+  }
+
+  return result;
+}
+
 // Initial Default Students - Synchronized across all PCs & devices
 const INITIAL_STUDENTS: ManagedStudent[] = [
   {
@@ -1033,18 +1090,21 @@ export const pbsAdminStore = {
    * Get all students
    */
   getStudents(): ManagedStudent[] {
+    let list: ManagedStudent[] = [];
     try {
       const stored = localStorage.getItem(STORAGE_STUDENTS_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          list = parsed;
         }
       }
     } catch (e) {
       console.warn('Could not read students from storage:', e);
     }
-    return INITIAL_STUDENTS;
+    
+    // Always merge INITIAL_STUDENTS with whatever is in storage so predefined students like Sandip Chavan and Pravin Yadav are never lost
+    return mergeStudentsList(INITIAL_STUDENTS, list);
   },
 
   /**
@@ -1052,9 +1112,10 @@ export const pbsAdminStore = {
    */
   saveStudents(students: ManagedStudent[]): void {
     try {
-      localStorage.setItem(STORAGE_STUDENTS_KEY, JSON.stringify(students));
-      pbsNotifyChange('students_updated', students);
-      syncToServer('students', students);
+      const merged = mergeStudentsList(INITIAL_STUDENTS, students);
+      localStorage.setItem(STORAGE_STUDENTS_KEY, JSON.stringify(merged));
+      pbsNotifyChange('students_updated', merged);
+      syncToServer('students', merged);
     } catch (e) {
       console.warn('Could not save students to storage:', e);
     }
@@ -2513,18 +2574,23 @@ export const pbsAdminStore = {
       const { data } = json;
       let hasUpdates = false;
 
-      // 1. Sync students
+      // 1. Sync students with intelligent two-way merge
+      const localList = this.getStudents();
       if (data.students && Array.isArray(data.students) && data.students.length > 0) {
+        const mergedStudents = mergeStudentsList(data.students, localList);
         const localStudentsStr = localStorage.getItem(STORAGE_STUDENTS_KEY);
-        const serverStudentsStr = JSON.stringify(data.students);
-        if (localStudentsStr !== serverStudentsStr) {
-          localStorage.setItem(STORAGE_STUDENTS_KEY, serverStudentsStr);
+        const mergedStudentsStr = JSON.stringify(mergedStudents);
+        if (localStudentsStr !== mergedStudentsStr) {
+          localStorage.setItem(STORAGE_STUDENTS_KEY, mergedStudentsStr);
           hasUpdates = true;
         }
+        // If local had any student not present on server, push back merged roster
+        if (mergedStudents.length > data.students.length) {
+          syncToServer('students', mergedStudents);
+        }
       } else {
-        const currentLocal = this.getStudents();
-        if (currentLocal && currentLocal.length > 0) {
-          syncToServer('students', currentLocal);
+        if (localList && localList.length > 0) {
+          syncToServer('students', localList);
         }
       }
 

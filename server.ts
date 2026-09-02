@@ -194,12 +194,44 @@ function writeCentralDb(data: Record<string, any>): void {
   }
 }
 
+// Intelligent students merger by ID, email, or rollNumber
+function mergeStudentsArray(existing: any[] = [], incoming: any[] = []): any[] {
+  const result = [...(Array.isArray(existing) ? existing : [])];
+  if (!Array.isArray(incoming) || incoming.length === 0) return result;
+
+  for (const inc of incoming) {
+    if (!inc) continue;
+    const incId = (inc.studentId || inc.id || '').toLowerCase().trim();
+    const incEmail = (inc.email || inc.personalEmail || inc.googleEmailId || '').toLowerCase().trim();
+    const incRoll = (inc.rollNumber || '').toLowerCase().trim();
+
+    const idx = result.findIndex(b => {
+      if (!b) return false;
+      const bId = (b.studentId || b.id || '').toLowerCase().trim();
+      const bEmail = (b.email || b.personalEmail || b.googleEmailId || '').toLowerCase().trim();
+      const bRoll = (b.rollNumber || '').toLowerCase().trim();
+      return (incId && bId && incId === bId) || (incRoll && bRoll && incRoll === bRoll) || (incEmail && bEmail && incEmail === bEmail);
+    });
+
+    if (idx >= 0) {
+      result[idx] = { ...result[idx], ...inc };
+    } else {
+      result.unshift(inc);
+    }
+  }
+
+  return result;
+}
+
 // Intelligent item merger by ID
 function mergeArrayById<T extends { id?: string; studentId?: string; receiptId?: string }>(
   existing: T[] = [],
   incoming: T[] = [],
   idKey: 'id' | 'studentId' | 'receiptId' = 'id'
 ): T[] {
+  if (idKey === 'studentId') {
+    return mergeStudentsArray(existing, incoming) as T[];
+  }
   if (!Array.isArray(incoming) || incoming.length === 0) return existing;
   if (!Array.isArray(existing) || existing.length === 0) return incoming;
 
